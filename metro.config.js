@@ -13,5 +13,12 @@ module.exports = {
         inlineRequires: true,
       },
     }),
+    dependencies: {
+      'react-native-vector-icons': {
+        platforms: {
+          ios: null,
+        },
+      },
+    },
   },
 };
