@@ -7,7 +7,8 @@ import {
 } from 'react-native';
 import React from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faFile, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
 type Props = {
   customerName: string;
   price: number;
@@ -71,13 +72,10 @@ const CardApprovedDashBoard = (props: Props) => {
       <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
         <View style={styles.header}>
           <Text style={styles.buttonText}>เริ่มทำสัญญา</Text>
+          <FontAwesomeIcon style={styles.iconButton} icon={faChevronRight} size={24} color="white" />
 
-          <Icon
-            style={styles.iconButton}
-            name="arrow-right-thin"
-            size={28}
-            color="#19232e"
-          />
+      
+
         </View>
       </TouchableOpacity>
     </View>

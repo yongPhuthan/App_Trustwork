@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import React from 'react';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faFile, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
 type Props = {
   customerName: string;
   price: number;
@@ -25,12 +25,9 @@ const CardDashBoard = (props: Props) => {
       <View style={styles.summary}>
         <Text style={styles.summaryText}>{props.customerName}</Text>
         <Text style={styles.summaryPrice}>{props.price}บาท</Text>
-        <Icon
-          style={styles.icon}
-          name="chevron-right"
-          size={26}
-          color="#19232e"
-        />
+
+                  <FontAwesomeIcon icon={faChevronRight} size={24} color="#19232e" />
+
       </View>
       <View
         style={{

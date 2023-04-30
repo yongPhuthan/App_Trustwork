@@ -18,7 +18,8 @@ import {Store} from '../redux/Store';
 import Modal from 'react-native-modal';
 import {FAB} from 'react-native-paper';
 // import Modal from 'react-native-modal';
-import Swal from 'sweetalert2';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
 import messaging from '@react-native-firebase/messaging';
 import { GooglePay } from 'react-native-google-pay';
 
@@ -328,13 +329,10 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           keyExtractor={item => item.id}
         />
 
-        <FAB
-          style={styles.fab}
-          icon="plus"
-          color="white"
-          onPress={() => createNewQuotation()}
-          theme={{colors: {accent: 'white'}}}
-        />
+<TouchableOpacity style={styles.customFab} onPress={() => createNewQuotation()}>
+  <FontAwesomeIcon icon={faPlus} size={24} color="white" />
+</TouchableOpacity>
+
       </View>
     </>
   );
@@ -415,5 +413,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: '80%',
     height: '80%',
+  },
+  customFab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 10,
+    backgroundColor: '#0050f0',
+    borderRadius: 28,
+    height: 56,
+    width: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

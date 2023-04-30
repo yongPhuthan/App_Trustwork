@@ -1,7 +1,8 @@
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import React from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
 type Props = {
   onPress: Function;
   disabled: boolean;
@@ -15,13 +16,9 @@ const FooterBtn = (props: Props) => {
         <TouchableOpacity style={styles.disabledButton} disabled>
           <View style={styles.header}>
             <Text style={styles.buttonText}>ไปหน้าสัญญา</Text>
+            <FontAwesomeIcon icon={faChevronRight} size={28} color="#19232e" />
 
-            <Icon
-              style={styles.icon}
-              name="arrow-right-thin"
-              size={28}
-              color="#19232e"
-            />
+
           </View>
         </TouchableOpacity>
       </View>
@@ -33,13 +30,9 @@ const FooterBtn = (props: Props) => {
       <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
         <View style={styles.header}>
           <Text style={styles.buttonText}>ไปหน้าสัญญา</Text>
+          <FontAwesomeIcon icon={faChevronRight} size={28} color="#19232e" />
 
-          <Icon
-            style={styles.icon}
-            name="arrow-right-thin"
-            size={28}
-            color="#19232e"
-          />
+
         </View>
       </TouchableOpacity>
     </View>

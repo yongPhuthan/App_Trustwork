@@ -39,11 +39,22 @@ import EditClientForm from '../screens/editClientForm';
 import EditQuotation from '../screens/editQuotation';
 import ContractCard from '../components/ContractCard';
 import WebViewScreen from '../screens/webView';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ContractDashBoard from '../screens/contractDashboard';
 import SelectScreen from '../screens/contract/signContract';
 import DocViewScreen from '../screens/docView';
 import TopUpScreen from '../screens/topUpScreen';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faFile,
+  faDrawPolygon,
+  faCog,
+  faBell,
+  faChevronRight,
+  faCashRegister,
+  faCoins,
+  faSign,
+  faSignature,
+} from '@fortawesome/free-solid-svg-icons';
 // import FontAwesomeIcon from 'react-native-vector-icons/FontAwesomeIcon5';
 
 type Props = {};
@@ -51,12 +62,11 @@ interface SettingScreenProps {
   navigation: StackNavigationProp<ParamListBase, 'TopUpScreen'>;
 }
 
-
 type ParamListBase = {
   Quotation: undefined;
   AddClient: undefined;
   AddProductForm: undefined;
-  TopUpScreen:undefined;
+  TopUpScreen: undefined;
   LayoutScreen: undefined;
   SelectScreen: {id: string};
   RootTab: undefined;
@@ -130,7 +140,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
           <Text style={{fontSize: 16, fontWeight: '600', color: '#333'}}>
             {item.title}
           </Text>
-          <MaterialCommunityIcons name="chevron-right" size={24} color="#aaa" />
+          <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
         </View>
       </TouchableOpacity>
       <View
@@ -214,7 +224,11 @@ function SettingsScreen({navigation}: SettingScreenProps) {
       {/* Business Name and Address */}
       {/* Account */}
       <View style={{backgroundColor: '#fff', marginTop: 10}}>
-        <TouchableOpacity onPress={()=>{navigation.navigate('TopUpScreen')}} style={{paddingVertical: 16, paddingHorizontal: 24}}>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('TopUpScreen');
+          }}
+          style={{paddingVertical: 16, paddingHorizontal: 24}}>
           <View
             style={{
               flexDirection: 'row',
@@ -222,12 +236,8 @@ function SettingsScreen({navigation}: SettingScreenProps) {
               justifyContent: 'space-between',
             }}>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <MaterialCommunityIcons
-                name="cash"
-                size={24}
-                color="#F5A623"
-                style={{marginRight: 8}}
-              />
+              <FontAwesomeIcon icon={faCoins} size={24} color="#F5A623" />
+
               <Text style={{fontSize: 16, fontWeight: '600', color: '#333'}}>
                 Credit
               </Text>
@@ -242,11 +252,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
                 }}>
                 0.00{' '}
               </Text>
-              <MaterialCommunityIcons
-                name="chevron-right"
-                size={24}
-                color="#aaa"
-              />
+              <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
             </View>
           </View>
         </TouchableOpacity>
@@ -304,21 +310,17 @@ function RootTab({navigation}: NavigationScreen) {
               </Text>
             ),
             headerRight: () => (
-              <TouchableOpacity onPress={() => alert('Top up')}>
-                <MaterialCommunityIcons
-                  name="bell-outline"
+              <TouchableOpacity >
+                <FontAwesomeIcon
+                  icon={faBell}
+                  color="gray"
                   size={28}
-                  color="#000"
                   style={{marginRight: 15}}
                 />
               </TouchableOpacity>
             ),
             tabBarIcon: ({color, size}) => (
-              <MaterialCommunityIcons
-                name="file-document"
-                color={color}
-                size={size}
-              />
+              <FontAwesomeIcon icon={faFile} color={color} size={size} />
             ),
           }}
           // component={SelectScreen}
@@ -345,17 +347,17 @@ function RootTab({navigation}: NavigationScreen) {
               </Text>
             ),
             headerRight: () => (
-              <TouchableOpacity onPress={() => alert('Notifications')}>
-                <MaterialCommunityIcons
-                  name="bell-outline"
-                  size={28}
-                  color="#000"
+              <TouchableOpacity >
+                <FontAwesomeIcon
                   style={{marginRight: 15}}
+                  icon={faBell}
+                  color="gray"
+                  size={28}
                 />
               </TouchableOpacity>
             ),
             tabBarIcon: ({color, size}) => (
-              <MaterialCommunityIcons name="draw" color={color} size={size} />
+              <FontAwesomeIcon icon={faSignature} color={color} size={size} />
             ),
           }}
           component={ContractDashBoard}
@@ -370,7 +372,7 @@ function RootTab({navigation}: NavigationScreen) {
 
             headerTintColor: '#000',
             tabBarIcon: ({color, size}) => (
-              <MaterialCommunityIcons name="cog" color={color} size={size} />
+              <FontAwesomeIcon icon={faCog} color={color} size={size} />
             ),
           }}
           component={SettingsScreen}
@@ -431,7 +433,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'สัญญา',
               headerTruncatedBackTitle: '',
             }}
             name="ContractCard"
@@ -444,7 +446,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'เพิ่มรายการ-สินค้า',
               headerTruncatedBackTitle: '',
             }}
             name="AddProductForm"
@@ -457,7 +459,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'แก้ไขรายการ-สินค้า',
               headerTruncatedBackTitle: '',
             }}
             name="EditProductForm"
@@ -470,7 +472,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'แก้ไขลูกค้า',
               headerTruncatedBackTitle: '',
             }}
             name="EditClientForm"
@@ -484,7 +486,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'เลือกมาตรฐานการทำงาน',
               headerTruncatedBackTitle: '',
             }}
             name="SelectAudit"
@@ -498,7 +500,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'สัญญาการทำงาน',
               headerTruncatedBackTitle: '',
             }}
             name="ContactInfoScreen"
@@ -511,7 +513,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'สรุปสัญญา',
               headerTruncatedBackTitle: '',
             }}
             name="ContractOption"
@@ -524,7 +526,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'เลือกสัญญา',
               headerTruncatedBackTitle: '',
             }}
             name="SelectContract"
@@ -537,7 +539,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'เลือกการแบ่งจ่ายงวดงาน',
               headerTruncatedBackTitle: '',
             }}
             name="InstallmentScreen"
@@ -550,7 +552,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'แก้ไขสัญญา',
               headerTruncatedBackTitle: '',
             }}
             name="EditContract"
@@ -563,7 +565,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: 'ตั้งค่าธุรกิจ',
               headerTruncatedBackTitle: '',
             }}
             name="SettingCompany"
@@ -576,7 +578,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               },
               headerTintColor: '#fff',
               headerBackTitle: '',
-              headerTitle: 'เพิ่มลูกค้า',
+              headerTitle: '',
               headerTruncatedBackTitle: '',
             }}
             name="SignUpScreen"
@@ -762,7 +764,7 @@ const Navigation = ({navigation}: NavigationScreen) => {
               name="DocViewScreen"
               component={DocViewScreen}
             />
-              <Stack.Screen
+            <Stack.Screen
               options={{
                 headerStyle: {
                   backgroundColor: '#0c5caa',
