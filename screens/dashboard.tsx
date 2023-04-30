@@ -19,9 +19,17 @@ import Modal from 'react-native-modal';
 import {FAB} from 'react-native-paper';
 // import Modal from 'react-native-modal';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faPlus, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faDrawPolygon,
+  faCog,
+  faBell,
+  faChevronRight,
+  faCashRegister,
+  faCoins,
+} from '@fortawesome/free-solid-svg-icons';
 import messaging from '@react-native-firebase/messaging';
-import { GooglePay } from 'react-native-google-pay';
+import {GooglePay} from 'react-native-google-pay';
 
 import * as stateAction from '../redux/Actions';
 
@@ -109,44 +117,44 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       return null;
     }
   };
-//   const requestData = {
-//     cardPaymentMethod: {
-//       tokenizationSpecification: {
-//         type: 'PAYMENT_GATEWAY',
-//         // stripe (see Example):
-//         gateway: 'stripe',
-//         gatewayMerchantId: '',
-//         stripe: {
-//           publishableKey: 'pk_test_TYooMQauvdEDq54NiTphI7jx',
-//           version: '2018-11-08',
-//         },
+  //   const requestData = {
+  //     cardPaymentMethod: {
+  //       tokenizationSpecification: {
+  //         type: 'PAYMENT_GATEWAY',
+  //         // stripe (see Example):
+  //         gateway: 'stripe',
+  //         gatewayMerchantId: '',
+  //         stripe: {
+  //           publishableKey: 'pk_test_TYooMQauvdEDq54NiTphI7jx',
+  //           version: '2018-11-08',
+  //         },
 
-//       },
-//       allowedCardNetworks,
-//       allowedCardAuthMethods,
-//     },
-//     transaction: {
-//       totalPrice: '10',
-//       totalPriceStatus: 'FINAL',
-//       currencyCode: 'USD',
-//     },
-//     merchantName: 'Example Merchant',
-//   };
-//   // Set the environment before the payment request
-// GooglePay.setEnvironment(GooglePay.ENVIRONMENT_TEST);
- 
-// // Check if Google Pay is available
-// GooglePay.isReadyToPay(allowedCardNetworks, allowedCardAuthMethods)
-//   .then((ready) => {
-//     if (ready) {
-//       // Request payment token
-//       GooglePay.requestPayment(requestData)
-//         .then((token: string) => {
-//           // Send a token to your payment gateway
-//         })
-//         .catch((error) => console.log(error.code, error.message));
-//     }
-//   })
+  //       },
+  //       allowedCardNetworks,
+  //       allowedCardAuthMethods,
+  //     },
+  //     transaction: {
+  //       totalPrice: '10',
+  //       totalPriceStatus: 'FINAL',
+  //       currencyCode: 'USD',
+  //     },
+  //     merchantName: 'Example Merchant',
+  //   };
+  //   // Set the environment before the payment request
+  // GooglePay.setEnvironment(GooglePay.ENVIRONMENT_TEST);
+
+  // // Check if Google Pay is available
+  // GooglePay.isReadyToPay(allowedCardNetworks, allowedCardAuthMethods)
+  //   .then((ready) => {
+  //     if (ready) {
+  //       // Request payment token
+  //       GooglePay.requestPayment(requestData)
+  //         .then((token: string) => {
+  //           // Send a token to your payment gateway
+  //         })
+  //         .catch((error) => console.log(error.code, error.message));
+  //     }
+  //   })
   useEffect(() => {
     const fetchData = async () => {
       const user = await getTokenAndEmail();
@@ -167,13 +175,13 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     //       const enabled =
     //         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
     //         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-      
+
     //       if (enabled) {
     //         console.log('Authorization status:', authStatus);
     //         getFCMToken();
     //       }
     //     }
-      
+
     //     async function getFCMToken() {
     //       const fcmToken = await messaging().getToken();
     //       if (fcmToken) {
@@ -184,7 +192,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     //     }
     //       requestUserPermission();
   }, []);
-
 
   const handleNewQuotationPress = () => {
     navigation.navigate('Quotation');
@@ -319,7 +326,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
 
     navigation.navigate('QuotationScreen');
   };
-  
+
   return (
     <>
       <View>
@@ -329,11 +336,17 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
           keyExtractor={item => item.id}
         />
 
-<TouchableOpacity style={styles.customFab} onPress={() => createNewQuotation()}>
-  <FontAwesomeIcon icon={faPlus} size={24} color="white" />
-</TouchableOpacity>
 
       </View>
+
+        <FAB
+          style={styles.fab}
+          icon="plus"
+          color="white"
+          onPress={() => createNewQuotation()}
+          theme={{colors: {accent: 'white'}}}
+        />
+        
     </>
   );
 };

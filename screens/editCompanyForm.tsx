@@ -2,6 +2,7 @@ import React, {useState, useContext, useEffect, useRef} from 'react';
 import {Text, View, TextInput, Button, StyleSheet} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import { useQuery } from 'react-query';
 
 import {
   clientName,
@@ -93,36 +94,55 @@ const updateCompanySeller = async (email: string, isEmulator: boolean, data: For
 };
 
 const EditCompanyForm = ({navigation, route}: Props) => {
+  const userEmail = "doorfolding@gmail.com"; // Replace with the user's email
+  const isEmulator = false; // Set to true if using an emulator
   const {
     state: {client_name,client_address,client_tel,client_tax},
     dispatch,
   }: any = useContext(Store);
-  const {
+
+  const { data: companyData, isLoading } = useQuery(
+    'fetchCompanyUser',
+    () => fetchCompanyUser(userEmail, isEmulator)
+  );
+
+   const {
     control,
     handleSubmit,
+    setValue,
     formState: {errors},
   } = useForm<FormValues>({
     defaultValues: {
-      name: client_name,
-      address: client_address,
-      phone: client_tel,
-      taxId: client_tax,
+      name: companyData ? companyData.userName : '',
+      address: companyData ? companyData.address : '',
+      phone: companyData ? companyData.mobileTel : '',
+      taxId: companyData ? companyData.companyNumber : '',
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    // Send form data to backend API to add client
-    // console.log(data);
-    // dispatch(stateAction.client_name(data.name));
-    // dispatch(stateAction.client_address(data.address));
-    // dispatch(stateAction.client_tel(data.phone));
-    // dispatch(stateAction.client_tax(data.taxId));
-    navigation.goBack();
+  useEffect(() => {
+    if (companyData) {
+      setValue('name', companyData.userName);
+      setValue('address', companyData.address);
+      setValue('phone', companyData.mobileTel);
+      setValue('taxId', companyData.companyNumber);
+    }
+  }, [companyData, setValue]);
+  const onSubmit = async (data: FormValues) => {
+    try {
+      await updateCompanySeller(userEmail, isEmulator, data);
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error updating company information:', error);
+    }
   };
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
   return (
     <ScrollView style={styles.container}>
       <View style={styles.subContainer}>
-        <Controller
+      <Controller
           control={control}
           name="name"
           rules={{required: true}}
@@ -134,7 +154,6 @@ const EditCompanyForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-     
         />
         {errors.name && <Text>This is required.</Text>}
 

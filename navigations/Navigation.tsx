@@ -770,7 +770,7 @@ const Navigation = ({navigation}: NavigationScreen) => {
                   backgroundColor: '#0c5caa',
                 },
                 headerTintColor: '#fff',
-                headerTitle: 'ตัวอย่างสัญญา',
+                headerTitle: 'เติมเครดิต',
                 headerBackTitle: '',
                 headerTruncatedBackTitle: '',
               }}

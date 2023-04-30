@@ -221,7 +221,9 @@ const Quotation = ({navigation}: Props) => {
     () => fetchCompanyUser(email,isEmulator).then(res => res),
     {
       onSuccess: data => {
+
         setCompanyUser(data);
+        console.log('company',JSON.stringify(data[0]))
       },
     },
   );
