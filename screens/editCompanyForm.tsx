@@ -2,7 +2,8 @@ import React, {useState, useContext, useEffect, useRef} from 'react';
 import {Text, View, TextInput, Button, StyleSheet} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import { useQuery } from 'react-query';
+import {useQuery} from 'react-query';
+import {HOST_URL} from '@env';
 
 import {
   clientName,
@@ -15,7 +16,7 @@ import * as stateAction from '../redux/Actions';
 import {StackNavigationProp} from '@react-navigation/stack';
 
 import {RouteProp, ParamListBase} from '@react-navigation/native';
-import { ScrollView } from 'react-native-gesture-handler';
+import {ScrollView} from 'react-native-gesture-handler';
 
 type FormValues = {
   name: string;
@@ -28,7 +29,7 @@ interface Props {
   navigation: StackNavigationProp<ParamListBase, 'EditCompanyForm'>;
   route: RouteProp<ParamListBase, 'EditCompanyForm'>;
 }
-const fetchCompanyUser = async (email: string, isEmulator:boolean) => {
+const fetchCompanyUser = async (email: string, isEmulator: boolean) => {
   const user = auth().currentUser;
   if (!user) {
     throw new Error('User not authenticated');
@@ -38,21 +39,18 @@ const fetchCompanyUser = async (email: string, isEmulator:boolean) => {
   if (isEmulator) {
     url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryCompanySeller2`;
   } else {
-    console.log('isEmulator Fetch',isEmulator)
+    console.log('isEmulator Fetch', isEmulator);
     url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryCompanySeller2`;
   }
-  const response = await fetch(
-    url,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({email}),
-      credentials: 'include',
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
     },
-  );
+    body: JSON.stringify({email}),
+    credentials: 'include',
+  });
   const data = await response.json();
 
   if (!response.ok) {
@@ -62,51 +60,54 @@ const fetchCompanyUser = async (email: string, isEmulator:boolean) => {
   return data;
 };
 
-const updateCompanySeller = async (email: string, isEmulator: boolean, data: FormValues) => {
+const updateCompanySeller = async (
+  email: string,
+  isEmulator: boolean,
+  data: FormValues,
+) => {
   const user = auth().currentUser;
   if (!user) {
-    throw new Error("User not authenticated");
+    throw new Error('User not authenticated');
   }
   const idToken = await user.getIdToken();
   let url;
   if (isEmulator) {
     url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/updateCompanySeller`;
   } else {
-    console.log("isEmulator Fetch", isEmulator);
+    console.log('isEmulator Fetch', isEmulator);
     url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/updateCompanySeller`;
   }
   const response = await fetch(url, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${idToken}`,
     },
-    body: JSON.stringify({ email, data }),
-    credentials: "include",
+    body: JSON.stringify({email, data}),
+    credentials: 'include',
   });
   const responseData = await response.json();
 
   if (!response.ok) {
-    throw new Error("Network response was not ok");
+    throw new Error('Network response was not ok');
   }
 
   return responseData;
 };
 
 const EditCompanyForm = ({navigation, route}: Props) => {
-  const userEmail = "doorfolding@gmail.com"; // Replace with the user's email
+  const userEmail = 'doorfolding@gmail.com'; // Replace with the user's email
   const isEmulator = false; // Set to true if using an emulator
   const {
-    state: {client_name,client_address,client_tel,client_tax},
+    state: {client_name, client_address, client_tel, client_tax},
     dispatch,
   }: any = useContext(Store);
 
-  const { data: companyData, isLoading } = useQuery(
-    'fetchCompanyUser',
-    () => fetchCompanyUser(userEmail, isEmulator)
+  const {data: companyData, isLoading} = useQuery('fetchCompanyUser', () =>
+    fetchCompanyUser(userEmail, isEmulator),
   );
 
-   const {
+  const {
     control,
     handleSubmit,
     setValue,
@@ -142,7 +143,7 @@ const EditCompanyForm = ({navigation, route}: Props) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.subContainer}>
-      <Controller
+        <Controller
           control={control}
           name="name"
           rules={{required: true}}
@@ -159,6 +160,7 @@ const EditCompanyForm = ({navigation, route}: Props) => {
 
         <Controller
           control={control}
+          name="address"
           rules={{required: true}}
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
@@ -173,12 +175,12 @@ const EditCompanyForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="address"
         />
         {errors.address && <Text>This is required.</Text>}
 
         <Controller
           control={control}
+          name="phone"
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
               placeholder="เบอร์โทรศัพท์"
@@ -189,12 +191,10 @@ const EditCompanyForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="phone"
         />
- 
-
         <Controller
           control={control}
+          name="taxId"
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
               placeholder="เลขทะเบียนภาษี(ถ้ามี)"
@@ -205,7 +205,6 @@ const EditCompanyForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="taxId"
         />
 
         <Button title="บันทึก" onPress={handleSubmit(onSubmit)} />

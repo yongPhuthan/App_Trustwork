@@ -55,6 +55,7 @@ import {
   faSign,
   faSignature,
 } from '@fortawesome/free-solid-svg-icons';
+import EditCompanyForm from '../screens/editCompanyForm';
 // import FontAwesomeIcon from 'react-native-vector-icons/FontAwesomeIcon5';
 
 type Props = {};
@@ -65,6 +66,7 @@ interface SettingScreenProps {
 type ParamListBase = {
   Quotation: undefined;
   AddClient: undefined;
+  EditCompanyForm: undefined;
   AddProductForm: undefined;
   TopUpScreen: undefined;
   LayoutScreen: undefined;
@@ -120,7 +122,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
   ];
 
   const accountOptions = [
-    {id: 1, title: 'Region', onPress: () => console.log('Region pressed')},
+    {id: 1, title: 'ข้อมูลธุรกิจ', onPress: () =>  navigation.navigate('EditCompanyForm')},
     {id: 2, title: 'Upgrade', onPress: () => console.log('Upgrade pressed')},
     {id: 3, title: 'Logout', onPress: () => console.log('Logout pressed')},
     // Add more items as needed
@@ -738,6 +740,18 @@ const Navigation = ({navigation}: NavigationScreen) => {
               }}
               name="EditClientForm"
               component={EditClientForm}
+            />
+             <Stack.Screen
+              options={{
+                headerStyle: {
+                  backgroundColor: '#19232e',
+                },
+                headerTintColor: '#fff',
+                headerBackTitle: '',
+                headerTruncatedBackTitle: '',
+              }}
+              name="EditCompanyForm"
+              component={EditCompanyForm}
             />
             <Stack.Screen
               options={{
