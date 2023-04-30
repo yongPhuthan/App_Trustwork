@@ -40,7 +40,6 @@ function Section({children, title}: SectionProps): JSX.Element {
     const unsubscribe = auth().onAuthStateChanged(user => {
       if (user) {
         setUser(user);
-        console.log(user)
 
       } else {
         setUser(null);

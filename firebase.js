@@ -1,5 +1,6 @@
 // Import the functions you need from the SDKs you need
 import firebase from '@react-native-firebase/app';
+import functions from '@react-native-firebase/functions';
 
 
 
@@ -30,6 +31,8 @@ if (!firebase.apps.length) {
 
 //   console.log('emulator' + emulatorHost);
 // }
+
+
 
 console.log('App name: ', firebase.app().name);
 
