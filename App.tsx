@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
@@ -25,6 +25,7 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import firebase from './firebase';
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -32,10 +33,22 @@ type SectionProps = PropsWithChildren<{
 
 function Section({children, title}: SectionProps): JSX.Element {
   const firebaseAPP =firebase
+  
   const isDarkMode = useColorScheme() === 'dark';
-  if(firebaseAPP){
-    console.log('good firebase')
-  }
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(user => {
+      if (user) {
+        setUser(user);
+        console.log(user)
+
+      } else {
+        setUser(null);
+        console.log('no user')
+      }
+    });
+    return unsubscribe;
+  }, []);
   return (
     <View style={styles.sectionContainer}>
       <Text

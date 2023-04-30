@@ -48,6 +48,8 @@ target 'Trustwork' do
   target 'TrustworkTests' do
     inherit! :complete
     # Pods for testing
+    pod 'RNFBAuth', :path => '../node_modules/@react-native-firebase/auth'
+
   end
 
   post_install do |installer|
