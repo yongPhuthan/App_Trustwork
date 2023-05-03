@@ -21,9 +21,20 @@ type Audit = {
   id: number;
 };
 
+const ModernCard: React.FC<Props> = ({title, onPress}) => {
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.card}>
+      <View style={styles.cardContent}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 const SelectAudit = ({navigation}: Props) => {
   const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
   const route = useRoute();
+  const [showCards, setShowCards] = useState(true);
 
   const {title, description}: any = route.params;
 
@@ -101,23 +112,34 @@ const SelectAudit = ({navigation}: Props) => {
             <Text style={styles.description}>{description}</Text>
           </View>
 
-          <View style={styles.auditListContainer}>
-            {auditsWithChecked.map((audit, index) => (
-              <CardAudit
-                key={index}
-                title={audit.title}
-                description={audit.description}
-                price={audit.price}
-                defaultChecked={audit.defaultChecked}
-                imageUri={audit.imageUri}
-                onPress={() => handleSelectAudit(audit)}
-              />
-            ))}
-          </View>
-          {/* problem here */}
+          {showCards ? (
+            <View style={styles.cardsContainer}>
+              <TouchableOpacity
+                onPress={() => setShowCards(false)}
+                style={styles.card}>
+                <View style={styles.cardContent}>
+                  <Text style={styles.title}>Window</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.auditListContainer}>
+              {auditsWithChecked.map((audit, index) => (
+                <CardAudit
+                  key={index}
+                  title={audit.title}
+                  description={audit.description}
+                  price={audit.price}
+                  defaultChecked={audit.defaultChecked}
+                  imageUri={audit.imageUri}
+                  onPress={() => handleSelectAudit(audit)}
+                />
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
-      {/* Done button */}
+
       {selectedAudits.length > 0 && (
         <View style={styles.containerBtn}>
           <TouchableOpacity onPress={handleDonePress} style={styles.button}>
@@ -128,7 +150,6 @@ const SelectAudit = ({navigation}: Props) => {
           </TouchableOpacity>
         </View>
       )}
-      {/* Done button */}
     </View>
   );
 };
@@ -212,5 +233,37 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 3,
+    shadowColor: 'black',
+    shadowOffset: {width: 1, height: 1},
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    width: '48%',
+  },
+  cardContent: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  cardsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  cardAuditView: {
+    height: 200, // Set a fixed height for the CardAudit component
+    marginBottom: 20,
+    width: '48%', // To show 2 cards in a row
+    borderRadius: 5, // Add rounded corners
+    backgroundColor: '#ffffff', // Add a background color
+    shadowColor: 'black',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
   },
 });

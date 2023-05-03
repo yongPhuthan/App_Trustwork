@@ -5,8 +5,9 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  NativeModules,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useContext, useEffect, useRef} from 'react';
 import {
   NavigationContainer,
   NavigationContext,
@@ -33,7 +34,8 @@ import ContractOption from '../screens/contractOptions';
 import InstallmentScreen from '../screens/installmentScreen';
 import {StackNavigationProp} from '@react-navigation/stack';
 import messaging from '@react-native-firebase/messaging';
-
+import {useQuery} from 'react-query';
+import {Store} from '../redux/Store';
 import EditContract from '../screens/editContract';
 import EditClientForm from '../screens/editClientForm';
 import EditQuotation from '../screens/editQuotation';
@@ -43,6 +45,15 @@ import ContractDashBoard from '../screens/contractDashboard';
 import SelectScreen from '../screens/contract/signContract';
 import DocViewScreen from '../screens/docView';
 import TopUpScreen from '../screens/topUpScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import {HOST_URL} from '@env';
+import {
+  launchCamera,
+  launchImageLibrary,
+  MediaType,
+} from 'react-native-image-picker';
+import Modal from 'react-native-modal';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faFile,
@@ -56,17 +67,30 @@ import {
   faSignature,
 } from '@fortawesome/free-solid-svg-icons';
 import EditCompanyForm from '../screens/editCompanyForm';
+import {ScrollView} from 'react-native-gesture-handler';
+import AuditCategory from '../screens/auditCategory';
 // import FontAwesomeIcon from 'react-native-vector-icons/FontAwesomeIcon5';
 
 type Props = {};
 interface SettingScreenProps {
   navigation: StackNavigationProp<ParamListBase, 'TopUpScreen'>;
 }
+type Company = {
+  bizName: string;
+  userName: string;
+  userLastName: string;
+  address:string;
+  officeTel: string;
+  companyNumber: string;
+  userEmail:string;
+  mobileTel:string;
+};
 
 type ParamListBase = {
   Quotation: undefined;
   AddClient: undefined;
   EditCompanyForm: undefined;
+  AuditCategory: {title: string; description: string; serviceID: string};
   AddProductForm: undefined;
   TopUpScreen: undefined;
   LayoutScreen: undefined;
@@ -110,28 +134,134 @@ type ParamListBase = {
     apiData: object[];
   };
 };
+const saveCompanyData = async (companyData:object) => {
+  try {
+    await AsyncStorage.setItem('companyData', JSON.stringify(companyData));
+  } catch (error) {
+    console.log('Error saving company data:', error);
+  }
+};
+const loadCompanyData = async () => {
+  try {
+    const companyData = await AsyncStorage.getItem('companyData');
+    return companyData ? JSON.parse(companyData) : null;
+  } catch (error) {
+    console.log('Error loading company data:', error);
+    return null;
+  }
+};
+
+const fetchCompanyUser = async (email: string, isEmulator: boolean) => {
+  const user = auth().currentUser;
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  const idToken = await user.getIdToken();
+  let url;
+  if (isEmulator) {
+    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryCompanySeller2`;
+  } else {
+    console.log('isEmulator Fetch', isEmulator);
+    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryCompanySeller2`;
+  }
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({email}),
+    credentials: 'include',
+  });
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  return data;
+};
 
 function SettingsScreen({navigation}: SettingScreenProps) {
-  const [logo, setLogo] = useState(null);
+  const [company, setCompany] = useState<Company>();
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  const {
+    state: {client_name, isEmulator, client_tel, client_tax},
+    dispatch,
+  }: any = useContext(Store);
 
+  useEffect(() => {
+    const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        setUser(user);
+
+        let fetchedCompanyUser = await loadCompanyData();
+        if (!fetchedCompanyUser) {
+          fetchedCompanyUser = await fetchCompanyUser(
+            user?.email || '',
+            isEmulator,
+          );
+          await saveCompanyData(fetchedCompanyUser);
+        }
+
+        setCompany(fetchedCompanyUser);
+        setLogo(fetchedCompanyUser.logo);
+      } else {
+        setUser(null);
+      }
+    });
+    return unsubscribe;
+  }, []);
+  const [logo, setLogo] = useState<string | null>(null);
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+
+  const toggleLogoutModal = () => {
+    setIsLogoutModalVisible(!isLogoutModalVisible);
+  };
   const businessDetails = [
-    {id: 1, title: 'Business Name', value: 'Acme Corporation'},
-    {id: 2, title: 'Business Address', value: '123 Main St, Anytown, USA'},
-    {id: 3, title: 'Phone Number', value: '+1 555-123-4567'},
+    {id: 2, title: 'Business Address', value: company?.address || ''},
+
     // Add more items as needed
   ];
 
   const accountOptions = [
-    {id: 1, title: 'ข้อมูลธุรกิจ', onPress: () =>  navigation.navigate('EditCompanyForm')},
-    {id: 2, title: 'Upgrade', onPress: () => console.log('Upgrade pressed')},
-    {id: 3, title: 'Logout', onPress: () => console.log('Logout pressed')},
-    // Add more items as needed
+    {
+      id: 1,
+      title: 'แก้ไขข้อมูลธุรกิจ',
+      onPress: () => navigation.navigate('EditCompanyForm'),
+    },
+    // {id: 2, title: 'Upgrade', onPress: () => console.log('Upgrade pressed')},
+    {id: 3, title: 'Logout', onPress: () => toggleLogoutModal()},
   ];
+  const handleLogoUpload = () => {
+    const options = {
+      mediaType: 'photo' as MediaType,
+      maxWidth: 300,
+      maxHeight: 300,
+    };
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        if (
+          response.assets &&
+          response.assets.length > 0 &&
+          response.assets[0].uri
+        ) {
+          setLogo(response.assets[0].uri);
+        } else {
+          console.log('No assets in response');
+        }
+      }
+    });
+  };
 
   const renderItem = ({item}: any) => (
     <>
       <TouchableOpacity
-        style={{paddingVertical: 16, paddingHorizontal: 24}}
+        style={{paddingVertical: 15, paddingHorizontal: 24}}
         onPress={item.onPress}>
         <View
           style={{
@@ -139,7 +269,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
             alignItems: 'center',
             justifyContent: 'space-between',
           }}>
-          <Text style={{fontSize: 16, fontWeight: '600', color: '#333'}}>
+          <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
             {item.title}
           </Text>
           <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
@@ -155,124 +285,235 @@ function SettingsScreen({navigation}: SettingScreenProps) {
     </>
   );
 
-  const handleLogoUpload = () => {
-    // Code to handle logo upload
-    console.log('Logo upload pressed');
+  const handleLogout = () => {
+    console.log('Logout confirmed');
+    toggleLogoutModal();
   };
+  console.log('LOGO', JSON.stringify(logo))
 
   return (
-    <View style={{flex: 1, backgroundColor: '#f5f5f5'}}>
-      {/* Business Details */}
-      <View style={{backgroundColor: '#fff', paddingVertical: 24}}>
-        {/* Logo */}
-        <TouchableOpacity
-          style={{alignItems: 'center', marginBottom: 24}}
-          onPress={handleLogoUpload}>
-          {logo ? (
-            <Image
-              source={{uri: logo}}
-              style={{width: 80, height: 80, borderRadius: 40}}
-            />
-          ) : (
+    <>
+      <ScrollView style={{flex: 1, backgroundColor: '#f5f5f5'}}>
+        {/* Business Details */}
+        <View style={{backgroundColor: '#fff', paddingVertical: 24}}>
+          {/* Logo */}
+          <TouchableOpacity
+            style={{alignItems: 'center', marginBottom: 24}}
+            onPress={handleLogoUpload}>
+            {logo ? (
+              <Image
+                
+              source={{
+                uri: logo,
+              }}
+                style={{ width: 100,aspectRatio: 2, resizeMode: 'contain' }}
+                />
+            ) : (
+              <View
+                style={{
+                  width: 80,
+                  height: 80,
+                  backgroundColor: '#ddd',
+                  borderRadius: 40,
+                  alignItems: 'center',
+                }}
+              />
+            )}
+          </TouchableOpacity>
+          {/* Business Name and Address */}
+          <View style={{alignItems: 'center'}}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: '#333',
+                marginBottom: 12,
+              }}>
+              {company?.bizName}
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                marginBottom: 10,
+                fontWeight: '600',
+                color: '#333',
+              }}>
+              {company?.userName} {company?.userLastName}
+            </Text>
+            {businessDetails.map(item => (
+              <View
+                key={item.id}
+                style={{
+                  flexDirection: 'row',
+                  maxWidth: '92%',
+                  marginBottom: 8,
+                }}>
+                <Text style={{fontSize: 14, fontWeight: '600', color: '#333'}}>
+                  {item.value}
+                </Text>
+              </View>
+            ))}
+            <Text
+              style={{
+                fontSize: 14,
+                marginBottom: 10,
+                fontWeight: '600',
+                color: '#333',
+              }}>
+              {company?.officeTel} {company?.mobileTel}
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                marginBottom: 10,
+                fontWeight: '600',
+                color: '#333',
+              }}>
+              {company?.userEmail}
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                marginBottom: 10,
+                fontWeight: '600',
+                color: '#333',
+              }}>
+              {company?.companyNumber}
+            </Text>
+          </View>
+        </View>
+        {/* Business Name and Address */}
+        {/* Account */}
+        <View style={{backgroundColor: '#fff', marginTop: 10}}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('TopUpScreen');
+            }}
+            style={{paddingVertical: 16, paddingHorizontal: 24}}>
             <View
               style={{
-                width: 80,
-                height: 80,
-                backgroundColor: '#ddd',
-                borderRadius: 40,
+                flexDirection: 'row',
                 alignItems: 'center',
-              }}
-            />
-          )}
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: '#333',
-              marginTop: 12,
-            }}>
-            Upload Logo
-          </Text>
-        </TouchableOpacity>
-        {/* Business Name and Address */}
-        <View style={{alignItems: 'center'}}>
-          <Text
-            style={{
-              fontSize: 20,
-              fontWeight: 'bold',
-              color: '#333',
-              marginBottom: 12,
-            }}>
-            Business Details
-          </Text>
-          {businessDetails.map(item => (
-            <View key={item.id} style={{flexDirection: 'row', marginBottom: 8}}>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: '#aaa',
-                  width: 120,
-                }}>
-                {item.title}
-              </Text>
-              <Text style={{fontSize: 14, fontWeight: '600', color: '#333'}}>
-                {item.value}
-              </Text>
+                justifyContent: 'space-between',
+              }}>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <FontAwesomeIcon icon={faCoins} size={24} color="#F5A623" />
+
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: '600',
+                    marginLeft: 10,
+                    color: '#333',
+                  }}>
+                  เครดิต
+                </Text>
+              </View>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: '600',
+                    color: '#333',
+                    marginRight: 8,
+                  }}>
+                  0.00{' '}
+                </Text>
+                <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
+              </View>
             </View>
-          ))}
-        </View>
-      </View>
-      {/* Business Name and Address */}
-      {/* Account */}
-      <View style={{backgroundColor: '#fff', marginTop: 10}}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate('TopUpScreen');
-          }}
-          style={{paddingVertical: 16, paddingHorizontal: 24}}>
+          </TouchableOpacity>
           <View
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <FontAwesomeIcon icon={faCoins} size={24} color="#F5A623" />
-
-              <Text style={{fontSize: 16, fontWeight: '600', color: '#333'}}>
-                Credit
-              </Text>
-            </View>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#333',
-                  marginRight: 8,
-                }}>
-                0.00{' '}
+              width: '90%',
+              alignSelf: 'center',
+              borderBottomWidth: 0.3,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <TouchableOpacity
+            style={{paddingVertical: 15, paddingHorizontal: 24}}
+            onPress={() => navigation.navigate('EditCompanyForm')}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+              <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
+                แก้ไขข้อมูลธุรกิจ
               </Text>
               <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
             </View>
+          </TouchableOpacity>
+          <View
+            style={{
+              width: '90%',
+              alignSelf: 'center',
+              borderBottomWidth: 0.3,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <TouchableOpacity
+            style={{paddingVertical: 15, paddingHorizontal: 24}}
+            onPress={() => toggleLogoutModal()}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+              <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
+                Logout
+              </Text>
+              <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
+            </View>
+          </TouchableOpacity>
+          <View
+            style={{
+              width: '90%',
+              alignSelf: 'center',
+              borderBottomWidth: 0.3,
+              borderBottomColor: '#cccccc',
+            }}></View>
+        </View>
+      </ScrollView>
+      <Modal isVisible={isLogoutModalVisible}>
+        <View style={{backgroundColor: 'white', padding: 20, borderRadius: 10}}>
+          <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15}}>
+            Confirm Logout
+          </Text>
+          <Text style={{fontSize: 16, marginBottom: 20}}>
+            Are you sure you want to logout?
+          </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              width: '100%',
+            }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#ccc',
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 5,
+              }}
+              onPress={toggleLogoutModal}>
+              <Text style={{fontSize: 16}}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#f00',
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 5,
+              }}
+              onPress={handleLogout}>
+              <Text style={{fontSize: 16, color: 'white'}}>Logout</Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-        <View
-          style={{
-            width: '90%',
-            alignSelf: 'center',
-            borderBottomWidth: 0.3,
-            borderBottomColor: '#cccccc',
-          }}></View>
-
-        <FlatList
-          data={accountOptions}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-        />
-      </View>
-    </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -312,7 +553,7 @@ function RootTab({navigation}: NavigationScreen) {
               </Text>
             ),
             headerRight: () => (
-              <TouchableOpacity >
+              <TouchableOpacity>
                 <FontAwesomeIcon
                   icon={faBell}
                   color="gray"
@@ -349,7 +590,7 @@ function RootTab({navigation}: NavigationScreen) {
               </Text>
             ),
             headerRight: () => (
-              <TouchableOpacity >
+              <TouchableOpacity>
                 <FontAwesomeIcon
                   style={{marginRight: 15}}
                   icon={faBell}
@@ -494,6 +735,19 @@ function QuotationScreen({navigation}: NavigationScreen) {
             name="SelectAudit"
             component={SelectAudit}
           />
+                <Stack.Screen
+            options={{
+              headerStyle: {
+                backgroundColor: '#042d60',
+              },
+              headerTintColor: '#fff',
+              headerBackTitle: '',
+              headerTitle: 'เลือกหมวดธุรกิจ',
+              headerTruncatedBackTitle: '',
+            }}
+            name="AuditCategory"
+            component={AuditCategory}
+          />
 
           <Stack.Screen
             options={{
@@ -610,6 +864,11 @@ const Stack = createStackNavigator<ParamListBase>();
 
 const Navigation = ({navigation}: NavigationScreen) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  const {
+    state: {client_name, isEmulator, client_tel, client_tax},
+    dispatch,
+  }: any = useContext(Store);
+
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged(user => {
       if (user) {
@@ -700,8 +959,8 @@ const Navigation = ({navigation}: NavigationScreen) => {
             />
             <Stack.Screen
               options={{headerShown: false}}
-              name="SelectScreen"
-              component={SelectScreen}
+              name="SelectContract"
+              component={SelectContract}
             />
             <Stack.Screen
               options={{headerShown: false}}
@@ -741,7 +1000,7 @@ const Navigation = ({navigation}: NavigationScreen) => {
               name="EditClientForm"
               component={EditClientForm}
             />
-             <Stack.Screen
+            <Stack.Screen
               options={{
                 headerStyle: {
                   backgroundColor: '#19232e',

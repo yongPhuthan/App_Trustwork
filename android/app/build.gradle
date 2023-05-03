@@ -96,6 +96,7 @@ android {
     namespace "com.trustwork"
     defaultConfig {
         applicationId "com.trustwork"
+        missingDimensionStrategy "store", "play"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -253,6 +253,8 @@ const Quotation = ({navigation}: Props) => {
 
   const handleAddProductForm = () => {
     // TODO: Add client to quotation
+    dispatch(stateAction.reset_audit());
+
     navigation.navigate('AddProductForm');
   };
   const handleEditService = (index: number) => {
@@ -353,28 +355,28 @@ const Quotation = ({navigation}: Props) => {
         navigation.navigate('LoginScreen');
       }
     });
-    // async function requestUserPermission() {
-    //   const authStatus = await messaging().requestPermission();
-    //   const enabled =
-    //     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-    //     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    async function requestUserPermission() {
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
   
-    //   if (enabled) {
-    //     console.log('Authorization status:', authStatus);
-    //     getFCMToken();
-    //   }
-    // }
+      if (enabled) {
+        console.log('Authorization status:', authStatus);
+        getFCMToken();
+      }
+    }
   
-    // async function getFCMToken() {
-    //   const fcmToken = await messaging().getToken();
-    //   if (fcmToken) {
-    //     console.log('Your Firebase Token  document:', fcmToken);
-    //       setFtmToken(fcmToken);
-    //   } else {
-    //     console.log('Failed to get Firebase Token');
-    //   }
-    // }
-    // requestUserPermission();
+    async function getFCMToken() {
+      const fcmToken = await messaging().getToken();
+      if (fcmToken) {
+        console.log('Your Firebase Token  document:', fcmToken);
+          setFtmToken(fcmToken);
+      } else {
+        console.log('Failed to get Firebase Token');
+      }
+    }
+    requestUserPermission();
 
     const today = new Date();
     const year = today.getFullYear();
@@ -391,6 +393,13 @@ const Quotation = ({navigation}: Props) => {
     return unsubscribe;
   }, [serviceList, navigation]);
 
+  
+  
+  
+  
+  
+  
+  
   if (isLoading) {
     return <Text>LOADING ........</Text>;
   }

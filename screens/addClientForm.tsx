@@ -74,7 +74,6 @@ const AddClientForm = ({navigation, route}: Props) => {
 
         <Controller
           control={control}
-          rules={{required: true}}
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
               placeholder="ที่อยู่"
@@ -90,7 +89,6 @@ const AddClientForm = ({navigation, route}: Props) => {
           )}
           name="address"
         />
-        {errors.address && <Text>This is required.</Text>}
 
         <Controller
           control={control}
@@ -107,7 +105,6 @@ const AddClientForm = ({navigation, route}: Props) => {
           )}
           name="phone"
         />
-        {/* {errors.phone && <Text>This is required.</Text>} */}
 
         <Controller
           control={control}

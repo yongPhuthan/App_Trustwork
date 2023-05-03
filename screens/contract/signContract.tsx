@@ -227,9 +227,7 @@ const SelectScreen = ({navigation}: Props) => {
   const handleStep3Press = async() => {
     setStep3(false);
     setStep2(true);
-    await mutate({data: { signDate, signAddress, servayDate, id:contract.id}, isEmulator});
-
-    
+    await mutate({data: { signDate, signAddress, servayDate, id:contract.id, quotationId:quotation.id}, isEmulator});    
   };
 
   const handlePrevPress = () => {

@@ -263,7 +263,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
         </Modal>
       ) : (
         <Modal
-          backdropOpacity={0.1}
           backdropTransitionOutTiming={100}
           style={styles.modalContainer}
           isVisible={showModal}
@@ -387,7 +386,8 @@ const styles = StyleSheet.create({
     width: '90%',
     alignItems: 'center',
     position: 'absolute',
-    bottom: '40%',
+    bottom:0,
+    // bottom: '40%',
     left: 0,
   },
   selectedQuotationText: {

@@ -1,15 +1,15 @@
-import React, { useState, useContext, useEffect, useMemo } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { WebView } from 'react-native-webview';
-import { Header, Icon, Button } from 'react-native-elements';
-import { Share } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp, ParamListBase } from '@react-navigation/native';
-import { Store } from '../redux/Store';
-import { HOST_URL } from '@env';
+import React, {useState, useContext, useEffect, useMemo} from 'react';
+import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {WebView} from 'react-native-webview';
+import {Header, Icon, Button} from 'react-native-elements';
+import {Share} from 'react-native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RouteProp, ParamListBase} from '@react-navigation/native';
+import {Store} from '../redux/Store';
+import {HOST_URL} from '@env';
 
 type RootStackParamList = {
-  WebViewScreen: { id: string };
+  WebViewScreen: {id: string};
 };
 
 type Props = {
@@ -17,12 +17,12 @@ type Props = {
   route: RouteProp<RootStackParamList, 'WebViewScreen'>;
 };
 
-const WebViewScreen = ({ navigation, route }: Props) => {
+const WebViewScreen = ({navigation, route}: Props) => {
   const {
-    state: { isEmulator },
+    state: {isEmulator},
     dispatch,
   }: any = useContext(Store);
-  const { id } = route.params;
+  const {id} = route.params;
 
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -67,9 +67,8 @@ const WebViewScreen = ({ navigation, route }: Props) => {
       {isLoading ? (
         ''
       ) : (
-        <View style={{ flex: 1 }}>
+        <View style={{flex: 1}}>
           <View style={styles.headerContainer}>
-
             <View style={styles.buttonContainerHead}>
               <Button
                 title="Webpage"
@@ -82,8 +81,8 @@ const WebViewScreen = ({ navigation, route }: Props) => {
                 }
                 titleStyle={
                   contentType === 'webpage'
-                  ? styles.buttonTitle
-                  : styles.inactiveButtonTitle
+                    ? styles.buttonTitle
+                    : styles.inactiveButtonTitle
                 }
               />
               <Button
@@ -97,107 +96,103 @@ const WebViewScreen = ({ navigation, route }: Props) => {
                 }
                 titleStyle={
                   contentType === 'pdf'
-                  ? styles.buttonTitle
-                  : styles.inactiveButtonTitle
-                
+                    ? styles.buttonTitle
+                    : styles.inactiveButtonTitle
                 }
               />
             </View>
           </View>
           {contentType === 'webpage' ? (
-<WebView source={{ uri: url }} />
-) : (
-<WebView source={{ uri: urlPdf }} />
-)}
-<View style={styles.buttonContainer}>
-<TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-<View style={styles.flexRow}>
-<Text style={styles.buttonText}>ส่งเอกสารให้ลูค้า</Text>
-<Icon
-                 style={styles.icon}
-                 name="send"
-                 type="font-awesome"
-                 size={22}
-                 color="#ec7211"
-               />
-</View>
-</TouchableOpacity>
-</View>
-</View>
-)}
-</>
-);
+            <WebView source={{uri: url}} />
+          ) : (
+            <WebView source={{uri: urlPdf}} />
+          )}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+              <View style={styles.flexRow}>
+                <Text style={styles.buttonText}>ส่งเอกสารให้ลูค้า</Text>
+                <Icon
+                  style={styles.icon}
+                  name="send"
+                  type="font-awesome"
+                  size={22}
+                  color="white"
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </>
+  );
 };
 
 const styles = StyleSheet.create({
-headerContainer: {
-backgroundColor: '#0c5caa',
-paddingBottom: 10,
-},
-header: {
-backgroundColor: '#0c5caa',
-borderBottomWidth: 0,
-},
-buttonContainer: {
-flexDirection: 'row',
-justifyContent: 'center',
-alignItems: 'center',
-marginBottom: 10,
-},
-buttonContainerHead: {
-  flexDirection: 'row',
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginBottom: 10,
-  marginTop: 10,
-  
+  headerContainer: {
+    backgroundColor: '#0c5caa',
+    paddingBottom: 10,
   },
-activeButton: {
-  backgroundColor: 'white',
-borderColor: '#fff3db',
-paddingHorizontal: 30,
-borderWidth: 1,
-paddingVertical: 10,
-borderRadius: 5,
-},
-inactiveButton: {
-backgroundColor: '#0c5caa',
+  header: {
+    backgroundColor: '#0c5caa',
+    borderBottomWidth: 0,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  buttonContainerHead: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 10,
+  },
+  activeButton: {
+    backgroundColor: 'white',
+    borderColor: '#fff3db',
+    paddingHorizontal: 30,
+    borderWidth: 1,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  inactiveButton: {
+    backgroundColor: '#0c5caa',
 
-paddingHorizontal: 30,
-paddingVertical: 10,
-
-},
-buttonTitle: {
-color: 'black',
-fontWeight: 'bold',
-},
-inactiveButtonTitle:{
-  color: '#e9f4f9',
-  fontWeight: 'bold',
-},
-flexRow: {
-flexDirection: 'row',
-alignItems: 'center',
-justifyContent: 'center',
-
-},
-buttonText: {
-color: '#ec7211',
-fontSize: 16,
-fontWeight: 'bold',
-marginRight: 8,
-},
-icon: {
-marginLeft: 10,
-},
-shareButton: {
-backgroundColor: 'white',
-paddingHorizontal: 30,
-paddingVertical: 10,
-borderRadius: 5,
-borderWidth: 1,
-borderColor: '#ec7211',
-},
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+  },
+  buttonTitle: {
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  inactiveButtonTitle: {
+    color: '#e9f4f9',
+    fontWeight: 'bold',
+  },
+  flexRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  icon: {
+    marginLeft: 10,
+  },
+  shareButton: {
+    backgroundColor: '#ec7211',
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#ec7211',
+  },
 });
 
 export default WebViewScreen;

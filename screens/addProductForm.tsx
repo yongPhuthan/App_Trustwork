@@ -80,6 +80,15 @@ const serviceID = uuidv4()
 
     navigation.goBack();
   };
+
+  // const handleSelectAudit = (data: FormData) => {
+  //   navigation.navigate('AuditCategory', {
+  //     title: data.title,
+  //     description: data.description,
+  //     serviceID: serviceID,
+      
+  //   });
+  // };
   const handleSelectAudit = (data: FormData) => {
     navigation.navigate('SelectAudit', {
       title: data.title,

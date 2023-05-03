@@ -1,61 +1,90 @@
-import React, {useEffect} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
+import React, {useEffect,useState} from 'react';
+import {View, Text, TouchableOpacity, StyleSheet, Alert,Platform} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {GooglePay} from 'react-native-google-pay';
+import {
+  initConnection,
+  getProducts,
+  requestPurchase,
+  purchaseErrorListener,
+  purchaseUpdatedListener,
+  type ProductPurchase,
+  type PurchaseError,
+   RequestPurchase,
+   Product,
+  flushFailedPurchasesCachedAsPendingAndroid,
+} from 'react-native-iap';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faCoins} from '@fortawesome/free-solid-svg-icons';
 
 interface TopUpOption {
   coins: number;
   price: number;
+  productId: string;
 }
+const itemSkus = Platform.select({
+  ios: [
+    'product_1000_coins',
+    'product_2000_coins',
+    'product_3000_coins',
+  ],
+  android: [
+    'product_1000_coins',
+    'product_2000_coins',
+    'product_3000_coins',
+  ],
+}) || [
+  'product_1000_coins',
+  'product_2000_coins',
+  'product_3000_coins',
+];
 
 const topUpOptions: TopUpOption[] = [
-  {coins: 1000, price: 1150},
-  {coins: 2000, price: 2250},
-  {coins: 3000, price: 3000},
+  {coins: 1000, price: 1150, productId: 'product_1000_coins'},
+  {coins: 2000, price: 2250, productId: 'product_2000_coins'},
+  {coins: 3000, price: 3000, productId: 'product_3000_coins'},
 ];
-const allowedCardNetworks = ['VISA', 'MASTERCARD'];
-const allowedCardAuthMethods = ['PAN_ONLY', 'CRYPTOGRAM_3DS'];
+
 const TopUpScreen: React.FC = () => {
-  const handleTopUpSelection = async (option: TopUpOption) => {
-    console.log(`Selected: ${option.coins} coins for ${option.price} THB`);
-
-    const requestData = {
-      cardPaymentMethod: {
-        tokenizationSpecification: {
-          type: 'PAYMENT_GATEWAY',
-          gateway: 'example', // Update your gateway here
-          gatewayMerchantId: 'exampleGatewayMerchantId', // Update your gateway merchant ID here
-        },
-        allowedCardNetworks,
-        allowedCardAuthMethods,
-      },
-      transaction: {
-        totalPrice: option.price.toString(),
-        totalPriceStatus: 'FINAL',
-        currencyCode: 'THB', // Update currency code if needed
-      },
-      merchantName: 'Trustwork', // Update your merchant name here
-    };
-
-    GooglePay.setEnvironment(GooglePay.ENVIRONMENT_TEST);
-
-    try {
-      const ready = await GooglePay.isReadyToPay(
-        allowedCardNetworks,
-        allowedCardAuthMethods,
-      );
-
-      if (ready) {
-        const token = await GooglePay.requestPayment(requestData);
-        console.log('Payment Token:', token);
-        // Send the token to your payment gateway
+  const [products, setProducts] = useState<Product[]>([]);
+  useEffect(() => {
+    const initializeIAP = async () => {
+      try {
+        await initConnection();
+        const productList = await getProducts({ skus: itemSkus });
+        console.log('Fetched products:', productList); // Add this line
+        setProducts(productList);
+        if (Platform.OS === 'android') {
+          await flushFailedPurchasesCachedAsPendingAndroid();
+        }
+      } catch (err) {
+        console.warn(err);
       }
-    } catch (error) {
-      console.log(error.code, error.message);
+    };
+    initializeIAP();
+  }, []);
+  const handleTopUpSelection = async (option: TopUpOption) => {
+    console.log(`Selected: ${option.productId}`);
+    try {
+      const selectedProduct = products.find(
+        (product) => product.productId === option.productId,
+      ) as any
+      if (selectedProduct) {
+        await requestPurchase(selectedProduct.productId);
+      } else {
+        console.warn(`Product not found: ${option.productId}`);
+      }
+    } catch (err) {
+      console.warn(err);
     }
   };
+  
+  
+  const getProductById = (productId: string) =>
+    products.find((product) => product.productId === productId);
+//   const handleTopUpSelection = async (option: TopUpOption) => {
+//     console.log(`Selected: ${option.coins} coins for ${option.price} THB`);
+// //  Modify topUplogic 
+//   };
 
   return (
     <View style={styles.container}>
@@ -110,6 +139,7 @@ const styles = StyleSheet.create({
     width: '40%',
     margin: 10,
     backgroundColor: '#ffffff',
+   
     borderRadius: 15,
     elevation: 3,
   },
