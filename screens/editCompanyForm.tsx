@@ -14,6 +14,9 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useQuery, useMutation} from 'react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {HOST_URL} from '@env';
+import firebase from '../firebase';
+import ImagePicker from 'react-native-image-crop-picker';
+
 import {
   launchCamera,
   launchImageLibrary,
@@ -34,12 +37,19 @@ import {RouteProp, ParamListBase} from '@react-navigation/native';
 type FormValues = {
   name: string;
   address: string;
+  companyNumber:string
   id: string;
   phone: string;
+  userName: string;
   logo: string;
   taxId: string;
+  userLastName:string;
   lastName: string;
+mobileTel:string;
   bizName: string;
+  company:{
+    id:string
+  }
 };
 interface MyError {
   response: object;
@@ -88,24 +98,14 @@ const fetchCompanyUser = async (email: string, isEmulator: boolean) => {
 
   return data;
 };
-const saveDataToAsyncStorage = async (key, value) => {
+const saveDataToAsyncStorage = async (key:string, value:any) => {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
     console.log('Error saving data to AsyncStorage:', error);
   }
 };
-const getDataFromAsyncStorage = async (key) => {
-  try {
-    const value = await AsyncStorage.getItem(key);
-    if (value !== null) {
-      return JSON.parse(value);
-    }
-  } catch (error) {
-    console.log('Error getting data from AsyncStorage:', error);
-  }
-  return null;
-};
+
 const updateCompanySellerAPI = async ({
   dataInputForm,
   isEmulator,
@@ -135,11 +135,19 @@ const updateCompanySellerAPI = async ({
     throw new Error('Network response was not ok');
   }
 };
-
+const removeDataFromAsyncStorage = async (key: string) => {
+  try {
+    await AsyncStorage.removeItem(key);
+  } catch (error) {
+    console.log('Error removing data from AsyncStorage:', error);
+  }
+};
 const EditCompanyForm = ({navigation, route}: Props) => {
-  const userEmail = auth().currentUser?.email;
+  const userEmail = auth().currentUser?.email ?? '';
   const [company, setCompany] = useState<Company>();
   const [logo, setLogo] = useState<string | null>(null);
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Set to true if using an emulator
   const {
@@ -147,35 +155,52 @@ const EditCompanyForm = ({navigation, route}: Props) => {
     dispatch,
   }: any = useContext(Store);
   const handleLogoUpload = () => {
-    const options = {
-      mediaType: 'photo' as MediaType,
-      maxWidth: 300,
-      maxHeight: 300,
-    };
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-      } else {
-        if (response.uri) {
-          setLogo({uri: response.uri});
+    ImagePicker.openPicker({
+      width: 300,
+      height: 300,
+      cropping: true,
+      mediaType: 'photo',
+    })
+      .then((response) => {
+        if (response.path) {
+          setLogo(response.path);
         } else {
           console.log('No URI in response');
         }
-      }
-    });
+      })
+      .catch((error) => {
+        console.log('ImagePicker Error: ', error);
+      });
   };
-  const {data: companyData, isLoading} = useQuery(
-    'fetchCompanyUser',
-    () => fetchCompanyUser(userEmail as string, isEmulator),
-    {
-      onSuccess: data => {
-        setCompany(data);
-        console.log('COMPANY', JSON.stringify(data));
-      },
-    },
-  );
+  
+  // const {data: companyData, isLoading} = useQuery(
+  //   'fetchCompanyUser',
+  //   () => fetchCompanyUser(userEmail as string, isEmulator),
+  //   {
+  //     onSuccess: data => {
+  //       setCompany(data);
+  //       console.log('COMPANY', JSON.stringify(data)); 
+  //     },
+  //   },
+  // );
+  
+  const loadCompanyData = async () => {
+    try {
+      const companyData = await AsyncStorage.getItem('companyData');
+      return companyData ? JSON.parse(companyData) : null;
+    } catch (error) {
+      console.log('Error loading company data:', error);
+      return null;
+    }
+  };
+  const saveCompanyData = async (companyData:object) => {
+    try {
+      await AsyncStorage.setItem('companyData', JSON.stringify(companyData));
+    } catch (error) {
+      console.log('Error saving company data:', error);
+    }
+  };
+
   const {mutate} = useMutation(updateCompanySellerAPI, {
     onSuccess: data => {
       navigation.goBack();
@@ -185,7 +210,6 @@ const EditCompanyForm = ({navigation, route}: Props) => {
       console.log(error.response);
     },
   });
-
   const {
     control,
     handleSubmit,
@@ -193,67 +217,84 @@ const EditCompanyForm = ({navigation, route}: Props) => {
     formState: {errors},
   } = useForm<FormValues>({
     defaultValues: {
-      name: companyData ? companyData.userName : '',
-      address: companyData ? companyData.address : '',
-      phone: companyData ? companyData.mobileTel : '',
-      taxId: companyData ? companyData.companyNumber : '',
+      name:   '',
+      address: '' ,
+      phone:'' ,
+      taxId: '' ,
     },
   });
-  useEffect(() => {
-    const fetchData = async () => {
-      const savedData = await getDataFromAsyncStorage('companyData');
-      if (savedData) {
-        setCompany(savedData);
-        setFormValues(savedData);
-      } else {
-        const fetchedData = await fetchCompanyUser(userEmail as string, isEmulator);
-        setCompany(fetchedData);
-        saveDataToAsyncStorage('companyData', fetchedData);
-        setFormValues(fetchedData);
-      }
-    };
-    fetchData();
-  }, []);
-  const setFormValues = (data:any) => {
-    setValue('logo', data.logo);
-    setValue('id', company?.id);
-    setValue('name', data.userName);
-    setValue('lastName', data.userLastName);
-    setValue('bizName', data.bizName);
-    setValue('address', data.address);
-    setValue('phone', data.mobileTel);
-    setValue('taxId', data.companyNumber);
-    setLogo(data.logo)
-  };
-  const onSubmit = async (data: FormValues) => {
-    await saveDataToAsyncStorage('companyData', data);
-    await mutate({dataInputForm: data, isEmulator} as any);
-  };
-  
-  // useEffect(() => {
-  //   if (companyData) {
-  //     setValue('logo', companyData.logo);
+  // const setFormValues = async (data: any) => {
+  //   if (company?.id) { 
+  //     setValue('logo', data.logo);
   //     setValue('id', company?.id);
-  //     setValue('name', companyData.userName);
-  //     setValue('lastName', companyData.userLastName);
-  //     setValue('bizName', companyData.bizName);
-  //     setValue('address', companyData.address);
-  //     setValue('phone', companyData.mobileTel);
-  //     setValue('taxId', companyData.companyNumber);
-  //     setLogo(companyData.logo)
-  //   }
-    
-  // }, [companyData, setValue]);
-
-  // const onSubmit = async (data: FormValues) => {
-  //   await mutate({dataInputForm: data, isEmulator} as any);
+  //     setValue('lastName', data.userLastName);
+  //     setValue('bizName', data.bizName);
+  //     setValue('address', data.address);
+  //     setValue('phone', data.mobileTel);
+  //     setValue('taxId', data.companyNumber);
+  //     setLogo(data.logo);
+  //   } 
   // };
 
-  if (isLoading) {
-    return <Text>Loading...</Text>;
-  }
+
+  useEffect(() => {
+    const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        setUser(user);
+  
+        let fetchedCompanyUser = await loadCompanyData();
+  
+        if (!fetchedCompanyUser) {
+          fetchedCompanyUser = await fetchCompanyUser(
+            user?.email || '',
+            isEmulator,
+          );
+          await saveCompanyData(fetchedCompanyUser);
+        }
+  
+        setCompany(fetchedCompanyUser);
+        setLogo(fetchedCompanyUser.logo);
+        setValue('userName', fetchedCompanyUser.userName);
+        setValue('logo', fetchedCompanyUser.logo);
+        setValue('id', fetchedCompanyUser.id);
+        setValue('userLastName', fetchedCompanyUser.userLastName);
+        setValue('bizName', fetchedCompanyUser.bizName);
+        setValue('address', fetchedCompanyUser.address);
+        setValue('mobileTel', fetchedCompanyUser.mobileTel);
+        setValue('companyNumber', fetchedCompanyUser.companyNumber);
+       
+
+        setIsLoading(false); // Add this line
+      } else {
+        setUser(null);
+      }
+    });
+    return unsubscribe;
+  }, []);
+  
+
+
+  
+  const onSubmit = async (data: FormValues) => {
+    await mutate({dataInputForm: data, isEmulator} as any, {
+      onSuccess: async () => {
+        await removeDataFromAsyncStorage('companyData'); // Add this line to remove data from AsyncStorage
+
+        await saveDataToAsyncStorage('companyData', data);
+        navigation.goBack()
+        // setFormValues(updatedData);
+      },
+    });
+  };
+  
+
+  // if (isLoading) {
+  //   return <Text>Loading...</Text>;
+  // }
   return (
-    <ScrollView style={styles.container}>
+    <>
+{!isLoading? ( 
+   <ScrollView style={styles.container}>
       <View style={styles.subContainer}>
         {/* Logo */}
         <TouchableOpacity
@@ -295,7 +336,7 @@ const EditCompanyForm = ({navigation, route}: Props) => {
         {errors.bizName && <Text>This is required.</Text>}
         <Controller
           control={control}
-          name="name"
+          name="userName"
           rules={{required: true}}
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
@@ -313,7 +354,7 @@ const EditCompanyForm = ({navigation, route}: Props) => {
         {errors.name && <Text>This is required.</Text>}
         <Controller
           control={control}
-          name="lastName"
+          name="userLastName"
           rules={{required: true}}
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
@@ -352,7 +393,7 @@ const EditCompanyForm = ({navigation, route}: Props) => {
 
         <Controller
           control={control}
-          name="phone"
+          name="mobileTel"
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
               placeholder="เบอร์โทรศัพท์"
@@ -366,7 +407,7 @@ const EditCompanyForm = ({navigation, route}: Props) => {
         />
         <Controller
           control={control}
-          name="taxId"
+          name="companyNumber"
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
               placeholder="เลขทะเบียนภาษี(ถ้ามี)"
@@ -381,7 +422,10 @@ const EditCompanyForm = ({navigation, route}: Props) => {
 
         <Button title="บันทึก" onPress={handleSubmit(onSubmit)} />
       </View>
-    </ScrollView>
+    </ScrollView>):
+    (<Text>Loading Company...</Text>)}
+  
+    </>
   );
 };
 

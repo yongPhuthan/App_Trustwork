@@ -7,7 +7,7 @@ import {
   Image,
   NativeModules,
 } from 'react-native';
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import React, {useState, useContext, useEffect, useCallback} from 'react';
 import {
   NavigationContainer,
   NavigationContext,
@@ -46,6 +46,7 @@ import SelectScreen from '../screens/contract/signContract';
 import DocViewScreen from '../screens/docView';
 import TopUpScreen from '../screens/topUpScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useFocusEffect} from '@react-navigation/native';
 
 import {HOST_URL} from '@env';
 import {
@@ -79,11 +80,11 @@ type Company = {
   bizName: string;
   userName: string;
   userLastName: string;
-  address:string;
+  address: string;
   officeTel: string;
   companyNumber: string;
-  userEmail:string;
-  mobileTel:string;
+  userEmail: string;
+  mobileTel: string;
 };
 
 type ParamListBase = {
@@ -134,7 +135,7 @@ type ParamListBase = {
     apiData: object[];
   };
 };
-const saveCompanyData = async (companyData:object) => {
+const saveCompanyData = async (companyData: object) => {
   try {
     await AsyncStorage.setItem('companyData', JSON.stringify(companyData));
   } catch (error) {
@@ -182,36 +183,49 @@ const fetchCompanyUser = async (email: string, isEmulator: boolean) => {
   return data;
 };
 
+const removeDataFromAsyncStorage = async (key: string) => {
+  try {
+    await AsyncStorage.removeItem(key);
+    console.log('removed');
+  } catch (error) {
+    console.log('Error removing data from AsyncStorage:', error);
+  }
+};
 function SettingsScreen({navigation}: SettingScreenProps) {
   const [company, setCompany] = useState<Company>();
+
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const {
     state: {client_name, isEmulator, client_tel, client_tax},
     dispatch,
   }: any = useContext(Store);
 
-  useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-      if (user) {
-        setUser(user);
-
-        let fetchedCompanyUser = await loadCompanyData();
-        if (!fetchedCompanyUser) {
-          fetchedCompanyUser = await fetchCompanyUser(
-            user?.email || '',
-            isEmulator,
+  useFocusEffect(
+    useCallback(() => {
+      const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+          setUser(user);
+  
+          // Remove the AsyncStorage data
+          await removeDataFromAsyncStorage("companyData");
+  
+          let fetchedCompanyUser = await fetchCompanyUser(
+            user?.email || "",
+            isEmulator
           );
           await saveCompanyData(fetchedCompanyUser);
+  
+          setCompany(fetchedCompanyUser);
+          setLogo(fetchedCompanyUser.logo);
+        } else {
+          setUser(null);
         }
-
-        setCompany(fetchedCompanyUser);
-        setLogo(fetchedCompanyUser.logo);
-      } else {
-        setUser(null);
-      }
-    });
-    return unsubscribe;
-  }, []);
+      });
+  
+      return () => unsubscribe();
+    }, [])
+  );
+  
   const [logo, setLogo] = useState<string | null>(null);
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
 
@@ -228,7 +242,12 @@ function SettingsScreen({navigation}: SettingScreenProps) {
     {
       id: 1,
       title: 'แก้ไขข้อมูลธุรกิจ',
-      onPress: () => navigation.navigate('EditCompanyForm'),
+      onPress: async () => {
+        console.log('try remove');
+        await removeDataFromAsyncStorage('companyData'); // Add this line to remove data from AsyncStorage
+
+        navigation.navigate('EditCompanyForm');
+      },
     },
     // {id: 2, title: 'Upgrade', onPress: () => console.log('Upgrade pressed')},
     {id: 3, title: 'Logout', onPress: () => toggleLogoutModal()},
@@ -289,7 +308,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
     console.log('Logout confirmed');
     toggleLogoutModal();
   };
-  console.log('LOGO', JSON.stringify(logo))
+  console.log('LOGO', JSON.stringify(logo));
 
   return (
     <>
@@ -302,12 +321,11 @@ function SettingsScreen({navigation}: SettingScreenProps) {
             onPress={handleLogoUpload}>
             {logo ? (
               <Image
-                
-              source={{
-                uri: logo,
-              }}
-                style={{ width: 100,aspectRatio: 2, resizeMode: 'contain' }}
-                />
+                source={{
+                  uri: logo,
+                }}
+                style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+              />
             ) : (
               <View
                 style={{
@@ -735,7 +753,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
             name="SelectAudit"
             component={SelectAudit}
           />
-                <Stack.Screen
+          <Stack.Screen
             options={{
               headerStyle: {
                 backgroundColor: '#042d60',

@@ -68,7 +68,7 @@ const AddClientForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="name"
+          name="userName"
         />
         {errors.name && <Text>This is required.</Text>}
 
@@ -103,7 +103,7 @@ const AddClientForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="phone"
+          name="mobileTel"
         />
 
         <Controller
@@ -118,7 +118,7 @@ const AddClientForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="taxId"
+          name="companyNumber"
         />
 
         <Button title="บันทึก" onPress={handleSubmit(onSubmit)} />

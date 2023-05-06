@@ -17,6 +17,8 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {Store} from '../redux/Store';
 import Modal from 'react-native-modal';
 import {FAB} from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // import Modal from 'react-native-modal';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -103,6 +105,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       }),
     });
     const data = await response.json();
+    await AsyncStorage.setItem('dashboardData', JSON.stringify(data));
 
     return data;
   };
@@ -117,80 +120,33 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       return null;
     }
   };
-  //   const requestData = {
-  //     cardPaymentMethod: {
-  //       tokenizationSpecification: {
-  //         type: 'PAYMENT_GATEWAY',
-  //         // stripe (see Example):
-  //         gateway: 'stripe',
-  //         gatewayMerchantId: '',
-  //         stripe: {
-  //           publishableKey: 'pk_test_TYooMQauvdEDq54NiTphI7jx',
-  //           version: '2018-11-08',
-  //         },
-
-  //       },
-  //       allowedCardNetworks,
-  //       allowedCardAuthMethods,
-  //     },
-  //     transaction: {
-  //       totalPrice: '10',
-  //       totalPriceStatus: 'FINAL',
-  //       currencyCode: 'USD',
-  //     },
-  //     merchantName: 'Example Merchant',
-  //   };
-  //   // Set the environment before the payment request
-  // GooglePay.setEnvironment(GooglePay.ENVIRONMENT_TEST);
-
-  // // Check if Google Pay is available
-  // GooglePay.isReadyToPay(allowedCardNetworks, allowedCardAuthMethods)
-  //   .then((ready) => {
-  //     if (ready) {
-  //       // Request payment token
-  //       GooglePay.requestPayment(requestData)
-  //         .then((token: string) => {
-  //           // Send a token to your payment gateway
-  //         })
-  //         .catch((error) => console.log(error.code, error.message));
-  //     }
-  //   })
+ 
   useEffect(() => {
     const fetchData = async () => {
       const user = await getTokenAndEmail();
       if (user) {
         console.log('user', user);
-
         const {token, email} = user;
-        if (email && token) {
-          const data = await fetchDashboardData(email, token);
-          setCompanyData(data[0]);
-          setQuotationData(data[1]);
+
+        if (email) {
+          // Try to get data from AsyncStorage
+          const cachedData = await AsyncStorage.getItem('dashboardData');
+  
+          if (cachedData) {
+            const data = JSON.parse(cachedData);
+            setCompanyData(data[0]);
+            setQuotationData(data[1]);
+          } else {
+            // If data is not in AsyncStorage, fetch it from the database
+            const data = await fetchDashboardData(email, token);
+            setCompanyData(data[0]);
+            setQuotationData(data[1]);
+          }
         }
       }
     };
     fetchData();
-    // async function requestUserPermission() {
-    //       const authStatus = await messaging().requestPermission();
-    //       const enabled =
-    //         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-    //         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    //       if (enabled) {
-    //         console.log('Authorization status:', authStatus);
-    //         getFCMToken();
-    //       }
-    //     }
-
-    //     async function getFCMToken() {
-    //       const fcmToken = await messaging().getToken();
-    //       if (fcmToken) {
-    //         console.log('Your Firebase Token is:', fcmToken);
-    //       } else {
-    //         console.log('Failed to get Firebase Token');
-    //       }
-    //     }
-    //       requestUserPermission();
+   
   }, []);
 
   const handleNewQuotationPress = () => {

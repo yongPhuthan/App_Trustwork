@@ -16,7 +16,7 @@ const FooterBtn = (props: Props) => {
         <TouchableOpacity style={styles.disabledButton} disabled>
           <View style={styles.header}>
             <Text style={styles.buttonText}>ไปหน้าสัญญา</Text>
-            <FontAwesomeIcon icon={faChevronRight} size={28} color="#19232e" />
+            <FontAwesomeIcon icon={faChevronRight} size={28} color="white" />
 
 
           </View>
@@ -30,7 +30,7 @@ const FooterBtn = (props: Props) => {
       <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
         <View style={styles.header}>
           <Text style={styles.buttonText}>ไปหน้าสัญญา</Text>
-          <FontAwesomeIcon icon={faChevronRight} size={28} color="#19232e" />
+          <FontAwesomeIcon icon={faChevronRight} size={28} color="white" />
 
 
         </View>
