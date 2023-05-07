@@ -1,11 +1,11 @@
 import React, {useState, useContext, useEffect} from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
-import {Checkbox} from 'react-native-paper';
+import CheckBox from 'react-native-check-box';
 import {Store} from '../redux/Store';
 type CardProps = {
   title: string;
   description: string;
-  price: number;
+  number: number;
   imageUri: string;
   onPress: Function;
   defaultChecked: boolean;
@@ -14,7 +14,7 @@ type CardProps = {
 const CardAudit = ({
   title,
   description,
-  price,
+  number,
   imageUri,
   onPress,
   defaultChecked,
@@ -34,18 +34,19 @@ const CardAudit = ({
   return (
     <View style={[styles.container, checked && styles.selected]}>
       <View style={styles.checkboxContainer}>
-        <Checkbox
-          status={checked ? 'checked' : 'unchecked'}
-          onPress={handleCheckbox}
+      <CheckBox
+          isChecked={checked}
+          onClick={handleCheckbox}
+          checkBoxColor='gray' // iOS default blue color
         />
       </View>
 
       <View style={styles.textContainer}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.title}>{defaultChecked.toString()}</Text>
+          {/* <Text style={styles.title}>{defaultChecked.toString()}</Text> */}
 
-          <Text style={styles.price}>{price}</Text>
+          {/* <Text style={styles.price}>{price}</Text> */}
         </View>
         <View style={styles.underline} />
         <Image style={styles.image} source={{uri: imageUri}} />
@@ -89,8 +90,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   image: {
-    width: 250,
+    width: 230,
     height: 250,
+  
   },
   textContainer: {
     flex: 1,
@@ -113,6 +115,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
+    marginTop:10
   },
   underline: {
     borderBottomWidth: 1,

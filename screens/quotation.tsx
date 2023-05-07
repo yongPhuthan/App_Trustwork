@@ -448,6 +448,7 @@ const Quotation = ({navigation}: Props) => {
           </View>
           {serviceList.map((item: any, index: number) => (
             <CardProject
+            index={index + 1}
               handleEditService={() => handleEditService(index)}
               serviceList={item}
               key={index}

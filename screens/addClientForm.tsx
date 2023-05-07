@@ -1,5 +1,12 @@
 import React, {useState, useContext, useEffect, useRef} from 'react';
-import {Text, View, TextInput, Button, StyleSheet} from 'react-native';
+import {
+  Text,
+  View,
+  TextInput,
+  Button,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import {
   clientName,
@@ -15,8 +22,8 @@ import {RouteProp, ParamListBase} from '@react-navigation/native';
 type FormValues = {
   name: string;
   address: string;
-  phone: string;
-  taxId: string;
+  mobilePhone: string;
+  companyId: string;
 };
 
 interface Props {
@@ -37,8 +44,8 @@ const AddClientForm = ({navigation, route}: Props) => {
     defaultValues: {
       name: '',
       address: '',
-      phone: '',
-      taxId: '',
+      mobilePhone: '',
+      companyId: '',
     },
   });
 
@@ -47,8 +54,8 @@ const AddClientForm = ({navigation, route}: Props) => {
     console.log(data);
     dispatch(stateAction.client_name(data.name));
     dispatch(stateAction.client_address(data.address));
-    dispatch(stateAction.client_tel(data.phone));
-    dispatch(stateAction.client_tax(data.taxId));
+    dispatch(stateAction.client_tel(data.mobilePhone));
+    dispatch(stateAction.client_tax(data.companyId));
     navigation.goBack();
   };
 
@@ -68,7 +75,7 @@ const AddClientForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="userName"
+          name="name"
         />
         {errors.name && <Text>This is required.</Text>}
 
@@ -92,7 +99,6 @@ const AddClientForm = ({navigation, route}: Props) => {
 
         <Controller
           control={control}
-       
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
               placeholder="เบอร์โทรศัพท์"
@@ -103,7 +109,7 @@ const AddClientForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="mobileTel"
+          name="mobilePhone"
         />
 
         <Controller
@@ -118,10 +124,13 @@ const AddClientForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="companyNumber"
+          name="companyId"
         />
 
-        <Button title="บันทึก" onPress={handleSubmit(onSubmit)} />
+        {/* <Button title="บันทึก" onPress={handleSubmit(onSubmit)} /> */}
+        <TouchableOpacity style={styles.btn} onPress={handleSubmit(onSubmit)}>
+          <Text style={styles.label}>บันทึก</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -136,6 +145,16 @@ const styles = StyleSheet.create({
     padding: 30,
     marginBottom: 10,
     height: 'auto',
+  },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 40,
+    backgroundColor: '#0073BA',
   },
   form: {
     border: '1px solid #0073BA',

@@ -19,6 +19,7 @@ type Props = {
     qty: number;
     total: number;
   };
+  index:number;
   handleEditService: Function;
 
 };
@@ -33,18 +34,26 @@ const CardProject = (props: Props) => {
         style={styles.subContainer}
         onPress={()=>props.handleEditService()}>
         <View style={styles.summary}>
-          <Text style={styles.summaryText}>{serviceList.title}</Text>
-          <Text style={styles.summaryPrice}>{serviceList.total}</Text>
+          <Text style={styles.summaryText}>{props.index}. {serviceList.title}</Text>
         </View>
         <View style={styles.description}>
           <Text>{serviceList.description}</Text>
           <Text></Text>
         </View>
+        <View style={{ flexDirection: 'row',
+    justifyContent: 'space-between'}}>
         <View style={styles.unitPrice}>
-          <Text>{serviceList.unitPrice}</Text>
+          <Text>{Number(serviceList.unitPrice).toFixed(2)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
           <Text> x</Text>
           <Text> {serviceList.qty}</Text>
+
         </View>
+                <Text style={styles.summaryPrice}>{Number(serviceList.total).toFixed(2)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
+
+    </View>
+      
       </TouchableOpacity>
     </View>
   );
@@ -88,6 +97,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   summaryPrice: {
+    marginTop: 10,
     fontSize: 18,
   },
   header: {

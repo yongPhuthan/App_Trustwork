@@ -17,6 +17,8 @@ import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {v4 as uuidv4} from 'uuid';
 import {ScrollView} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import SmallDivider from '../components/styles/SmallDivider';
+import CurrencyInput from 'react-native-currency-input';
 
 const windowWidth = Dimensions.get('window').width;
 type FormData = {
@@ -46,37 +48,38 @@ type Props = {
 
 const AddProductForm = ({navigation, route}: Props) => {
   const {control, handleSubmit} = useForm<FormData>();
-  const [qty, setQuantity] = useState(1);
+
   const [count, setCount] = useState(0);
+  const [qty, setQuantity] = useState(1);
   const [unitPrice, setPrice] = useState(0);
   const [total, setTotalCost] = useState(0);
   const [serviceListState, setServiceList] = useState<ServiceList[]>([]);
-const serviceID = uuidv4()
+  const serviceID = uuidv4();
   const {
     state: {serviceList, selectedAudit},
     dispatch,
   }: any = useContext(Store);
 
   const handleFormSubmit = (data: FormData) => {
-    const selectedAudits = selectedAudit.map((obj:any) => {
+    const selectedAudits = selectedAudit.map((obj: any) => {
       return {
         ...obj,
         serviceID,
       };
     });
     const newServiceItem = {
-      id: serviceID, 
+      id: serviceID,
       title: data.title,
       description: data.description,
       unitPrice: data.unitPrice,
       qty: qty,
       discountPercent: data.discountPercent,
       total: (qty * unitPrice).toString(),
-      audits:selectedAudits
+      audits: selectedAudits,
     };
     dispatch(stateAction.service_list(newServiceItem as any));
     dispatch(stateAction.reset_audit());
-    console.log('serviceList' + (serviceList));
+    console.log('serviceList' + serviceList);
 
     navigation.goBack();
   };
@@ -86,7 +89,7 @@ const serviceID = uuidv4()
   //     title: data.title,
   //     description: data.description,
   //     serviceID: serviceID,
-      
+
   //   });
   // };
   const handleSelectAudit = (data: FormData) => {
@@ -94,13 +97,17 @@ const serviceID = uuidv4()
       title: data.title,
       description: data.description,
       serviceID: serviceID,
-      
     });
   };
   useEffect(() => {
     // Calculate the total cost based on the quantity and price values
-    setTotalCost(qty * unitPrice);
+    if (qty > 0) {
+      setTotalCost(qty * unitPrice);
+    } else {
+      setTotalCost(0);
+    }
   }, [qty, unitPrice]);
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.subContainer}>
@@ -138,22 +145,23 @@ const serviceID = uuidv4()
         <View style={styles.summary}>
           <Text style={styles.price}>ราคา:</Text>
           <Controller
-            control={control}
-            name="unitPrice"
-            defaultValue=""
-            render={({field: {onChange, value}}) => (
-              <TextInput
-                style={styles.price}
-                placeholder="0"
-                keyboardType="number-pad"
-                onChangeText={value => {
-                  onChange(value);
-                  setPrice(parseInt(value, 10));
-                }}
-                value={value}
-              />
-            )}
-          />
+  control={control}
+  name="unitPrice"
+  defaultValue=""
+  render={({field: {onChange, value}}) => (
+    <TextInput
+      style={[styles.input, {textAlign: 'right'}]} // Add textAlign property
+      placeholder="0"
+      keyboardType="number-pad"
+      onChangeText={value => {
+        onChange(value);
+        setPrice(parseFloat(value));
+      }}
+      value={value}
+    />
+  )}
+/>
+
         </View>
         <View style={styles.summary}>
           <Text style={styles.price}>จำนวน:</Text>
@@ -234,6 +242,7 @@ const serviceID = uuidv4()
         <Divider />
         <View style={styles.summary}>
           <Text style={styles.price}>รวมเป็นเงิน:</Text>
+
           <Controller
             control={control}
             name="total"
@@ -243,7 +252,13 @@ const serviceID = uuidv4()
                 style={styles.priceSummary}
                 placeholder="0"
                 keyboardType="number-pad"
-                value={(qty * unitPrice).toString()}
+                value={
+                  qty > 0
+                    ? Number(qty * unitPrice)
+                        .toFixed(2)
+                        .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                    : '0'
+                }
                 editable={false}
               />
             )}
@@ -253,7 +268,7 @@ const serviceID = uuidv4()
         <View>
           {selectedAudit?.length > 0 ? (
             <View style={styles.cardContainer}>
-              {selectedAudit?.map((item:any)  => (
+              {selectedAudit?.map((item: any) => (
                 <TouchableOpacity
                   key={item.id}
                   style={styles.card}
@@ -269,16 +284,22 @@ const serviceID = uuidv4()
                 <TouchableOpacity
                   style={styles.selectButton}
                   onPress={handleSubmit(handleSelectAudit)}>
-                  <Text style={styles.selectButtonText}>Select Audit</Text>
+                  <Text style={styles.selectButtonText}>
+                    เลือกมาตรฐานการทำงาน
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
           )}
         </View>
-
+        <SmallDivider />
         <TouchableOpacity
-          style={styles.btn}
-          onPress={handleSubmit(handleFormSubmit)}>
+          style={[
+            styles.btn,
+            selectedAudit.length === 0 ? styles.btnDisabled : null,
+          ]}
+          onPress={handleSubmit(handleFormSubmit)}
+          disabled={selectedAudit.length === 0}>
           <Text style={styles.label}>บันทึก</Text>
         </TouchableOpacity>
       </View>
@@ -314,6 +335,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#0073BA',
   },
 
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginVertical: 10,
+    fontSize: 16,
+    width: 150,
+    textAlign: 'right', // Add textAlign property
+  },
+  
   inputName: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -407,6 +440,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  btnDisabled: {
+    backgroundColor: '#ccc',
+  },
+
   count: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -426,6 +463,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
+    marginTop: 20,
   },
 
   card: {
@@ -438,7 +476,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 10,
     justifyContent: 'space-between',
-
   },
   cardTitle: {
     fontSize: 16,

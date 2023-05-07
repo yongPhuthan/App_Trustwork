@@ -11,12 +11,15 @@ import * as stateAction from '../redux/Actions';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'SelectAudit'>;
   route: RouteProp<ParamListBase, 'SelectAudit'>;
+  title:string;
+  onPress:()=>void
   // onGoBack: (data: string) => void;
 };
 type Audit = {
   title: string;
   description: string;
-  price: number;
+
+  number:number;
   imageUri: string;
   id: number;
 };
@@ -35,6 +38,8 @@ const SelectAudit = ({navigation}: Props) => {
   const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
   const route = useRoute();
   const [showCards, setShowCards] = useState(true);
+  const [headerText, setHeaderText] = useState("");
+
 
   const {title, description}: any = route.params;
 
@@ -45,24 +50,24 @@ const SelectAudit = ({navigation}: Props) => {
   const audits: Audit[] = [
     {
       id: 1,
-      title: 'Audit 1',
-      description: 'This is the description of Audit 1',
-      price: 300,
-      imageUri: 'https://images.unsplash.com/photo-1542057222-14988252f3fa',
+      number:101,
+      title: 'ตรวจเช็คการป้องกันน้ำ',
+      description: ' การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน',
+      imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680677569/gttirwz80fd4vsa11q2k.jpg',
     },
     {
       id: 2,
-      title: 'Audit 2',
-      description: 'This is the description of Audit 2',
-      price: 250,
-      imageUri: 'https://images.unsplash.com/photo-1556228724-4da03d9f6bf4',
+      number:102,
+      title: 'ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน',
+      description: 'ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน',
+      imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680680642/aluminium/gpiopwyc5is4pynbvnq7.jpg',
     },
     {
       id: 3,
-      title: 'Audit 3',
-      description: 'This is the description of Audit 3',
-      price: 350,
-      imageUri: 'https://images.unsplash.com/photo-1573497497889-573cf1d9041a',
+      number:103,
+      title: 'ตรวจเช็คตำแหน่งความเอียงของประตู',
+      description: 'ทดสอบตำแหน่งของประตูจะต้องอยู่ในองศาที่ดี ตำแหน่งการติดตั้งไม่เบี้ยวหากตำแหน่งของประตูไม่ได้อยู่ในองศาที่ดีจะต้องแก้ไขให้เรียบร้อยก่อนเบิกงวดงาน',
+      imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680680851/aluminium/ynpf4mn8cgg4pms2i4xa.jpg',
     },
   ];
   const handleSelectAudit = (audit: Audit) => {
@@ -101,10 +106,11 @@ const SelectAudit = ({navigation}: Props) => {
 
   return (
     <View style={{flex: 1}}>
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container}> 
         <View style={styles.contentContainer}>
           <View style={styles.headerContainer}>
-            <Text style={styles.headerTitle}>Select an Audit </Text>
+            <Text style={styles.headerTitle}>มาตรฐานงานติดตั้ง {headerText} </Text>
+            {/* Text "Window here" */}
           </View>
           {/* Tile & description part */}
           <View style={styles.titleContainer}>
@@ -115,7 +121,9 @@ const SelectAudit = ({navigation}: Props) => {
           {showCards ? (
             <View style={styles.cardsContainer}>
               <TouchableOpacity
-                onPress={() => setShowCards(false)}
+                onPress={() => {
+                  setHeaderText("บานเฟี้ยม");
+                  setShowCards(false)}}
                 style={styles.card}>
                 <View style={styles.cardContent}>
                   <Text style={styles.title}>Window</Text>
@@ -129,7 +137,7 @@ const SelectAudit = ({navigation}: Props) => {
                   key={index}
                   title={audit.title}
                   description={audit.description}
-                  price={audit.price}
+                  number={audit.number}
                   defaultChecked={audit.defaultChecked}
                   imageUri={audit.imageUri}
                   onPress={() => handleSelectAudit(audit)}
@@ -146,7 +154,7 @@ const SelectAudit = ({navigation}: Props) => {
             <Text
               style={
                 styles.buttonText
-              }>{`ไปหน้าสัญญา (${selectedAudits.length})`}</Text>
+              }>{`บันทึก ${selectedAudits.length} มาตรฐาน`}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -175,14 +183,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#323232',
-    marginBottom: 10,
+
+   fontFamily:'Sukhumvit set'
   },
   titleContainer: {
     flexDirection: 'column',
     paddingHorizontal: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#323232',
   },
@@ -194,10 +203,11 @@ const styles = StyleSheet.create({
   auditListContainer: {
     flexDirection: 'column',
     justifyContent: 'space-between',
+
   },
   cardAudit: {
     height: 200, // Set a fixed height for the CardAudit component
-    marginBottom: 20,
+
   },
   buttonContainer: {
     backgroundColor: '#2196F3',
@@ -220,6 +230,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 4,
     bottom: 0,
+
 
     width: '100%',
 
@@ -252,6 +263,7 @@ const styles = StyleSheet.create({
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginTop:40,
     justifyContent: 'space-between',
   },
   cardAuditView: {

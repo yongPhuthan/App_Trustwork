@@ -8,6 +8,8 @@ import {
   Button,
   StyleSheet,
   ScrollView,
+  Platform,
+  PermissionsAndroid
 } from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -15,19 +17,13 @@ import {useQuery, useMutation} from 'react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {HOST_URL} from '@env';
 import firebase from '../firebase';
-import ImagePicker from 'react-native-image-crop-picker';
 
 import {
   launchCamera,
   launchImageLibrary,
   MediaType,
 } from 'react-native-image-picker';
-import {
-  clientName,
-  clientAddress,
-  clientTel,
-  clientVat,
-} from '../redux/Actions';
+
 import {Store} from '../redux/Store';
 import * as stateAction from '../redux/Actions';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -154,23 +150,20 @@ const EditCompanyForm = ({navigation, route}: Props) => {
     state: {client_name, isEmulator, client_tel, client_tax},
     dispatch,
   }: any = useContext(Store);
-  const handleLogoUpload = () => {
-    ImagePicker.openPicker({
-      width: 300,
-      height: 300,
-      cropping: true,
-      mediaType: 'photo',
-    })
-      .then((response) => {
-        if (response.path) {
-          setLogo(response.path);
-        } else {
-          console.log('No URI in response');
-        }
-      })
-      .catch((error) => {
-        console.log('ImagePicker Error: ', error);
-      });
+  // const requestPhotoLibraryPermission = async () => {
+  //   if (Platform.OS === 'ios') {
+  //     const status = await check(PERMISSIONS.IOS.PHOTO_LIBRARY);
+  //     if (status === RESULTS.GRANTED) {
+  //       return true;
+  //     }
+  //     const requestStatus = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+  //     return requestStatus === RESULTS.GRANTED;
+  //   }
+  //   return true;
+  // };
+  
+  const handleLogoUpload = async () => {
+  console.log('upload')
   };
   
   // const {data: companyData, isLoading} = useQuery(
