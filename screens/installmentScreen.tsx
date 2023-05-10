@@ -1,10 +1,25 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, FlatList, Alert,KeyboardAvoidingView,Platform} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import {TextInput, Button} from 'react-native-paper';
 import RNPickerSelect from 'react-native-picker-select';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faChevronRight,
+  faCashRegister,
+  faCoins,
+} from '@fortawesome/free-solid-svg-icons';
 
 interface InstallmentDetail {
   installment: number;
@@ -56,26 +71,24 @@ const InstallmentScreen = ({navigation}: Props) => {
       Alert.alert('Error', errorMessage?.toString() || 'Error');
       return;
     }
-    
-    const newInstallmentDetails = Object.entries(percentages).map(([key, value]) => ({
-      installment: Number(key) + 1,
-      percentage: value,
-      amount: (totalPrice * value) / 100,
-      details: installmentDetailsText[Number(key)],
-    }));
-  
+
+    const newInstallmentDetails = Object.entries(percentages).map(
+      ([key, value]) => ({
+        installment: Number(key) + 1,
+        percentage: value,
+        amount: (totalPrice * value) / 100,
+        details: installmentDetailsText[Number(key)],
+      }),
+    );
+
     // Update periodPercent in data
     data.data.periodPercent = newInstallmentDetails;
-  
 
     // navigation.navigate('SelectContract', {  updatedData:data });
-    navigation.navigate('ContractOption', {  data });
+    navigation.navigate('ContractOption', {data});
 
-  
     console.log('Updated data:', data);
   };
-  
-  
 
   const handlePercentageChange = (value: string, index: number) => {
     setPercentages(prevState => ({
@@ -91,11 +104,13 @@ const InstallmentScreen = ({navigation}: Props) => {
     }));
   };
 
-  const pickerItems = [3, 5, 7].map(value => ({
+  const pickerItems = [2, 3, 4, 5, 6, 7, 8, 9, 10].map(value => ({
     label: `${value} งวด`,
     value,
   }));
-console.log('data params', JSON.stringify(data));
+
+  console.log('data params', JSON.stringify(data));
+
   const renderItem = ({item, index}: {item: any; index: number}) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
@@ -105,57 +120,77 @@ console.log('data params', JSON.stringify(data));
         <TextInput
           label={`% ของงวดนี้`}
           keyboardType="numeric"
-          onChangeText={(value) => handlePercentageChange(value, index)}
+          onChangeText={value => handlePercentageChange(value, index)}
           style={styles.input}
-          theme={{ colors: { primary: '#009EDB' } }}
+          theme={{colors: {primary: '#009EDB'}}}
         />
         <Text style={styles.amountText}>
-          จำนวนเงิน:{' '}
-          {((totalPrice * percentages[index]) / 100).toFixed(2)} THB
+          {(!isNaN(totalPrice * percentages[index])
+            ? (totalPrice * percentages[index]) / 100
+            : 0
+          ).toFixed(2)}{' '}
+          บาท
         </Text>
       </View>
       <View style={styles.cardContent}>
         <TextInput
           label={`รายละเอียดงวดที่ ${index + 1}`}
-          onChangeText={(value) =>
+          onChangeText={value =>
             handleInstallmentDetailsTextChange(value, index)
           }
           style={styles.detailsInput}
-          theme={{ colors: { primary: '#009EDB' } }}
+          theme={{colors: {primary: '#009EDB'}}}
         />
       </View>
     </View>
   );
 
-
-
   return (
     <KeyboardAvoidingView
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    style={styles.container}>
-    <View style={styles.innerContainer}>
-      <Text style={styles.header}>Total Price: {totalPrice} THB</Text>
-      <RNPickerSelect
-        onValueChange={value => setInstallments(value)}
-        items={pickerItems}
-        placeholder={{label: 'เลือกจำนวนงวด', value: null}}
-        style={pickerSelectStyles}
-      />
- <FlatList
-        data={Array.from({length: installments})}
-        renderItem={renderItem}
-        keyExtractor={(_, index) => index.toString()}
-      />
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}>
+      <View style={styles.innerContainer}>
+        <Text style={styles.header}>
+          ยอดรวม:{' '}
+          {Number(totalPrice)
+            .toFixed(2)
+            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
+          บาท
+        </Text>
+        <RNPickerSelect
+          onValueChange={value => setInstallments(value)}
+          items={pickerItems}
+          placeholder={{label: 'เลือกจำนวนงวด', value: null}}
+          style={pickerSelectStyles}
+        />
+        <FlatList
+          data={Array.from({length: installments})}
+          renderItem={renderItem}
+          keyExtractor={(_, index) => index.toString()}
+        />
 
-      <Button
-        mode="contained"
-        onPress={handleSave}
-        style={styles.saveButton}
-        // disabled={!isPercentagesValid}
-      >
-        Save
-      </Button>
-    </View>
+        {/* <Button
+          mode="contained"
+          onPress={handleSave}
+          style={styles.saveButton}
+          // disabled={!isPercentagesValid}
+        >
+          Save
+        </Button> */}
+      </View>
+      <View style={styles.containerBtn}>
+        <TouchableOpacity style={styles.button} onPress={handleSave}>
+          <View style={styles.headerBtn}>
+            <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
+            <FontAwesomeIcon
+              style={styles.icon}
+              icon={faChevronRight}
+              size={20}
+              color="white"
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -166,36 +201,50 @@ const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f4f6f9',
+    backgroundColor: 'white',
   },
   header: {
-    fontSize: 24,
+    fontSize: 22,
     marginBottom: 16,
+    fontWeight: 'bold',
     color: '#009EDB',
   },
-  row: {
+  headerBtn: {
+    // fontSize: 22,
+    // marginBottom: 16,
+    // fontWeight: 'bold',
+    // color: '#009EDB',
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    flexWrap: 'wrap', // เพิ่มบรรทัดนี้เพื่อให้ข้อความขึ้นบรรทัดใหม่เมื่อความกว้างไม่เพียงพอ
-  },
-  errorText: {
-    fontSize: 14,
-    color: 'red',
-    marginBottom: 16,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
   },
   amountText: {
     flex: 1,
     fontSize: 16,
     color: '#2a7de1',
   },
-  saveButton: {
-    backgroundColor: '#009EDB',
+  containerBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+    shadowColor: 'black',
+    shadowOffset: {width: 1, height: 2},
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    bottom: 0,
+
+    width: '100%',
+
+    paddingBottom: 30,
   },
-  amountContainer: {
-    flex: 1,
-    marginTop: 8,
-    marginBottom: 16,
+  icon: {
+    color: 'white',
+    marginTop: 3,
+  },
+  saveButton: {
+    backgroundColor: '#0073BA',
+    marginTop: 16,
+    borderRadius: 8,
   },
   card: {
     backgroundColor: '#ffffff',
@@ -218,6 +267,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+    marginTop: 1,
+  },
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -234,6 +290,7 @@ const styles = StyleSheet.create({
     borderColor: '#009EDB',
     borderRadius: 4,
     marginBottom: 8,
+    backgroundColor: '#F0F0F0',
   },
   input: {
     flex: 1,
@@ -242,6 +299,16 @@ const styles = StyleSheet.create({
     borderColor: '#009EDB',
     borderRadius: 4,
     width: '90%',
+    backgroundColor: '#F0F0F0',
+  },
+  button: {
+    width: '90%',
+    top: '30%',
+    height: 50,
+    backgroundColor: '#0073BA',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
@@ -256,6 +323,7 @@ const pickerSelectStyles = StyleSheet.create({
     color: 'black',
     paddingRight: 30,
     marginBottom: 16,
+    backgroundColor: '#F0F0F0',
   },
   inputAndroid: {
     fontSize: 16,
@@ -267,7 +335,9 @@ const pickerSelectStyles = StyleSheet.create({
     color: 'black',
     paddingRight: 30,
     marginBottom: 16,
+    backgroundColor: '#F0F0F0',
   },
+
   installmentDetailContainer: {
     backgroundColor: '#e3f3ff',
     borderRadius: 4,
@@ -279,5 +349,4 @@ const pickerSelectStyles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
 export default InstallmentScreen;

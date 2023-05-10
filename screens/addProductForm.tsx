@@ -50,6 +50,8 @@ const AddProductForm = ({navigation, route}: Props) => {
   const {control, handleSubmit} = useForm<FormData>();
 
   const [count, setCount] = useState(0);
+  const [discountPercent, setDiscountPercent] = useState(0);
+
   const [qty, setQuantity] = useState(1);
   const [unitPrice, setPrice] = useState(0);
   const [total, setTotalCost] = useState(0);
@@ -73,7 +75,7 @@ const AddProductForm = ({navigation, route}: Props) => {
       description: data.description,
       unitPrice: data.unitPrice,
       qty: qty,
-      discountPercent: data.discountPercent,
+      discountPercent,
       total: (qty * unitPrice).toString(),
       audits: selectedAudits,
     };
@@ -100,13 +102,14 @@ const AddProductForm = ({navigation, route}: Props) => {
     });
   };
   useEffect(() => {
-    // Calculate the total cost based on the quantity and price values
     if (qty > 0) {
-      setTotalCost(qty * unitPrice);
+      const total = qty * unitPrice;
+      // const discountedTotal = total - (total * discountPercent / 100);
+      setTotalCost(total);
     } else {
       setTotalCost(0);
     }
-  }, [qty, unitPrice]);
+  }, [qty, unitPrice, discountPercent]);
 
   return (
     <ScrollView style={styles.container}>
@@ -143,7 +146,7 @@ const AddProductForm = ({navigation, route}: Props) => {
         />
 
         <View style={styles.summary}>
-          <Text style={styles.price}>ราคา:</Text>
+          <Text style={styles.priceHead}>ราคา:</Text>
           <Controller
   control={control}
   name="unitPrice"
@@ -222,47 +225,53 @@ const AddProductForm = ({navigation, route}: Props) => {
             )}
           />
         </View>
-        <View style={styles.summary}>
+         {/* ปิดส่วนลดแยกรายการ */}
+        {/* <View style={styles.summary}>
           <Text style={styles.price}>ส่วนลด(%):</Text>
           <Controller
-            control={control}
-            name="discountPercent"
-            defaultValue=""
-            render={({field: {onChange, value}}) => (
-              <TextInput
-                style={styles.price}
-                placeholder="0"
-                keyboardType="number-pad"
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-          />
-        </View>
+  control={control}
+  name="discountPercent"
+  defaultValue=""
+  render={({field: {onChange, value}}) => (
+    <TextInput
+      style={styles.price}
+      placeholder="0"
+      keyboardType="number-pad"
+      onChangeText={value => {
+        onChange(value);
+        setDiscountPercent(parseFloat(value));
+      }}
+      value={value}
+    />
+  )}
+/>
+
+        </View> */}
         <Divider />
         <View style={styles.summary}>
           <Text style={styles.price}>รวมเป็นเงิน:</Text>
 
           <Controller
-            control={control}
-            name="total"
-            defaultValue=""
-            render={({field: {value}}) => (
-              <TextInput
-                style={styles.priceSummary}
-                placeholder="0"
-                keyboardType="number-pad"
-                value={
-                  qty > 0
-                    ? Number(qty * unitPrice)
-                        .toFixed(2)
-                        .replace(/\d(?=(\d{3})+\.)/g, '$&,')
-                    : '0'
-                }
-                editable={false}
-              />
-            )}
-          />
+  control={control}
+  name="total"
+  defaultValue=""
+  render={({field: {value}}) => (
+    <TextInput
+      style={styles.priceSummary}
+      placeholder="0"
+      keyboardType="number-pad"
+      value={
+        qty > 0
+          ? Number(qty * unitPrice )
+              .toFixed(2)
+              .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+          : '0'
+      }
+      editable={false}
+    />
+  )}
+/>
+
         </View>
         <View></View>
         <View>
@@ -413,6 +422,11 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 18,
     color: 'black',
+  },
+  priceHead: {
+    fontSize: 18,
+    color: 'black',
+    marginTop:10
   },
   counter: {
     fontSize: 18,

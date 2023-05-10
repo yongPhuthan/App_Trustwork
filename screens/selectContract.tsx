@@ -62,9 +62,9 @@ const createContract = async ({ data, isEmulator }: { data: any, isEmulator: boo
   const user = auth().currentUser;
   let url;
   if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/createContractAndQuotation`;
+    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/appCreateQuotation`;
   } else {
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createContractAndQuotation`;
+    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/appCreateQuotation`;
   }
   const response = await fetch(
     url,
@@ -90,8 +90,9 @@ const SelectContract = ({navigation}: Props) => {
     dispatch,
   }: any = useContext(Store);
   const route = useRoute();
-
-  const {updatedData, contract}: any = route.params;
+  const {data}: any = route?.params;
+  const quotation = data.data
+  // const {updatedData, contract}: any = route.params;
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
 
   const handleSelectContract = (contract: Contract) => {
@@ -114,8 +115,8 @@ const SelectContract = ({navigation}: Props) => {
 
   const {mutate} = useMutation(createContract, {
     onSuccess: data => {
-      const newId = updatedData.data.id.slice(0, 8);
-      navigation.navigate('WebViewScreen', {newId});
+      const newId = quotation.id.slice(0, 8);
+      navigation.navigate('WebViewScreen', {id:newId});
     },
     onError: (error: MyError) => {
       console.error('There was a problem calling the function:', error);
@@ -128,35 +129,10 @@ const SelectContract = ({navigation}: Props) => {
       setIsLoadingMutation(true);
       try {
         const apiData = {
-          data: {
-            id: uuidv4(),
-            quotationId: updatedData.data.id,
-            signDate: 'preview',
-            signDateStamp: 11,
-            deposit: 2,
-            signAddress: contract.signAddress,
-            adjustPerDay: Number(contract.adjustPerDay),
-            installingDay: Number(contract.installingDay),
-            warantyYear: Number(contract.warantyYear),
-            prepareDay: Number(contract.prepareDay),
-            servayDate: contract.servayDate,
-
-            quotationPageQty: 1,
-            workCheckDay: Number(contract.workCheckDay),
-            workCheckEnd: contract.workCheckEnd,
-            warantyTimeWork: contract.warantyTimeWork,
-            workAfterGetDeposit: contract.workAfterGetDeposit,
-            sellerId : updatedData.data.userId,
-            finishedDay: Number(contract.finishedDay),
-            offerContract: 'preview',
-            selectedContract: selectedContracts,
-            offerCheck: 'preview',
-            projectName: contract.projectName,
-          },
-          quotation:updatedData.data
+          data: quotation
         };
 
-        // console.log('api data',JSON.stringify(apiData));
+        console.log('api data',JSON.stringify(apiData));
         await mutate({ data: apiData, isEmulator });
 
         setIsLoadingMutation(false);
@@ -181,7 +157,7 @@ const SelectContract = ({navigation}: Props) => {
     defaultChecked: selectedContracts.some(a => a.id === contract.id),
   }));
 
-console.log("FtM Token document is ==", fcnToken)
+console.log("data Quotation ==", JSON.stringify(quotation.services))
 
   return (
     <View style={{flex: 1}}>
@@ -197,7 +173,7 @@ console.log("FtM Token document is ==", fcnToken)
                 key={index}
                 title={contract.title}
                 description={contract.description}
-                price={contract.price}
+                number={contract.price}
                 defaultChecked={contract.defaultChecked}
                 imageUri={contract.imageUri}
                 onPress={() => handleSelectContract(contract)}

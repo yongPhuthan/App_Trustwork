@@ -34,7 +34,9 @@ const Summary = (props: Props) => {
   const [vat7Value, setVat7Value] = useState(0);
 
   const onDiscountInputChange = (value: string) => {
-    if (/^\d+%?$/.test(value)) {
+    if (value === '') {
+      setDiscount('0');
+    } else if (/^\d+%?$/.test(value)) {
       setDiscount(value);
     }
   };

@@ -7,9 +7,11 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {Store} from '../redux/Store';
 import {HOST_URL} from '@env';
+import {FAB} from 'react-native-paper';
 
 type RootStackParamList = {
   WebViewScreen: {id: string};
+  RootTab: undefined
 };
 
 type Props = {
@@ -31,7 +33,9 @@ const WebViewScreen = ({navigation, route}: Props) => {
   const firstPart = id?.substring(0, 8);
 
   const [contentType, setContentType] = useState('webpage');
-
+const backHome =()=>{
+  navigation.navigate('RootTab')
+}
   const handleShare = async () => {
     try {
       const result = await Share.share({
@@ -47,20 +51,22 @@ const WebViewScreen = ({navigation, route}: Props) => {
         // dismissed
       }
     } catch (error) {
-      alert(error?.message || 'Something went wrong');
+      alert(error || 'Something went wrong');
     }
   };
 
   useEffect(() => {
     if (isEmulator) {
-      setUrl(`http://${HOST_URL}:3000/preview/${firstPart}`);
-      setUrlPdf(`http://${HOST_URL}:3000/preview/doc/${firstPart}`);
+      setUrl(`http://${HOST_URL}:3000/preview/qt/${id}`);
+      setUrlPdf(`http://${HOST_URL}:3000/preview/doc/${id}`);
     } else {
-      setUrl(`https://www.trustwork.co/preview/${firstPart}`);
-      setUrlPdf(`http://www.trustwork.co/preview/doc/${firstPart}`);
+      setUrl(`https://www.trustwork.co/preview/qt/${id}`);
+      setUrlPdf(`http://www.trustwork.co/preview/doc/${id}`);
     }
     setIsLoading(false);
   }, []);
+  console.log('path', id);
+  console.log('url', url);
 
   return (
     <>
@@ -68,59 +74,35 @@ const WebViewScreen = ({navigation, route}: Props) => {
         ''
       ) : (
         <View style={{flex: 1}}>
-          <View style={styles.headerContainer}>
-            <View style={styles.buttonContainerHead}>
-              <Button
-                title="Webpage"
-                onPress={() => setContentType('webpage')}
-                type={contentType === 'webpage' ? 'solid' : 'outline'}
-                buttonStyle={
-                  contentType === 'webpage'
-                    ? styles.activeButton
-                    : styles.inactiveButton
-                }
-                titleStyle={
-                  contentType === 'webpage'
-                    ? styles.buttonTitle
-                    : styles.inactiveButtonTitle
-                }
-              />
-              <Button
-                title="Preview PDF"
-                onPress={() => setContentType('pdf')}
-                type={contentType === 'pdf' ? 'solid' : 'outline'}
-                buttonStyle={
-                  contentType === 'pdf'
-                    ? styles.activeButton
-                    : styles.inactiveButton
-                }
-                titleStyle={
-                  contentType === 'pdf'
-                    ? styles.buttonTitle
-                    : styles.inactiveButtonTitle
-                }
-              />
-            </View>
-          </View>
           {contentType === 'webpage' ? (
             <WebView source={{uri: url}} />
           ) : (
             <WebView source={{uri: urlPdf}} />
           )}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-              <View style={styles.flexRow}>
-                <Text style={styles.buttonText}>ส่งเอกสารให้ลูค้า</Text>
-                <Icon
-                  style={styles.icon}
-                  name="send"
-                  type="font-awesome"
-                  size={22}
-                  color="white"
-                />
-              </View>
-            </TouchableOpacity>
+          <View style={styles.buttonRow}>
+          <Button 
+              buttonStyle={styles.button}
+              title="กลับหน้าแรก"
+              onPress={backHome}
+              titleStyle={styles.buttonHomeText}
+              icon={<Icon name="home" type="font-awesome" size={20} color="white" />}
+              iconPosition='left'
+            />
+            <Button 
+              buttonStyle={styles.button} 
+              onPress={handleShare}
+              title="ส่งให้ลูกค้า"
+              titleStyle={styles.buttonText}
+              icon={<Icon name="send" type="font-awesome" size={22} color="white" />}
+              iconRight
+            />
           </View>
+          {/* <FAB
+          style={styles.fab}
+          small
+          icon="share-variant"
+          onPress={handleShare}
+        /> */}
         </View>
       )}
     </>
@@ -140,7 +122,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    padding: 5,
+
+    paddingVertical: 10,
+    backgroundColor: 'white', // Light neutral background color
+  },
+
+  icon: {
+    marginLeft: 10,
+    color: '#FF6347', // Vivid icon color
+  },
+
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 50,
+    backgroundColor: '#ec7211',
   },
   buttonContainerHead: {
     flexDirection: 'row',
@@ -176,23 +174,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginRight: 8,
+
+  buttonRow: {
+    position: 'absolute',
+    bottom: 10,
+    flexDirection: 'row',
+    width: '100%',
+    alignItems: 'center',
+    alignSelf: 'center',
+    height: 70,
+    backgroundColor: 'white',
+
   },
-  icon: {
-    marginLeft: 10,
-  },
-  shareButton: {
-    backgroundColor: '#ec7211',
+  homeButton: {
+    backgroundColor: '#0c5caa',
     paddingHorizontal: 30,
     paddingVertical: 10,
     borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ec7211',
+    width:200,
+    elevation: 2, // for Android
+    shadowColor: '#000', // for iOS
+    shadowOffset: {width: 0, height: 2}, // for iOS
+    shadowOpacity: 0.25, // for iOS
+    shadowRadius: 3.84, // for iOS
   },
+  shareButton: {
+    backgroundColor: '#0c5caa',
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    borderRadius: 5,
+    elevation: 2, // for Android
+    shadowColor: '#000', // for iOS
+    shadowOffset: {width: 0, height: 2}, // for iOS
+    shadowOpacity: 0.25, // for iOS
+    shadowRadius: 3.84, // for iOS
+  },
+  button: {
+    backgroundColor: '#0c5caa',
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    borderRadius: 5,
+    elevation: 2, // for Android
+    shadowColor: '#000', // for iOS
+    shadowOffset: {width: 0, height: 2}, // for iOS
+    shadowOpacity: 0.25, // for iOS
+    shadowRadius: 3.84, // for iOS
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+    color:'white'
+  },
+  buttonHomeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    color:'white'
+  },
+
 });
 
 export default WebViewScreen;

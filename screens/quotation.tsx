@@ -30,8 +30,9 @@ import {useQuery} from 'react-query';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {useMutation} from 'react-query';
 import axios, {AxiosResponse, AxiosError} from 'axios';
-import {HOST_URL, DEV_API_URL,PROD_API_URL} from "@env"
+import {HOST_URL, DEV_API_URL, PROD_API_URL} from '@env';
 import messaging from '@react-native-firebase/messaging';
+import Lottie from 'lottie-react-native';
 
 type RootStackParamList = {
   Quotation: undefined;
@@ -41,13 +42,14 @@ type RootStackParamList = {
   EditClientForm: undefined;
   LoginScreen: undefined;
   SignUpScreen: undefined;
-  InstallmentScreen:{
-    data:any
-  }
+  InstallmentScreen: {
+    data: any;
+  };
   SelectContract: {
-    id: string
-   totalPrice: number
-   sellerId: string
+    data: any;
+    // id: string;
+    // totalPrice: number;
+    // sellerId: string;
   };
   WebViewScreen: {id: string}; // add parameter type for WebViewScreen
 };
@@ -101,7 +103,7 @@ const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
   day: '2-digit',
 });
 
-const fetchCompanyUser = async (email: string, isEmulator:boolean) => {
+const fetchCompanyUser = async (email: string, isEmulator: boolean) => {
   const user = auth().currentUser;
   if (!user) {
     throw new Error('User not authenticated');
@@ -111,21 +113,18 @@ const fetchCompanyUser = async (email: string, isEmulator:boolean) => {
   if (isEmulator) {
     url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryCompanySeller2`;
   } else {
-    console.log('isEmulator Fetch',isEmulator)
+    console.log('isEmulator Fetch', isEmulator);
     url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryCompanySeller2`;
   }
-  const response = await fetch(
-    url,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({email}),
-      credentials: 'include',
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
     },
-  );
+    body: JSON.stringify({email}),
+    credentials: 'include',
+  });
   const data = await response.json();
 
   if (!response.ok) {
@@ -135,7 +134,7 @@ const fetchCompanyUser = async (email: string, isEmulator:boolean) => {
   return data;
 };
 
-const createQuotation = async (data: any, isEmulator:boolean) => {
+const createQuotation = async (data: any, isEmulator: boolean) => {
   const user = auth().currentUser;
   let url;
   if (isEmulator) {
@@ -143,17 +142,14 @@ const createQuotation = async (data: any, isEmulator:boolean) => {
   } else {
     url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createQuotation3`;
   }
-  const response = await fetch(
-    url,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${user?.uid}`,
-      },
-      body: JSON.stringify({data}),
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${user?.uid}`,
     },
-  );
+    body: JSON.stringify({data}),
+  });
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
@@ -168,7 +164,7 @@ const Quotation = ({navigation}: Props) => {
       client_address,
       client_tel,
       client_tax,
-      isEmulator
+      isEmulator,
     },
     dispatch,
   }: any = useContext(Store);
@@ -193,7 +189,7 @@ const Quotation = ({navigation}: Props) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [token, setToken] = useState<FirebaseAuthTypes.User | null>(null);
   const quotationId = uuidv4();
-  const [fcnToken,setFtmToken] = useState('')
+  const [fcnToken, setFtmToken] = useState('');
   const [discount, setDiscount] = useState('0');
   const [vat7, setVat7] = useState(false);
   const totalPrice = useMemo(() => {
@@ -218,12 +214,11 @@ const Quotation = ({navigation}: Props) => {
 
   const {data, isLoading, isError} = useQuery(
     ['companyUser', email],
-    () => fetchCompanyUser(email,isEmulator).then(res => res),
+    () => fetchCompanyUser(email, isEmulator).then(res => res),
     {
       onSuccess: data => {
-
         setCompanyUser(data);
-        console.log('company',JSON.stringify(data[0]))
+        console.log('company', JSON.stringify(data[0]));
       },
     },
   );
@@ -243,8 +238,6 @@ const Quotation = ({navigation}: Props) => {
   const handleCustomerNameChange = (value: string) => {
     setCustomerName(value);
   };
-
-
 
   const handleAddClientForm = () => {
     // TODO: Add client to quotation
@@ -268,7 +261,7 @@ const Quotation = ({navigation}: Props) => {
     setCustomerAddress(value);
   };
   const handleButtonPress = async () => {
-    // navigation.navigate('SelectContract', {id: quotationId, totalPrice, sellerId: companyUser.id});  
+    // navigation.navigate('SelectContract', {id: quotationId, totalPrice, sellerId: companyUser.id});
 
     setIsLoadingMutation(true);
     try {
@@ -300,7 +293,7 @@ const Quotation = ({navigation}: Props) => {
           discountValue,
           discountName: 'percent',
           dateOffer,
-          FCMToken:fcnToken,
+          FCMToken: fcnToken,
           docNumber,
           summaryAfterDiscount,
           allTotal: totalPrice,
@@ -310,7 +303,9 @@ const Quotation = ({navigation}: Props) => {
         },
       };
       // await mutate(apiData);
-   navigation.navigate('InstallmentScreen', {data: apiData });
+      // navigation.navigate('InstallmentScreen', {data: apiData});
+      navigation.navigate('SelectContract', {data: apiData});
+
 
       setIsLoadingMutation(false);
     } catch (error: Error | AxiosError | any) {
@@ -360,18 +355,18 @@ const Quotation = ({navigation}: Props) => {
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-  
+
       if (enabled) {
         console.log('Authorization status:', authStatus);
         getFCMToken();
       }
     }
-  
+
     async function getFCMToken() {
       const fcmToken = await messaging().getToken();
       if (fcmToken) {
         console.log('Your Firebase Token  document:', fcmToken);
-          setFtmToken(fcmToken);
+        setFtmToken(fcmToken);
       } else {
         console.log('Failed to get Firebase Token');
       }
@@ -384,30 +379,32 @@ const Quotation = ({navigation}: Props) => {
     const day = String(today.getDate()).padStart(2, '0');
     const randomNum = Math.floor(Math.random() * 900) + 100; // generates a random 3-digit number
     setDocnumber(`${year}${month}${day}${randomNum}`);
-    setDateOffer(`${year}-${month}-${day}`);
+    setDateOffer(`${day}-${month}-${year}`);
     const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     const endYear = endDate.getFullYear();
     const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
     const endDay = String(endDate.getDate()).padStart(2, '0');
-    setDateEnd(`${endYear}-${endMonth}-${endDay}`);
+    setDateEnd(`${endDay}-${endMonth}-${endYear}`);
     return unsubscribe;
   }, [serviceList, navigation]);
 
-  
-  
-  
-  
-  
-  
-  
   if (isLoading) {
-    return <Text>LOADING ........</Text>;
+    return (
+      <View style={styles.loadingContainer}>
+        <Lottie
+          style={{width: '25%'}}
+          source={require('../assets/animation/lf20_rwq6ciql.json')}
+          autoPlay
+          loop
+        />
+      </View>
+    );
   }
   const idContractList = selectedContract.map((obj: IdContractList) => obj.id);
 
-  console.log('company user' + JSON.stringify(companyUser));
-  console.log('serviceList' + JSON.stringify(serviceList));
-  console.log('fcmToken', fcnToken)
+  // console.log('company user' + JSON.stringify(companyUser));
+  // console.log('serviceList' + JSON.stringify(serviceList));
+  // console.log('fcmToken', fcnToken);
   return (
     <View style={{flex: 1}}>
       <ScrollView style={styles.container}>
@@ -430,9 +427,7 @@ const Quotation = ({navigation}: Props) => {
         </View>
         <View style={styles.subContainer}>
           {client_name ? (
-            <CardClient
-            handleEditClient={handleEditClient}
-            />
+            <CardClient handleEditClient={handleEditClient} />
           ) : (
             <AddClient handleAddClient={handleAddClientForm} />
           )}
@@ -448,7 +443,7 @@ const Quotation = ({navigation}: Props) => {
           </View>
           {serviceList.map((item: any, index: number) => (
             <CardProject
-            index={index + 1}
+              index={index + 1}
               handleEditService={() => handleEditService(index)}
               serviceList={item}
               key={index}
@@ -493,10 +488,7 @@ const Quotation = ({navigation}: Props) => {
         {/* <TouchableOpacity style={styles.button} onPress={signOutPage}>
           <Text style={styles.buttonText}>sign out page</Text>
         </TouchableOpacity> */}
-        <FooterBtn 
-        disabled={isDisabled}  
-
-        onPress={handleButtonPress} />
+        <FooterBtn disabled={isDisabled} onPress={handleButtonPress} />
       </View>
     </View>
   );
@@ -506,13 +498,12 @@ export default Quotation;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor:'#e9f7ff',
-
+    backgroundColor: '#e9f7ff',
   },
   subContainerHead: {
     padding: 30,
     marginBottom: 10,
-    backgroundColor:'#e9f7ff',
+    backgroundColor: '#e9f7ff',
     height: 'auto',
   },
   subContainer: {
@@ -604,5 +595,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

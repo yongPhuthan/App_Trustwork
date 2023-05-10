@@ -15,8 +15,8 @@ const FooterBtn = (props: Props) => {
       <View style={styles.containerBtn}>
         <TouchableOpacity style={styles.disabledButton} disabled>
           <View style={styles.header}>
-            <Text style={styles.buttonText}>ไปหน้าสัญญา</Text>
-            <FontAwesomeIcon icon={faChevronRight} size={28} color="white" />
+            <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
+            <FontAwesomeIcon style={styles.icon} icon={faChevronRight} size={20} color="white" />
 
 
           </View>
@@ -29,8 +29,8 @@ const FooterBtn = (props: Props) => {
       {/* Your main content here */}
       <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
         <View style={styles.header}>
-          <Text style={styles.buttonText}>ไปหน้าสัญญา</Text>
-          <FontAwesomeIcon icon={faChevronRight} size={28} color="white" />
+          <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
+          <FontAwesomeIcon style={styles.icon} icon={faChevronRight} size={20} color="white" />
 
 
         </View>
@@ -60,9 +60,9 @@ const styles = StyleSheet.create({
     width: '90%',
     top: '30%',
     height: 50,
-    backgroundColor: '#ec7211',
+    // backgroundColor: '#ec7211',
 
-    // backgroundColor: '#0073BA',
+    backgroundColor: '#0073BA',
     borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: 'white',
-    marginLeft: 10,
+    marginTop: 3,
   },
   disabledButton: {
     width: '90%',

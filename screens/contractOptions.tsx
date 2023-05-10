@@ -22,7 +22,12 @@ import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Store} from '../redux/Store';
-
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faChevronRight,
+  faCashRegister,
+  faCoins,
+} from '@fortawesome/free-solid-svg-icons';
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ContractOption'>;
   route: RouteProp<ParamListBase, 'ContractOption'>;
@@ -219,22 +224,22 @@ const ContractOption = ({navigation}: Props) => {
       {!showSecondPage ? (
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Project Name</Text>
+            <Text style={styles.label}>ชื่อโครงการ</Text>
             <TextInput
               style={styles.input}
               value={projectName}
               onChangeText={setProjectName}
-              placeholder="Project Name"
+              placeholder="โครงการติดตั้ง..."
               placeholderTextColor="#A6A6A6"
             />
           </View>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Warranty Year</Text>
+            <Text style={styles.label}>รับประกันงานติดตั้งกี่ปี</Text>
             <TextInput
               style={styles.input}
               value={warantyTimeWork}
               onChangeText={setWarantyTimeWork}
-              placeholder="Warranty Year"
+              placeholder="จำนวนปี"
               placeholderTextColor="#A6A6A6"
               keyboardType="numeric"
             />
@@ -267,12 +272,12 @@ const ContractOption = ({navigation}: Props) => {
             <View style={styles.header}>
               <Text style={styles.buttonText}>ต่อไป</Text>
 
-              <Icon
-                style={styles.icon}
-                name="arrow-right-thin"
-                size={28}
-                color="#19232e"
-              />
+              <FontAwesomeIcon
+              style={styles.icon}
+              icon={faChevronRight}
+              size={18}
+              color="white"
+            />
             </View>
           </TouchableOpacity>
           {/* <Button title="Next" onPress={handleShowSecondPage} color="#007AFF" /> */}
@@ -423,6 +428,7 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
+    marginTop:30
   },
   row: {
     flexDirection: 'row',
@@ -463,7 +469,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontFamily: 'sukhumvit set',
+    // fontFamily: 'sukhumvit set',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -500,7 +506,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontFamily: 'sukhumvit set',
+    // fontFamily: 'sukhumvit set',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -543,7 +549,8 @@ const styles = StyleSheet.create({
   icon: {
     color: 'white',
     marginLeft: 10,
-    marginTop: -2.5,
+    marginTop: 2,
+ 
   },
   iconPrev: {
     // color: '#007AFF',

@@ -16,12 +16,12 @@ type Props = {
     title: string;
     description: string;
     unitPrice: number;
+    discountPercent:number
     qty: number;
     total: number;
   };
-  index:number;
+  index: number;
   handleEditService: Function;
-
 };
 const windowWidth = Dimensions.get('window').width;
 
@@ -32,28 +32,42 @@ const CardProject = (props: Props) => {
     <View>
       <TouchableOpacity
         style={styles.subContainer}
-        onPress={()=>props.handleEditService()}>
+        onPress={() => props.handleEditService()}>
         <View style={styles.summary}>
-          <Text style={styles.summaryText}>{props.index}. {serviceList.title}</Text>
+          <Text style={styles.summaryText}>
+            {props.index}. {serviceList.title}
+          </Text>
         </View>
         <View style={styles.description}>
           <Text>{serviceList.description}</Text>
           <Text></Text>
         </View>
-        <View style={{ flexDirection: 'row',
-    justifyContent: 'space-between'}}>
-        <View style={styles.unitPrice}>
-          <Text>{Number(serviceList.unitPrice).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
-          <Text> x</Text>
-          <Text> {serviceList.qty}</Text>
-
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <View style={styles.unitPrice}>
+            <Text>
+              {Number(serviceList.unitPrice)
+                .toFixed(2)
+                .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+            </Text>
+            <Text> x</Text>
+            <Text> {serviceList.qty}</Text>
+          </View>
+          <Text style={styles.summaryPrice}>
+            {Number(serviceList.total)
+              .toFixed(2)
+              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+          </Text>
         </View>
-                <Text style={styles.summaryPrice}>{Number(serviceList.total).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
-
-    </View>
-      
+        {/* {serviceList?.discountPercent   ? (
+               <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+               <Text>
+                    ลด {Number(serviceList.discountPercent)
+                     } %
+                   </Text>
+       
+               </View>
+        ):('')} */}
+   
       </TouchableOpacity>
     </View>
   );
@@ -97,8 +111,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   summaryPrice: {
-    marginTop: 10,
-    fontSize: 18,
+    marginTop: 5,
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   header: {
     flexDirection: 'row',

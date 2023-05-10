@@ -9,7 +9,7 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
-  PermissionsAndroid
+  PermissionsAndroid,
 } from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -17,11 +17,13 @@ import {useQuery, useMutation} from 'react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {HOST_URL} from '@env';
 import firebase from '../firebase';
+import storage from '@react-native-firebase/storage';
 
 import {
-  launchCamera,
   launchImageLibrary,
   MediaType,
+  ImageLibraryOptions,
+  ImagePickerResponse,
 } from 'react-native-image-picker';
 
 import {Store} from '../redux/Store';
@@ -33,19 +35,19 @@ import {RouteProp, ParamListBase} from '@react-navigation/native';
 type FormValues = {
   name: string;
   address: string;
-  companyNumber:string
+  companyNumber: string;
   id: string;
   phone: string;
   userName: string;
   logo: string;
   taxId: string;
-  userLastName:string;
+  userLastName: string;
   lastName: string;
-mobileTel:string;
+  mobileTel: string;
   bizName: string;
-  company:{
-    id:string
-  }
+  company: {
+    id: string;
+  };
 };
 interface MyError {
   response: object;
@@ -54,6 +56,7 @@ interface MyError {
 type UpdateCompanySellerArgs = {
   email: string;
   isEmulator: boolean;
+  logo: any;
 
   dataInputForm: FormValues;
 };
@@ -94,7 +97,7 @@ const fetchCompanyUser = async (email: string, isEmulator: boolean) => {
 
   return data;
 };
-const saveDataToAsyncStorage = async (key:string, value:any) => {
+const saveDataToAsyncStorage = async (key: string, value: any) => {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
@@ -105,6 +108,7 @@ const saveDataToAsyncStorage = async (key:string, value:any) => {
 const updateCompanySellerAPI = async ({
   dataInputForm,
   isEmulator,
+  logo,
 }: UpdateCompanySellerArgs): Promise<void> => {
   const user = auth().currentUser;
   if (!user) {
@@ -118,6 +122,7 @@ const updateCompanySellerAPI = async ({
     url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/appUpdateCompanySeller`;
   }
   const dataApi = dataInputForm;
+
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
@@ -150,33 +155,44 @@ const EditCompanyForm = ({navigation, route}: Props) => {
     state: {client_name, isEmulator, client_tel, client_tax},
     dispatch,
   }: any = useContext(Store);
-  // const requestPhotoLibraryPermission = async () => {
-  //   if (Platform.OS === 'ios') {
-  //     const status = await check(PERMISSIONS.IOS.PHOTO_LIBRARY);
-  //     if (status === RESULTS.GRANTED) {
-  //       return true;
-  //     }
-  //     const requestStatus = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
-  //     return requestStatus === RESULTS.GRANTED;
-  //   }
-  //   return true;
-  // };
-  
-  const handleLogoUpload = async () => {
-  console.log('upload')
+
+  const handleLogoUpload = () => {
+    const options: ImageLibraryOptions = {
+      mediaType: 'photo' as MediaType,
+      maxWidth: 300,
+      maxHeight: 300,
+      quality: 0.7,
+    };
+
+    launchImageLibrary(options, async (response: ImagePickerResponse) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
+        const source = {uri: response.assets[0].uri ?? null};
+        console.log('Image source:', source);
+
+        if (source.uri) {
+          try {
+            const firebaseUrl: string | undefined = await uploadImageToFirebase(
+              source.uri,
+            );
+            if (firebaseUrl) {
+              setLogo(firebaseUrl as string);
+            } else {
+              setLogo(null);
+            }
+            setLogo(firebaseUrl || null);
+            setValue('logo', firebaseUrl as string);
+          } catch (error) {
+            console.error('Error uploading image to Firebase:', error);
+          }
+        }
+      }
+    });
   };
-  
-  // const {data: companyData, isLoading} = useQuery(
-  //   'fetchCompanyUser',
-  //   () => fetchCompanyUser(userEmail as string, isEmulator),
-  //   {
-  //     onSuccess: data => {
-  //       setCompany(data);
-  //       console.log('COMPANY', JSON.stringify(data)); 
-  //     },
-  //   },
-  // );
-  
+
   const loadCompanyData = async () => {
     try {
       const companyData = await AsyncStorage.getItem('companyData');
@@ -186,7 +202,7 @@ const EditCompanyForm = ({navigation, route}: Props) => {
       return null;
     }
   };
-  const saveCompanyData = async (companyData:object) => {
+  const saveCompanyData = async (companyData: object) => {
     try {
       await AsyncStorage.setItem('companyData', JSON.stringify(companyData));
     } catch (error) {
@@ -210,33 +226,35 @@ const EditCompanyForm = ({navigation, route}: Props) => {
     formState: {errors},
   } = useForm<FormValues>({
     defaultValues: {
-      name:   '',
-      address: '' ,
-      phone:'' ,
-      taxId: '' ,
+      name: '',
+      address: '',
+      phone: '',
+      taxId: '',
     },
   });
-  // const setFormValues = async (data: any) => {
-  //   if (company?.id) { 
-  //     setValue('logo', data.logo);
-  //     setValue('id', company?.id);
-  //     setValue('lastName', data.userLastName);
-  //     setValue('bizName', data.bizName);
-  //     setValue('address', data.address);
-  //     setValue('phone', data.mobileTel);
-  //     setValue('taxId', data.companyNumber);
-  //     setLogo(data.logo);
-  //   } 
-  // };
-
+  const uploadImageToFirebase = async (imagePath:string) => {
+    if (!imagePath) {
+      console.log('No image path provided');
+      return;
+    }
+  
+    const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+    const storageRef = storage().ref(`images/${filename}`);
+    await storageRef.putFile(imagePath);
+  
+    const downloadUrl = await storageRef.getDownloadURL();
+    return downloadUrl;
+  };
+  
+  
 
   useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+    const unsubscribe = firebase.auth().onAuthStateChanged(async user => {
       if (user) {
         setUser(user);
-  
+
         let fetchedCompanyUser = await loadCompanyData();
-  
+
         if (!fetchedCompanyUser) {
           fetchedCompanyUser = await fetchCompanyUser(
             user?.email || '',
@@ -244,7 +262,7 @@ const EditCompanyForm = ({navigation, route}: Props) => {
           );
           await saveCompanyData(fetchedCompanyUser);
         }
-  
+
         setCompany(fetchedCompanyUser);
         setLogo(fetchedCompanyUser.logo);
         setValue('userName', fetchedCompanyUser.userName);
@@ -255,7 +273,6 @@ const EditCompanyForm = ({navigation, route}: Props) => {
         setValue('address', fetchedCompanyUser.address);
         setValue('mobileTel', fetchedCompanyUser.mobileTel);
         setValue('companyNumber', fetchedCompanyUser.companyNumber);
-       
 
         setIsLoading(false); // Add this line
       } else {
@@ -264,160 +281,154 @@ const EditCompanyForm = ({navigation, route}: Props) => {
     });
     return unsubscribe;
   }, []);
-  
 
-
-  
   const onSubmit = async (data: FormValues) => {
     await mutate({dataInputForm: data, isEmulator} as any, {
       onSuccess: async () => {
         await removeDataFromAsyncStorage('companyData'); // Add this line to remove data from AsyncStorage
 
         await saveDataToAsyncStorage('companyData', data);
-        navigation.goBack()
+        navigation.goBack();
         // setFormValues(updatedData);
       },
     });
   };
-  
+  console.log("Current user:", auth().currentUser);
 
-  // if (isLoading) {
-  //   return <Text>Loading...</Text>;
-  // }
   return (
     <>
-{!isLoading? ( 
-   <ScrollView style={styles.container}>
-      <View style={styles.subContainer}>
-        {/* Logo */}
-        <TouchableOpacity
-          style={{alignItems: 'center', marginBottom: 24}}
-          onPress={handleLogoUpload}>
-          {logo ? (
-            <Image
-                
-            source={{
-              uri: logo,
-            }}
-              style={{ width: 100,aspectRatio: 2, resizeMode: 'contain' }}
-              />
-          ) : (
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                backgroundColor: '#ddd',
-                borderRadius: 40,
-                alignItems: 'center',
-              }}
+      {!isLoading ? (
+        <ScrollView style={styles.container}>
+          <View style={styles.subContainer}>
+            {/* Logo */}
+            <TouchableOpacity
+              style={{alignItems: 'center', marginBottom: 24}}
+              onPress={handleLogoUpload}>
+              {logo ? (
+                <Image
+                  source={{
+                    uri: logo,
+                  }}
+                  style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+                />
+              ) : (
+                <View
+                  style={{
+                    width: 80,
+                    height: 80,
+                    backgroundColor: '#ddd',
+                    borderRadius: 40,
+                    alignItems: 'center',
+                  }}
+                />
+              )}
+            </TouchableOpacity>
+            <Controller
+              control={control}
+              name="bizName"
+              rules={{required: true}}
+              render={({field: {onChange, onBlur, value}}) => (
+                <TextInput
+                  style={styles.inputName}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
             />
-          )}
-        </TouchableOpacity>
-        <Controller
-          control={control}
-          name="bizName"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
+            {errors.bizName && <Text>This is required.</Text>}
+            <Controller
+              control={control}
+              name="userName"
+              rules={{required: true}}
+              render={({field: {onChange, onBlur, value}}) => (
+                <TextInput
+                  placeholder="ชื่อจริง"
+                  multiline
+                  textAlignVertical="top"
+                  numberOfLines={1}
+                  style={styles.inputName}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
             />
-          )}
-        />
-        {errors.bizName && <Text>This is required.</Text>}
-        <Controller
-          control={control}
-          name="userName"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="ชื่อจริง"
-              multiline
-              textAlignVertical="top"
-              numberOfLines={1}
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
+            {errors.name && <Text>This is required.</Text>}
+            <Controller
+              control={control}
+              name="userLastName"
+              rules={{required: true}}
+              render={({field: {onChange, onBlur, value}}) => (
+                <TextInput
+                  placeholder="นามสกุล"
+                  multiline
+                  textAlignVertical="top"
+                  numberOfLines={1}
+                  style={styles.inputName}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
             />
-          )}
-        />
-        {errors.name && <Text>This is required.</Text>}
-        <Controller
-          control={control}
-          name="userLastName"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="นามสกุล"
-              multiline
-              textAlignVertical="top"
-              numberOfLines={1}
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-        />
-        {errors.address && <Text>This is required.</Text>}
+            {errors.address && <Text>This is required.</Text>}
 
-        <Controller
-          control={control}
-          name="address"
-          rules={{required: true}}
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="ที่อยู่"
-              keyboardType="name-phone-pad"
-              multiline
-              textAlignVertical="top"
-              numberOfLines={4}
-              style={styles.inputAddress}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
+            <Controller
+              control={control}
+              name="address"
+              rules={{required: true}}
+              render={({field: {onChange, onBlur, value}}) => (
+                <TextInput
+                  placeholder="ที่อยู่"
+                  keyboardType="name-phone-pad"
+                  multiline
+                  textAlignVertical="top"
+                  numberOfLines={4}
+                  style={styles.inputAddress}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
             />
-          )}
-        />
-        {errors.address && <Text>This is required.</Text>}
+            {errors.address && <Text>This is required.</Text>}
 
-        <Controller
-          control={control}
-          name="mobileTel"
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="เบอร์โทรศัพท์"
-              keyboardType="phone-pad"
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
+            <Controller
+              control={control}
+              name="mobileTel"
+              render={({field: {onChange, onBlur, value}}) => (
+                <TextInput
+                  placeholder="เบอร์โทรศัพท์"
+                  keyboardType="phone-pad"
+                  style={styles.inputName}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
             />
-          )}
-        />
-        <Controller
-          control={control}
-          name="companyNumber"
-          render={({field: {onChange, onBlur, value}}) => (
-            <TextInput
-              placeholder="เลขทะเบียนภาษี(ถ้ามี)"
-              keyboardType="number-pad"
-              style={styles.inputName}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
+            <Controller
+              control={control}
+              name="companyNumber"
+              render={({field: {onChange, onBlur, value}}) => (
+                <TextInput
+                  placeholder="เลขทะเบียนภาษี(ถ้ามี)"
+                  keyboardType="number-pad"
+                  style={styles.inputName}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
             />
-          )}
-        />
 
-        <Button title="บันทึก" onPress={handleSubmit(onSubmit)} />
-      </View>
-    </ScrollView>):
-    (<Text>Loading Company...</Text>)}
-  
+            <Button title="บันทึก" onPress={handleSubmit(onSubmit)} />
+          </View>
+        </ScrollView>
+      ) : (
+        <Text>Loading Company...</Text>
+      )}
     </>
   );
 };

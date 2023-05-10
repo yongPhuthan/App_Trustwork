@@ -127,28 +127,29 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       if (user) {
         console.log('user', user);
         const {token, email} = user;
-
+    
         if (email) {
-          // Try to get data from AsyncStorage
-          const cachedData = await AsyncStorage.getItem('dashboardData');
-  
-          if (cachedData) {
-            const data = JSON.parse(cachedData);
-            setCompanyData(data[0]);
-            setQuotationData(data[1]);
-          } else {
-            // If data is not in AsyncStorage, fetch it from the database
-            const data = await fetchDashboardData(email, token);
-            setCompanyData(data[0]);
-            setQuotationData(data[1]);
+          // Always fetch data from the database
+          const data = await fetchDashboardData(email, token);
+    
+          // Sort the quotation data by dateOffer in descending order
+          if (data && data[1]) {
+            data[1].sort((a:Quotation, b:Quotation) => {
+              const dateA = new Date(a.dateOffer);
+              const dateB = new Date(b.dateOffer);
+              return dateB.getTime() - dateA.getTime();  // sort in descending order
+            });
           }
+    
+          setCompanyData(data[0]);
+          setQuotationData(data[1]);
         }
       }
     };
+    
     fetchData();
-   
   }, []);
-
+  
   const handleNewQuotationPress = () => {
     navigation.navigate('Quotation');
   };

@@ -4,6 +4,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  Image,
   TextInput,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -12,8 +13,13 @@ import {firebase as firebaseFunction} from '@react-native-firebase/functions';
 import firebase from '../firebase';
 import { useMutation } from 'react-query';
 import { RadioButton } from 'react-native-paper';
-
-
+import {
+  launchImageLibrary,
+  MediaType,
+  ImageLibraryOptions,
+  ImagePickerResponse,
+} from 'react-native-image-picker';
+import storage from '@react-native-firebase/storage';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {v4 as uuidv4} from 'uuid';
 
@@ -102,7 +108,7 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
   const [officeTel, setOfficeTel] = useState<string>('');
   const [mobileTel, setMobileTel] = useState<string>('');
   // const [bizType, setBizType] = useState<string>('');
-  const [logo, setLogo] = useState<string>('');
+  const [logo, setLogo] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
   const [companyNumber, setCompanyNumber] = useState<string>('');
   const [bankaccount, setBankaccount] = useState<object>({});
@@ -140,7 +146,56 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
     mutate(data);
   };
 
+  const handleLogoUpload = () => {
+    const options: ImageLibraryOptions = {
+      mediaType: 'photo' as MediaType,
+      maxWidth: 300,
+      maxHeight: 300,
+      quality: 0.7,
+    };
 
+    launchImageLibrary(options, async (response: ImagePickerResponse) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
+        const source = {uri: response.assets[0].uri ?? null};
+        console.log('Image source:', source);
+
+        if (source.uri) {
+          try {
+            const firebaseUrl: string | undefined = await uploadImageToFirebase(
+              source.uri,
+            );
+            if (firebaseUrl) {
+              setLogo(firebaseUrl as string);
+            } else {
+              setLogo(null);
+            }
+            setLogo(firebaseUrl || null);
+          } catch (error) {
+            console.error('Error uploading image to Firebase:', error);
+          }
+        }
+      }
+    });
+  };
+
+  const uploadImageToFirebase = async (imagePath:string) => {
+    if (!imagePath) {
+      console.log('No image path provided');
+      return;
+    }
+  
+    const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+    const storageRef = storage().ref(`images/${filename}`);
+    await storageRef.putFile(imagePath);
+  
+    const downloadUrl = await storageRef.getDownloadURL();
+    return downloadUrl;
+  };
+  
   const handleNextPage = () => {
     setPage(page + 1);
   };
@@ -235,6 +290,25 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
             onPress={() => setBizType('business')}
           />
         </View>
+        <TouchableOpacity
+              style={{alignItems: 'center', marginBottom: 24}}
+              onPress={handleLogoUpload}>
+             {logo ? (
+          <Image
+            source={{
+              uri: logo,
+            }}
+            style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+          />
+        ) : (
+          <Image
+            source={{
+              uri: 'gs://workerfirebase-f1005.appspot.com/static/image.png',
+            }}
+            style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+          />
+        )}
+            </TouchableOpacity>
   
         <TouchableOpacity style={styles.button} onPress={handleNextPage}>
           <Text style={styles.buttonText}>Next</Text>

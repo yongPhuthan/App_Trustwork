@@ -64,10 +64,10 @@ type Props = {
 const EditProductForm = ({navigation, route}: Props) => {
   const {control, handleSubmit} = useForm<FormData>();
   const {item} = route.params;
-  const [qty, setQuantity] = useState(0);
+  const [qty, setQuantity] = useState(item.qty);
   const [count, setCount] = useState(0);
-  const [unitPrice, setPrice] = useState(0);
-  const [total, setTotalCost] = useState(0);
+  const [unitPrice, setPrice] = useState(item.unitPrice);
+  const [total, setTotalCost] = useState(item.total);
   const [serviceListState, setServiceList] = useState<ServiceList[]>([]);
 
   const {
@@ -133,7 +133,6 @@ const EditProductForm = ({navigation, route}: Props) => {
       description: data.description,
     });
   };
-  console.log('item' + JSON.stringify(item.audits))
 
   useEffect(() => {
     // Calculate the total cost based on the quantity and price values
@@ -277,7 +276,7 @@ const EditProductForm = ({navigation, route}: Props) => {
           <Controller
             control={control}
             name="total"
-            defaultValue={String(item.total)}
+            defaultValue={String(total)}
             render={({field: {value}}) => (
               <TextInput
                 style={styles.priceSummary}
