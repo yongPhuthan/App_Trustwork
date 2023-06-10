@@ -62,6 +62,8 @@ type RootStackParamList = {
   QuotationScreen: undefined;
   EditQuotation: {id: string};
   Dashboard: undefined;
+  CreateContractScreen:{id: string};
+
 };
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {

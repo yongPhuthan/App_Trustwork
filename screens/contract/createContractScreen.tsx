@@ -21,6 +21,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useForm, Controller} from 'react-hook-form';
 import {HOST_URL} from '@env';
 import * as stateAction from '../../redux/Actions';
+import ContractOption from 'screens/contract/contractOptions';
 
 type FormData = {
   address: string;
@@ -71,8 +72,8 @@ interface Quotation {
   allTotal: string;
 }
 type Props = {
-  navigation: StackNavigationProp<ParamListBase, 'SelectContract'>;
-  route: RouteProp<ParamListBase, 'SelectContract'>;
+  navigation: StackNavigationProp<ParamListBase, 'CreateContractScreen'>;
+  route: RouteProp<ParamListBase, 'CreateContractScreen'>;
   // onGoBack: (data: string) => void;
 };
 const fetchContract = async ({
@@ -138,7 +139,7 @@ const updateContract =async (input: UpdateContractInput): Promise<void> => {
     throw new Error('Network response was not ok');
   }
 };
-const SelectScreen = ({navigation}: Props) => {
+const CreateContractScreen = ({navigation}: Props) => {
   const [step1, setStep1] = useState(true);
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [customer, setCustomer] = useState<Customer>({} as Customer);
@@ -150,12 +151,6 @@ const SelectScreen = ({navigation}: Props) => {
   const route = useRoute();
   const {
     state: {
-      client_name,
-      selectedContract,
-      serviceList,
-      client_address,
-      client_tel,
-      client_tax,
       isEmulator,
     },
     dispatch,
@@ -220,14 +215,42 @@ const SelectScreen = ({navigation}: Props) => {
 
   
   const handleStep2Press = () => {
-    setStep2(false);
-    setStep3(true);
+    const apiData = {
+      data: {
+        id: quotation.id,
+        summary: quotation.summary,
+        services: quotation.services,
+        customer: customer,
+        vat7: quotation.vat7,
+        taxValue: quotation.taxValue,
+        taxName: 'vat3',
+        dateEnd:quotation.dateEnd,
+        discountValue:quotation.discountValue,
+        discountName: 'percent',
+        dateOffer:quotation.dateOffer,
+        FCMToken: quotation.FCMToken,
+        docNumber:quotation.docNumber,
+        summaryAfterDiscount:quotation.summaryAfterDiscount,
+        allTotal: quotation.allTotal,
+        sellerSignature: quotation.sellerSignature,
+        offerContract: '',
+        signDate,
+        servayDate,
+        signAddress,
+
+        userId: company.id,
+      },
+    };
+
+    navigation.navigate('InstallmentScreen',{data: apiData})
+
   };
 
   const handleStep3Press = async() => {
-    setStep3(false);
-    setStep2(true);
-    await mutate({data: { signDate, signAddress, servayDate, id:contract.id, quotationId:quotation.id}, isEmulator});    
+    // setStep3(false);
+    // setStep2(true);
+    navigation.navigate('InstallmentScreen')
+    // await mutate({data: { signDate, signAddress, servayDate, id:contract.id, quotationId:quotation.id}, isEmulator});    
   };
 
   const handlePrevPress = () => {
@@ -259,9 +282,36 @@ const SelectScreen = ({navigation}: Props) => {
   };
 
   const onSubmit = (data: FormData) => {
-    setAddress(data.address);
-    handleNextPress();
-    // handle form submission
+
+    console.log('address',(data.address))
+    const apiData = {
+      data: {
+        id: quotation.id,
+        summary: quotation.summary,
+        services: quotation.services,
+        customer: customer,
+        vat7: quotation.vat7,
+        taxValue: quotation.taxValue,
+        taxName: 'vat3',
+        dateEnd:quotation.dateEnd,
+        discountValue:quotation.discountValue,
+        discountName: 'percent',
+        dateOffer:quotation.dateOffer,
+        FCMToken: quotation.FCMToken,
+        docNumber:quotation.docNumber,
+        summaryAfterDiscount:quotation.summaryAfterDiscount,
+        allTotal: quotation.allTotal,
+        sellerSignature: quotation.sellerSignature,
+        offerContract: '',
+        signDate,
+        servayDate,
+        signAddress:data.address,
+
+        userId: company.id,
+      },
+    };
+
+    navigation.navigate('InstallmentScreen',{data: apiData})
   };
   const renderItem = ({item}: any) => (
     <View style={[styles.summaryItem, {backgroundColor: item.bgColor}]}>
@@ -363,7 +413,7 @@ useEffect(() => {
       )}
 
       {step2 && (
-        <>
+        <ScrollView>
           <View style={styles.card}>
             <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
               โครงการ: {contract.projectName}
@@ -449,120 +499,116 @@ useEffect(() => {
               </View>
             </TouchableOpacity>
           </View>
-        </>
+        </ScrollView>
       )}
       {step3 && (
-        <ScrollView style={styles.scrollView}>
-          <Text style={styles.title}>สรุปสัญญา:</Text>
+        ''
+//         <ScrollView style={styles.scrollView}>
+//           <Text style={styles.title}>สรุปสัญญา:</Text>
 
-          <View style={styles.card3}>
-            <Text style={styles.keyAddress}>ชื่อโครงการ</Text>
-            <Text style={styles.valueAddres}>
-              {' '}
-              โครงการ{splitText(contract.projectName, 50)}
-            </Text>
+//           <View style={styles.card3}>
+//             <Text style={styles.keyAddress}>ชื่อโครงการ</Text>
+//             <Text style={styles.valueAddres}>
+//               {' '}
+//               โครงการ{splitText(contract.projectName, 50)}
+//             </Text>
 
-            <View style={[styles.row, styles.alternateRow]}>
-              <Text style={styles.key}>ลูกค้า:</Text>
-              <Text style={styles.value}>{customer.name}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.key}>ยอดรวม:</Text>
-              <Text style={styles.value}>{quotation.allTotal} บาท</Text>
-            </View>
-            <View style={[styles.row, styles.alternateRow]}>
-              <Text style={styles.key}>วันที่ทำสัญญา:</Text>
-              <Text style={styles.value}>{signDate}</Text>
-            </View>
-            <Text style={styles.keyAddress}>สถาณที่ติดตั้งงาน:</Text>
-            <Text style={styles.valueAddres}>{signAddress}</Text>
-            <View style={[styles.row, styles.alternateRow]}>
-              <Text style={styles.key}>วันที่วัดหน้างาน:</Text>
-              <Text style={styles.value}>{signDate}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.key}>เริ่มงานภายใน:</Text>
-              <Text style={styles.value}>{contract.workAfterGetDeposit} วัน หลังอนุมัติสัญญา </Text>
-            </View>
-            <View style={[styles.row, styles.alternateRow]}>
-              <Text style={styles.key}>ใช้เวลาเตรียมงาน:</Text>
-              <Text style={styles.value}>{contract.prepareDay} วัน</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.key}>ใช้เวลาติดตั้งงาน:</Text>
-              <Text style={styles.value}>{contract.installingDay} วัน </Text>
-            </View>
-            <View style={[styles.row, styles.alternateRow]}>
-              <Text style={styles.key}>ใช้เวลาทำงานทั้งหมด:</Text>
-              <Text style={styles.value}>{contract.finishedDay} วัน</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.key}>รับประกันงานติดตั้ง:</Text>
-              <Text style={styles.value}>{contract.warantyYear} เดือน </Text>
-            </View>
-            <View style={[styles.row, styles.alternateRow]}>
-              <Text style={styles.key}>ลูกค้าตรวจงานภายใน:</Text>
-              <Text style={styles.value}>{contract.offerCheck} วัน</Text>
-            </View>
-          </View>
+//             <View style={[styles.row, styles.alternateRow]}>
+//               <Text style={styles.key}>ลูกค้า:</Text>
+//               <Text style={styles.value}>{customer.name}</Text>
+//             </View>
+//             <View style={styles.row}>
+//               <Text style={styles.key}>ยอดรวม:</Text>
+//               <Text style={styles.value}>{quotation.allTotal} บาท</Text>
+//             </View>
+//             <View style={[styles.row, styles.alternateRow]}>
+//               <Text style={styles.key}>วันที่ทำสัญญา:</Text>
+//               <Text style={styles.value}>{signDate}</Text>
+//             </View>
+//             <Text style={styles.keyAddress}>สถาณที่ติดตั้งงาน:</Text>
+//             <Text style={styles.valueAddres}>{signAddress}</Text>
+//             <View style={[styles.row, styles.alternateRow]}>
+//               <Text style={styles.key}>วันที่วัดหน้างาน:</Text>
+//               <Text style={styles.value}>{signDate}</Text>
+//             </View>
+//             <View style={styles.row}>
+//               <Text style={styles.key}>เริ่มงานภายใน:</Text>
+//               <Text style={styles.value}>{contract.workAfterGetDeposit} วัน หลังอนุมัติสัญญา </Text>
+//             </View>
+//             <View style={[styles.row, styles.alternateRow]}>
+//               <Text style={styles.key}>ใช้เวลาเตรียมงาน:</Text>
+//               <Text style={styles.value}>{contract.prepareDay} วัน</Text>
+//             </View>
+//             <View style={styles.row}>
+//               <Text style={styles.key}>ใช้เวลาติดตั้งงาน:</Text>
+//               <Text style={styles.value}>{contract.installingDay} วัน </Text>
+//             </View>
+//             <View style={[styles.row, styles.alternateRow]}>
+//               <Text style={styles.key}>ใช้เวลาทำงานทั้งหมด:</Text>
+//               <Text style={styles.value}>{contract.finishedDay} วัน</Text>
+//             </View>
+//             <View style={styles.row}>
+//               <Text style={styles.key}>รับประกันงานติดตั้ง:</Text>
+//               <Text style={styles.value}>{contract.warantyYear} เดือน </Text>
+//             </View>
+//             <View style={[styles.row, styles.alternateRow]}>
+//               <Text style={styles.key}>ลูกค้าตรวจงานภายใน:</Text>
+//               <Text style={styles.value}>{contract.offerCheck} วัน</Text>
+//             </View>
+//           </View>
 
-          {/* <FlatList
-            data={summaryData}
-            renderItem={renderItem}
-            keyExtractor={item => item.key}
-            style={styles.summaryList}
-          /> */}
-<View style={{justifyContent: 'center', alignItems: 'center'}}>
 
-          <TouchableOpacity
-            style={[
-              styles.step3Button,
-              {
-                backgroundColor: errors.address ? '#ccc' : '#0073BA',
-                opacity: errors.address ? 0.5 : 1,
-              },
-            ]}
-            onPress={() => handleStep3Press()}
-            disabled={!!errors.address}>
-            <View style={styles.header}>
-              <Text style={styles.buttonText}></Text>
+// <View style={{justifyContent: 'center', alignItems: 'center'}}>
 
-              <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
-              <Icon
-                style={styles.icon}
-                name="chevron-right"
-                size={28}
-                color="#19232e"
-              />
-            </View>
-          </TouchableOpacity>
+//           <TouchableOpacity
+//             style={[
+//               styles.step3Button,
+//               {
+//                 backgroundColor: errors.address ? '#ccc' : '#0073BA',
+//                 opacity: errors.address ? 0.5 : 1,
+//               },
+//             ]}
+//             onPress={() => handleStep3Press()}
+//             disabled={!!errors.address}>
+//             <View style={styles.header}>
+//               <Text style={styles.buttonText}></Text>
 
-          <View style={styles.buttonPrevContainer}>
-            <TouchableOpacity
-              style={[styles.previousButton, styles.outlinedButton]}
-              onPress={handlePrevPress}>
-              <View style={styles.header}>
-                <Icon
-                  style={styles.iconPrev}
-                  name="chevron-left"
-                  size={28}
-                  color="#19232e"
-                />
+//               <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
+//               <Icon
+//                 style={styles.icon}
+//                 name="chevron-right"
+//                 size={28}
+//                 color="#19232e"
+//               />
+//             </View>
+//           </TouchableOpacity>
 
-                <Text style={[styles.buttonText, styles.outlinedButtonText]}>
-                  ย้อนกลับ
-                </Text>
-                <Text style={styles.buttonText}></Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-          </View>
-        </ScrollView>
+//           <View style={styles.buttonPrevContainer}>
+//             <TouchableOpacity
+//               style={[styles.previousButton, styles.outlinedButton]}
+//               onPress={handlePrevPress}>
+//               <View style={styles.header}>
+//                 <Icon
+//                   style={styles.iconPrev}
+//                   name="chevron-left"
+//                   size={28}
+//                   color="#19232e"
+//                 />
+
+//                 <Text style={[styles.buttonText, styles.outlinedButtonText]}>
+//                   ย้อนกลับ
+//                 </Text>
+//                 <Text style={styles.buttonText}></Text>
+//               </View>
+//             </TouchableOpacity>
+//           </View>
+//           </View>
+//         </ScrollView>
       )}
     </View>
   );
 };
-export default SelectScreen;
+export default CreateContractScreen;
 
 const {width} = Dimensions.get('window');
 
@@ -720,10 +766,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 5,
     elevation: 3,
-    // shadowColor: '#000',
-    // shadowOffset: {width: 0, height: 2},
-    // shadowOpacity: 0.3,
-    // shadowRadius: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
     padding: 20,
     marginVertical: 20,
     width: '90%',
@@ -733,10 +779,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 5,
     elevation: 3,
-    // shadowColor: '#000',
-    // shadowOffset: {width: 0, height: 2},
-    // shadowOpacity: 0.3,
-    // shadowRadius: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
     padding: 20,
     marginVertical: 15,
     width: '95%',

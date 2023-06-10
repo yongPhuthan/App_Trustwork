@@ -13,6 +13,7 @@ import * as stateAction from '../redux/Actions';
 import Modal from 'react-native-modal';
 import CardApprovedDashBoard from '../components/CardApprovedDashBoard';
 import messaging from '@react-native-firebase/messaging';
+import CreateContractScreen from './contract/createContractScreen';
 
 type Props = {};
 interface Quotation {
@@ -40,7 +41,7 @@ type RootStackParamList = {
   QuotationScreen: undefined;
   WebViewScreen: {id: string};
   EditQuotation: {id: string};
-  SelectScreen:{id: string};
+  CreateContractScreen:{id: string};
   Dashboard: undefined;
 };
 
@@ -152,7 +153,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
 
   }, []);
   const handleSelectScreen = (id: string) => {
-    navigation.navigate('SelectScreen', {
+    navigation.navigate('CreateContractScreen', {
       id,
     });
   };

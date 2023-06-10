@@ -30,7 +30,7 @@ import SelectAudit from '../screens/selectAudit';
 import EditProductForm from '../screens/editProductForm';
 import ContactInfoScreen from '../screens/contactInfoScreen';
 import SettingCompany from '../screens/settingCompany';
-import ContractOption from '../screens/contractOptions';
+import ContractOption from '../screens/contract/contractOptions';
 import InstallmentScreen from '../screens/installmentScreen';
 import {StackNavigationProp} from '@react-navigation/stack';
 import messaging from '@react-native-firebase/messaging';
@@ -42,7 +42,7 @@ import EditQuotation from '../screens/editQuotation';
 import ContractCard from '../components/ContractCard';
 import WebViewScreen from '../screens/webView';
 import ContractDashBoard from '../screens/contractDashboard';
-import SelectScreen from '../screens/contract/signContract';
+import CreateContractScreen from '../screens/contract/createContractScreen';
 import DocViewScreen from '../screens/docView';
 import TopUpScreen from '../screens/topUpScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -95,7 +95,7 @@ type ParamListBase = {
   AddProductForm: undefined;
   TopUpScreen: undefined;
   LayoutScreen: undefined;
-  SelectScreen: {id: string};
+  CreateContractScreen:{id: string};
   RootTab: undefined;
   QuotationScreen: undefined;
   Dashboard: undefined;
@@ -806,19 +806,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
             name="SelectContract"
             component={SelectContract}
           />
-          <Stack.Screen
-            options={{
-              headerStyle: {
-                backgroundColor: '#042d60',
-              },
-              headerTintColor: '#fff',
-              headerBackTitle: '',
-              headerTitle: 'เลือกการแบ่งจ่ายงวดงาน',
-              headerTruncatedBackTitle: '',
-            }}
-            name="InstallmentScreen"
-            component={InstallmentScreen}
-          />
+          
           <Stack.Screen
             options={{
               headerStyle: {
@@ -867,6 +855,19 @@ function QuotationScreen({navigation}: NavigationScreen) {
             name="WebViewScreen"
             component={WebViewScreen}
           />
+           <Stack.Screen
+              options={{
+                headerStyle: {
+                  backgroundColor: '#0c5caa',
+                },
+                headerTintColor: '#fff',
+                headerTitle: 'สร้างสัญญา',
+                // headerBackTitle: '',
+                headerTruncatedBackTitle: '',
+              }}
+              name="CreateContractScreen"
+              component={CreateContractScreen}
+            />
         </>
       </Stack.Navigator>
     </>
@@ -934,6 +935,7 @@ const Navigation = ({navigation}: NavigationScreen) => {
             name="CompanyUserFormScreen"
             component={CompanyUserFormScreen}
           />
+           
         </Stack.Navigator>
       </NavigationContainer>
     );
@@ -1068,6 +1070,33 @@ const Navigation = ({navigation}: NavigationScreen) => {
               name="TopUpScreen"
               component={TopUpScreen}
             />
+             <Stack.Screen
+              options={{
+                headerStyle: {
+                  backgroundColor: '#0c5caa',
+                },
+                headerTintColor: '#fff',
+                headerTitle: 'สร้างสัญญา',
+                headerBackTitle: '',
+                headerTruncatedBackTitle: '',
+              }}
+              name="CreateContractScreen"
+              component={CreateContractScreen}
+            />
+            <Stack.Screen
+            options={{
+              headerStyle: {
+                backgroundColor: '#042d60',
+              },
+              headerTintColor: '#fff',
+              headerBackTitle: '',
+              headerTitle: 'เลือกการแบ่งจ่ายงวดงาน',
+              headerTruncatedBackTitle: '',
+            }}
+            name="InstallmentScreen"
+            component={InstallmentScreen}
+          />
+           
           </>
         </Stack.Navigator>
       </NavigationContainer>

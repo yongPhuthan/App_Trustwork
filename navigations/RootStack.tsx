@@ -23,7 +23,7 @@ import EditQuotation from '../screens/editQuotation';
 import EditClientForm from '../screens/editClientForm';
 import EditContract from '../screens/editContract';
 import InstallmentScreen from '../screens/installmentScreen';
-import ContractOption from '../screens/contractOptions';
+import ContractOption from '../screens/contract/contractOptions';
 import ContractCard from '../screens/contractCard';
 import LayoutScreen from '../screens/dashBoardScreen';
 
@@ -33,6 +33,7 @@ type ParamListBase = {
   AddClient: undefined;
   AddProductForm: undefined;
   EditQuotationScreen:{id: string};
+  SelectContractScreen:{id: string};
   LayoutScreen: undefined;
   Dashboard: undefined;
   ContractCard: undefined;

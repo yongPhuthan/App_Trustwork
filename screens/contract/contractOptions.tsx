@@ -10,7 +10,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import DatePickerButton from '../components/styles/DatePicker';
+import DatePickerButton from '../../components/styles/DatePicker';
 import messaging from '@react-native-firebase/messaging';
 import {useMutation} from 'react-query';
 import axios, {AxiosResponse, AxiosError} from 'axios';
@@ -21,7 +21,7 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Store} from '../redux/Store';
+import {Store} from '../../redux/Store';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faChevronRight,
@@ -53,9 +53,9 @@ const createContract = async ({
   const user = auth().currentUser;
   let url;
   if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/createContractAndQuotation`;
+    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/createContract`;
   } else {
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createContractAndQuotation`;
+    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createContract`;
   }
   const response = await fetch(url, {
     method: 'POST',
@@ -70,10 +70,12 @@ const createContract = async ({
   }
 };
 const ContractOption = ({navigation}: Props) => {
-  const [projectName, setProjectName] = useState('');
-  const [signAddress, setSignAddress] = useState('preview');
   const route = useRoute();
   const {data}: any = route?.params;
+
+  const [projectName, setProjectName] = useState('');
+  const [signAddress, setSignAddress] = useState(data.data.signAddress);
+
   const [warantyTimeWork, setWarantyTimeWork] = useState('');
   const [workingDays, setWorkingDays] = useState('');
   const [workCheckEnd, setWorkCheckEnd] = useState('');
@@ -89,21 +91,25 @@ const ContractOption = ({navigation}: Props) => {
   const [showSecondPage, setShowSecondPage] = useState(false);
   const [servayDate, setServayDate] = useState<String>('preview');
   const {updatedData, contract}: any = route.params;
+  
   const {
     state: {selectedContract, isEmulator},
     dispatch,
   }: any = useContext(Store);
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     const apiData = {
+      id: uuidv4(),
+      quotationId: data.data.id,
       projectName,
-      signAddress,
+      signAddress:data.data.signAddress,
       warantyYear: warantyTimeWork,
       workingDays,
       workAfterGetDeposit,
       prepareDay,
       finishedDay,
+      signDate:data.data.signDate,
       adjustPerDay,
-      servayDate,
+      servayDate:data.data.servayDate,
       workCheckDay,
       workCheckEnd,
       installingDay,
@@ -119,10 +125,13 @@ const ContractOption = ({navigation}: Props) => {
       finishedDay,
       adjustPerDay,
     });
-    navigation.navigate('SelectContract', {
-      updatedData: data,
-      contract: apiData,
-    });
+          console.log('api data',JSON.stringify(data.data));
+
+    await mutate({data: apiData, isEmulator});
+    // navigation.navigate('SelectContract', {
+    //   updatedData: data,
+    //   contract: apiData,
+    // });
   };
   const handleStartDateSelected = (date: Date) => {
     const formattedDate = thaiDateFormatter.format(date);
@@ -131,8 +140,7 @@ const ContractOption = ({navigation}: Props) => {
   };
   const {mutate} = useMutation(createContract, {
     onSuccess: data => {
-      const newId = updatedData.data.id.slice(0, 8);
-      navigation.navigate('WebViewScreen', {newId});
+      navigation.navigate('WebViewScreen', {id:data?.data.id});
     },
     onError: (error: MyError) => {
       console.error('There was a problem calling the function:', error);
@@ -217,16 +225,16 @@ const ContractOption = ({navigation}: Props) => {
   console.log('route', JSON.stringify(data.data.userId));
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.containerForm}>
       {/* <View style={styles.header}>
         <Text style={styles.headerText}>สร้างข้อเสนอสัญญา</Text>
       </View> */}
       {!showSecondPage ? (
-        <View style={styles.form}>
+        <View style={styles.formInput}>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>ชื่อโครงการ</Text>
             <TextInput
-              style={styles.input}
+              style={styles.inputForm}
               value={projectName}
               onChangeText={setProjectName}
               placeholder="โครงการติดตั้ง..."
@@ -236,7 +244,7 @@ const ContractOption = ({navigation}: Props) => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>รับประกันงานติดตั้งกี่ปี</Text>
             <TextInput
-              style={styles.input}
+              style={styles.inputForm}
               value={warantyTimeWork}
               onChangeText={setWarantyTimeWork}
               placeholder="จำนวนปี"
@@ -247,7 +255,7 @@ const ContractOption = ({navigation}: Props) => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Working Days</Text>
             <TextInput
-              style={styles.input}
+              style={styles.inputForm}
               value={workingDays}
               onChangeText={setWorkingDays}
               placeholder="Working Days"
@@ -258,7 +266,7 @@ const ContractOption = ({navigation}: Props) => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Installing Day</Text>
             <TextInput
-              style={styles.input}
+              style={styles.inputForm}
               value={installingDay}
               onChangeText={setInstallingDay}
               placeholder="Installing Day"
@@ -267,13 +275,13 @@ const ContractOption = ({navigation}: Props) => {
             />
           </View>
           <TouchableOpacity
-            style={styles.button}
+            style={styles.buttonForm}
             onPress={handleShowSecondPage}>
-            <View style={styles.header}>
-              <Text style={styles.buttonText}>ต่อไป</Text>
+            <View style={styles.headerForm}>
+              <Text style={styles.buttonTextForm}>ต่อไป</Text>
 
               <FontAwesomeIcon
-              style={styles.icon}
+              style={styles.iconForm}
               icon={faChevronRight}
               size={18}
               color="white"
@@ -283,13 +291,13 @@ const ContractOption = ({navigation}: Props) => {
           {/* <Button title="Next" onPress={handleShowSecondPage} color="#007AFF" /> */}
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <View style={styles.form}>
+        <ScrollView contentContainerStyle={styles.scrollViewForm}>
+          <View style={styles.formInput}>
             <View style={styles.inputContainer}>
-              <View style={[styles.row, styles.center]}>
+              <View style={[styles.rowForm, styles.center]}>
                 <Text style={styles.label}>Work After Get Deposit</Text>
                 <TextInput
-                  style={[styles.input, styles.smallInput]}
+                  style={[styles.inputForm, styles.smallInput]}
                   value={workAfterGetDeposit}
                   onChangeText={setWorkAfterGetDeposit}
                   placeholder="Work After Get Deposit"
@@ -301,10 +309,10 @@ const ContractOption = ({navigation}: Props) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <View style={[styles.row, styles.center]}>
+              <View style={[styles.rowForm, styles.center]}>
                 <Text style={styles.label}>Prepare Days</Text>
                 <TextInput
-                  style={[styles.input, styles.smallInput]}
+                  style={[styles.inputForm, styles.smallInput]}
                   value={prepareDay}
                   onChangeText={setPrepareDay}
                   placeholder="Prepare Days"
@@ -315,10 +323,10 @@ const ContractOption = ({navigation}: Props) => {
               </View>
             </View>
             <View style={styles.inputContainer}>
-              <View style={[styles.row, styles.center]}>
+              <View style={[styles.rowForm, styles.center]}>
                 <Text style={styles.label}>Finished Days</Text>
                 <TextInput
-                  style={[styles.input, styles.smallInput]}
+                  style={[styles.inputForm, styles.smallInput]}
                   value={finishedDay}
                   onChangeText={setFinishedDay}
                   placeholder="Finished Days"
@@ -329,10 +337,10 @@ const ContractOption = ({navigation}: Props) => {
               </View>
             </View>
             <View style={styles.inputContainer}>
-              <View style={[styles.row, styles.center]}>
+              <View style={[styles.rowForm, styles.center]}>
                 <Text style={styles.label}>Work Check Day</Text>
                 <TextInput
-                  style={[styles.input, styles.smallInput]}
+                  style={[styles.inputForm, styles.smallInput]}
                   value={workCheckDay}
                   onChangeText={setWorkCheckDay}
                   placeholder="Work Check Day"
@@ -343,10 +351,10 @@ const ContractOption = ({navigation}: Props) => {
               </View>
             </View>
             <View style={styles.inputContainer}>
-              <View style={[styles.row, styles.center]}>
+              <View style={[styles.rowForm, styles.center]}>
                 <Text style={styles.label}>Work Check End</Text>
                 <TextInput
-                  style={[styles.input, styles.smallInput]}
+                  style={[styles.inputForm, styles.smallInput]}
                   value={workCheckEnd}
                   onChangeText={setWorkCheckEnd}
                   placeholder="Work Check End"
@@ -357,10 +365,10 @@ const ContractOption = ({navigation}: Props) => {
               </View>
             </View>
             <View style={styles.inputContainer}>
-              <View style={[styles.row, styles.center]}>
+              <View style={[styles.rowForm, styles.center]}>
                 <Text style={styles.label}>Adjust Per Days</Text>
                 <TextInput
-                  style={[styles.input, styles.smallInput]}
+                  style={[styles.inputForm, styles.smallInput]}
                   value={adjustPerDay}
                   onChangeText={setAdjustPerDay}
                   placeholder="Adjust Per Days"
@@ -371,31 +379,31 @@ const ContractOption = ({navigation}: Props) => {
               </View>
             </View>
             <TouchableOpacity
-              style={styles.submitedButton}
+              style={styles.submitedButtonForm}
               onPress={handleSubmit}
               disabled={isLoadingMutation}>
-              <View style={styles.header}>
+              <View style={styles.headerForm}>
                 {isLoadingMutation ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.buttonText}>สร้างเอกสาร</Text>
+                  <Text style={styles.buttonTextForm}>สร้างเอกสาร</Text>
                 )}
               </View>
             </TouchableOpacity>
 
-            <View style={styles.buttonPrevContainer}>
+            <View style={styles.buttonPrevContainerForm}>
               <TouchableOpacity
                 onPress={handleHideSecondPage}
-                style={[styles.previousButton, styles.outlinedButton]}>
-                <View style={styles.header}>
+                style={[styles.previousButtonForm, styles.outlinedButtonForm]}>
+                <View style={styles.headerForm}>
                   <Icon
-                    style={styles.iconPrev}
+                    style={styles.iconPrevForm}
                     name="arrow-left-thin"
                     size={28}
                     color="#19232e"
                   />
 
-                  <Text style={[styles.buttonText, styles.outlinedButtonText]}>
+                  <Text style={[styles.buttonTextForm, styles.outlinedButtonTextForm]}>
                     ย้อนกลับ
                   </Text>
                 </View>
@@ -409,28 +417,28 @@ const ContractOption = ({navigation}: Props) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  containerForm: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  header: {
+  headerForm: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -1,
   },
-  headerText: {
+  headerTextForm: {
     fontFamily: 'sukhumvit set',
     fontSize: 20,
     fontWeight: 'bold',
   },
-  form: {
+  formInput: {
     flex: 1,
     marginTop:30
   },
-  row: {
+  rowForm: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -439,10 +447,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 5,
   },
-  outlinedButton: {
+  outlinedButtonForm: {
     backgroundColor: 'transparent',
   },
-  outlinedButtonText: {
+  outlinedButtonTextForm: {
     color: '#0073BA',
   },
   roundedButton: {
@@ -461,7 +469,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollView: {
+  scrollViewForm: {
     flexGrow: 1,
     justifyContent: 'center',
   },
@@ -474,28 +482,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  input: {
+  inputForm: {
     backgroundColor: '#F5F5F5',
     borderRadius: 5,
     height: 50,
     marginLeft: 10,
     paddingHorizontal: 10,
   },
-  buttonContainer: {
+  buttonContainerForm: {
     marginTop: 20,
     // backgroundColor: '#007AFF',
     borderRadius: 5,
     height: 40,
     justifyContent: 'center',
   },
-  submitedButton: {
+  submitedButtonForm: {
     backgroundColor: '#0073BA',
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 5,
     marginTop: 20,
   },
-  buttonPrevContainer: {
+  buttonPrevContainerForm: {
     marginTop: 20,
     borderColor: '#0073BA',
     borderWidth: 1,
@@ -504,7 +512,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
   },
-  buttonText: {
+  buttonTextForm: {
     color: '#FFFFFF',
     // fontFamily: 'sukhumvit set',
     fontSize: 16,
@@ -531,7 +539,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  button: {
+  buttonForm: {
     backgroundColor: '#0073BA',
     paddingVertical: 12,
     paddingHorizontal: 32,
@@ -539,20 +547,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 20,
   },
-  previousButton: {
+  previousButtonForm: {
     borderColor: '#0073BA',
     backgroundColor: 'white',
   },
   smallInput: {
     width: '30%',
   },
-  icon: {
+  iconForm: {
     color: 'white',
     marginLeft: 10,
     marginTop: 2,
  
   },
-  iconPrev: {
+  iconPrevForm: {
     // color: '#007AFF',
     color: '#0073BA',
 
