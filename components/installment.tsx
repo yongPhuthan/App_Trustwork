@@ -130,7 +130,7 @@ const Installment = (props: Props) => {
 
   const {mutate,isLoading} = useMutation(updateContract, {
     onSuccess: data => {
-      const newId = dataProps.id.slice(0, 8);
+      const newId = dataProps.quotationId.slice(0, 8);
       navigation.navigate('DocViewScreen', {
         id:newId,
       });
@@ -164,7 +164,6 @@ const Installment = (props: Props) => {
       Alert.alert('Error', errorMessage?.toString() || 'Error');
       return;
     }
-
 
     const newInstallmentDetails = Object.entries(percentages).map(
       ([key, value]) => ({
