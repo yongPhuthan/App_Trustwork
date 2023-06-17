@@ -306,7 +306,6 @@ const Quotation = ({navigation}: Props) => {
       // navigation.navigate('InstallmentScreen', {data: apiData});
       navigation.navigate('SelectContract', {data: apiData});
 
-
       setIsLoadingMutation(false);
     } catch (error: Error | AxiosError | any) {
       console.error('There was a problem calling the function:', error);
@@ -358,12 +357,14 @@ const Quotation = ({navigation}: Props) => {
 
       if (enabled) {
         console.log('Authorization status:', authStatus);
+        await messaging().registerDeviceForRemoteMessages(); // Register device for remote messages
         getFCMToken();
       }
     }
 
     async function getFCMToken() {
       const fcmToken = await messaging().getToken();
+
       if (fcmToken) {
         console.log('Your Firebase Token  document:', fcmToken);
         setFtmToken(fcmToken);

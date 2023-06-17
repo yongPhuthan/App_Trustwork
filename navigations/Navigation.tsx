@@ -70,6 +70,7 @@ import {
 import EditCompanyForm from '../screens/editCompanyForm';
 import {ScrollView} from 'react-native-gesture-handler';
 import AuditCategory from '../screens/auditCategory';
+import ContractSteps from '../screens/contract/contractSteps';
 // import FontAwesomeIcon from 'react-native-vector-icons/FontAwesomeIcon5';
 
 type Props = {};
@@ -120,7 +121,7 @@ type ParamListBase = {
   };
   EditClientForm: undefined;
   WebViewScreen: {id: string};
-  DocViewScreen: {id: string};
+  DocViewScreen: {id: any};
   SignUpScreen: undefined;
   LoginScreen: undefined;
   CompanyUserFormScreen: undefined;
@@ -308,7 +309,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
     console.log('Logout confirmed');
     toggleLogoutModal();
   };
-  console.log('LOGO', JSON.stringify(logo));
+  console.log('company', JSON.stringify(company));
 
   return (
     <>
@@ -435,7 +436,9 @@ function SettingsScreen({navigation}: SettingScreenProps) {
                     color: '#333',
                     marginRight: 8,
                   }}>
-                  0.00{' '}
+                {Number(company?.balance)
+              .toFixed(2)
+              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
                 </Text>
                 <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
               </View>
@@ -1096,6 +1099,18 @@ const Navigation = ({navigation}: NavigationScreen) => {
             name="InstallmentScreen"
             component={InstallmentScreen}
           />
+        <Stack.Screen
+            options={{
+             
+              headerTruncatedBackTitle: '',
+              headerBackTitle: '',
+              headerTitle: 'ร่างสัญญา',
+           
+            }}
+            name="ContractOptions"
+            component={ContractOption}
+          />
+          
            
           </>
         </Stack.Navigator>

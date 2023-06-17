@@ -1,7 +1,7 @@
 import DatePickerButton from '../../components/styles/DatePicker';
 import {useRoute} from '@react-navigation/native';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {useQuery,useMutation} from 'react-query';
+import {useQuery, useMutation} from 'react-query';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
 import {Store} from '../../redux/Store';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -22,9 +22,12 @@ import {useForm, Controller} from 'react-hook-form';
 import {HOST_URL} from '@env';
 import * as stateAction from '../../redux/Actions';
 import ContractOption from 'screens/contract/contractOptions';
+import ContractFooter from '../../components/styles/ContractFooter';
+import SmallDivider from '../../components/styles/SmallDivider';
+import DatePickerContract from '../../components/styles/DatePickerContract';
 
 type FormData = {
-  address: string;
+  // address: string;
 };
 const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
   year: 'numeric',
@@ -39,7 +42,6 @@ type UpdateContractInput = {
   data: any;
   isEmulator: boolean;
 };
-
 
 interface ContractData {
   id: string;
@@ -72,9 +74,14 @@ interface Quotation {
   allTotal: string;
 }
 type Props = {
-  navigation: StackNavigationProp<ParamListBase, 'CreateContractScreen'>;
-  route: RouteProp<ParamListBase, 'CreateContractScreen'>;
-  // onGoBack: (data: string) => void;
+  handleDateServay: (date: Date) => void;
+  handleDateSigne: (date: Date) => void;
+  signDate: string;
+  servayDate: string;
+  projectName: string;
+  customerName: string;
+  allTotal: number;
+  handleAddressChange:(address:string) => void;
 };
 const fetchContract = async ({
   id,
@@ -113,50 +120,23 @@ const fetchContract = async ({
   return data;
 };
 
-const updateContract =async (input: UpdateContractInput): Promise<void> => {
-  const { data, isEmulator } = input;
-  const user = auth().currentUser;
-  console.log('data PUT', JSON.stringify(data))
 
-  let url;
-  if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/appUpdateContract`;
-  } else {
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/appUpdateContract`;
-  }
-  const response = await fetch(
-    url,
-    {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${user?.uid}`,
-      },
-      body: JSON.stringify({data}),
-    },
-  );
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
-const CreateContractScreen = ({navigation}: Props) => {
+const CreateContractScreen = (props: Props) => {
   const [step1, setStep1] = useState(true);
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [customer, setCustomer] = useState<Customer>({} as Customer);
   const [quotation, setQuotation] = useState<Quotation>({} as Quotation);
   const [company, setCompany] = useState('');
   const [contract, setContract] = useState<ContractData>({} as ContractData);
-  const [signDate, setDateSign] = useState('');
-  const [servayDate, setDateServay] = useState('');
+  // const [signDate, setDateSign] = useState('');
+  // const [servayDate, setDateServay] = useState('');
   const route = useRoute();
   const {
-    state: {
-      isEmulator,
-    },
+    state: {isEmulator},
     dispatch,
   }: any = useContext(Store);
   const [step3, setStep3] = useState(false);
-  const {id}: any = route.params;
+  const {id}: any = 'route.params';
   const [step2, setStep2] = useState(false);
   const [hasPhoneNumber, setHasPhoneNumber] = useState(false);
   const [date, setDate] = useState(new Date());
@@ -175,36 +155,20 @@ const CreateContractScreen = ({navigation}: Props) => {
   );
 
   const {
-    control,
     handleSubmit,
+    control,
     formState: {errors},
-  } = useForm<FormData>();
+    watch,
+  } = useForm();
+  const address = watch('address');
 
   const handleStep1Press = (hasAccount: boolean) => {
     setStep1(false);
     setHasPhoneNumber(hasAccount);
     setStep2(true);
   };
-  const {mutate} = useMutation(updateContract, {
-    onSuccess: data => {
-      const newId = quotation.id.slice(0, 8);
-      navigation.navigate('DocViewScreen', {id:newId});
-    },
-    onError: (error: MyError) => {
-      console.error('There was a problem calling the function:', error);
-      console.log(error.response);
-    },
-  });
-  
-  const handleDateSigne = (date: Date) => {
-    const formattedDate = thaiDateFormatter.format(date);
-    setDateSign(formattedDate);
-  };
 
-  const handleDateServay = (date: Date) => {
-    const formattedDate = thaiDateFormatter.format(date);
-    setDateServay(formattedDate);
-  };
+
   const truncateText = (text: string, maxLength: number) => {
     if (text.length > maxLength) {
       return text.substring(0, maxLength - 3) + '...';
@@ -212,8 +176,6 @@ const CreateContractScreen = ({navigation}: Props) => {
     return text;
   };
 
-
-  
   const handleStep2Press = () => {
     const apiData = {
       data: {
@@ -224,13 +186,13 @@ const CreateContractScreen = ({navigation}: Props) => {
         vat7: quotation.vat7,
         taxValue: quotation.taxValue,
         taxName: 'vat3',
-        dateEnd:quotation.dateEnd,
-        discountValue:quotation.discountValue,
+        dateEnd: quotation.dateEnd,
+        discountValue: quotation.discountValue,
         discountName: 'percent',
-        dateOffer:quotation.dateOffer,
+        dateOffer: quotation.dateOffer,
         FCMToken: quotation.FCMToken,
-        docNumber:quotation.docNumber,
-        summaryAfterDiscount:quotation.summaryAfterDiscount,
+        docNumber: quotation.docNumber,
+        summaryAfterDiscount: quotation.summaryAfterDiscount,
         allTotal: quotation.allTotal,
         sellerSignature: quotation.sellerSignature,
         offerContract: '',
@@ -242,15 +204,14 @@ const CreateContractScreen = ({navigation}: Props) => {
       },
     };
 
-    navigation.navigate('InstallmentScreen',{data: apiData})
-
+    // navigation.navigate('InstallmentScreen', {data: apiData});
   };
 
-  const handleStep3Press = async() => {
+  const handleStep3Press = async () => {
     // setStep3(false);
     // setStep2(true);
-    navigation.navigate('InstallmentScreen')
-    // await mutate({data: { signDate, signAddress, servayDate, id:contract.id, quotationId:quotation.id}, isEmulator});    
+    // navigation.navigate('InstallmentScreen');
+    // await mutate({data: { signDate, signAddress, servayDate, id:contract.id, quotationId:quotation.id}, isEmulator});
   };
 
   const handlePrevPress = () => {
@@ -282,8 +243,7 @@ const CreateContractScreen = ({navigation}: Props) => {
   };
 
   const onSubmit = (data: FormData) => {
-
-    console.log('address',(data.address))
+    console.log('address', data.address);
     const apiData = {
       data: {
         id: quotation.id,
@@ -293,26 +253,27 @@ const CreateContractScreen = ({navigation}: Props) => {
         vat7: quotation.vat7,
         taxValue: quotation.taxValue,
         taxName: 'vat3',
-        dateEnd:quotation.dateEnd,
-        discountValue:quotation.discountValue,
+        dateEnd: quotation.dateEnd,
+        discountValue: quotation.discountValue,
         discountName: 'percent',
-        dateOffer:quotation.dateOffer,
+        dateOffer: quotation.dateOffer,
         FCMToken: quotation.FCMToken,
-        docNumber:quotation.docNumber,
-        summaryAfterDiscount:quotation.summaryAfterDiscount,
+        docNumber: quotation.docNumber,
+        summaryAfterDiscount: quotation.summaryAfterDiscount,
         allTotal: quotation.allTotal,
         sellerSignature: quotation.sellerSignature,
         offerContract: '',
         signDate,
         servayDate,
-        signAddress:data.address,
+        signAddress: data.address, // change here
 
         userId: company.id,
       },
     };
 
-    navigation.navigate('InstallmentScreen',{data: apiData})
+    navigation.navigate('InstallmentScreen', {data: apiData});
   };
+
   const renderItem = ({item}: any) => (
     <View style={[styles.summaryItem, {backgroundColor: item.bgColor}]}>
       <Text style={styles.summaryKey}>{item.key}</Text>
@@ -338,273 +299,134 @@ const CreateContractScreen = ({navigation}: Props) => {
     {key: '16', value: contract.sellerId, bgColor: 'white'},
   ] as {key: string; value: any; bgColor: string}[];
 
-useEffect(() => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
- setDateServay(`${day}-${month}-${year}`)
- setDateSign(`${day}-${month}-${year}`)
- 
-}, [])
+  // useEffect(() => {
+  //   const today = new Date();
+  //   const year = today.getFullYear();
+  //   const month = String(today.getMonth() + 1).padStart(2, '0');
+  //   const day = String(today.getDate()).padStart(2, '0');
+  //   setDateServay(`${day}-${month}-${year}`);
+  //   setDateSign(`${day}-${month}-${year}`);
+  // }, []);
 
+useEffect(() => {
+  if(address){
+    props.handleAddressChange(address);
+
+  }
+}, [address]);
   return (
     <View style={styles.container}>
-      {step1 && (
-        <>
-          <View style={styles.card}>
-            <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
-              โครงการ: {contract.projectName}
-            </Text>
-            <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
-              ลูกค้า: {customer?.name}
-            </Text>
-            <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
-              ยอดรวม: {quotation?.allTotal} บาท
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <Text style={styles.title}>Do you have already account?</Text>
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.yesButton,
-              {
-                backgroundColor: errors.address ? '#ccc' : '#0073BA',
-                opacity: errors.address ? 0.5 : 1,
-              },
-            ]}
-            onPress={() => handleStep1Press(true)}
-            disabled={!!errors.address}>
-            <View style={styles.headerStep1Button}>
-              <Text style={styles.buttonText}></Text>
-              <Icon
-                style={styles.icon}
-                name="check"
-                size={28}
-                color="#19232e"
-              />
-              <Text style={styles.buttonText}>สำรวจหน้างานแล้ว</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.yesButton,
-              {
-                backgroundColor: errors.address ? '#ccc' : '#0073BA',
-                opacity: errors.address ? 0.5 : 1,
-              },
-            ]}
-            onPress={() => handleStep1Press(true)}
-            disabled={!!errors.address}>
-            <View style={styles.headerStep1Button}>
-              <Icon
-                style={styles.icon}
-                name="check"
-                size={28}
-                color="#19232e"
-              />
-              <Text style={styles.buttonText}></Text>
-
-              <Text style={styles.buttonText}>ยังไม่ได้สำรวจหน้างาน</Text>
-            </View>
-          </TouchableOpacity>
-        </>
-      )}
-
-      {step2 && (
-        <ScrollView>
-          <View style={styles.card}>
-            <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
-              โครงการ: {contract.projectName}
-            </Text>
-            <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
-              ลูกค้า: {customer.name}
-            </Text>
-            <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
-              ยอดรวม: {quotation.allTotal} บาท
-            </Text>
-          </View>
-          <View style={styles.stepContainer}>
-            <Text style={styles.title}>วันที่ทำสัญญา:</Text>
-            <DatePickerButton
-              label=""
-              date="today"
-              onDateSelected={handleDateSigne}
-            />
-            <Text style={styles.title}>สถาณที่ติดตั้งงาน:</Text>
-            <Controller
-              control={control}
-              render={({field}) => (
-                <TextInput
-                  multiline
-                  style={styles.input}
-                  placeholder="Address"
-                  value={field.value}
-                  onChangeText={field.onChange}
-                />
-              )}
-              name="address"
-              rules={{required: true}}
-            />
-            {errors.address && (
-              <Text style={styles.error}>This field is required.</Text>
-            )}
-            <Text style={styles.title}>วันที่วัดหน้างาน:</Text>
-            <DatePickerButton
-              label=""
-              date="today"
-              onDateSelected={handleDateServay}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.submitedButton,
-              {
-                backgroundColor: errors.address ? '#ccc' : '#0073BA',
-                opacity: errors.address ? 0.5 : 1,
-              },
-            ]}
-            onPress={handleSubmit(onSubmit)}
-            disabled={!!errors.address}>
-            <View style={styles.header}>
-              <Text style={styles.buttonText}></Text>
-
-              <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
-              <Icon
-                style={styles.icon}
-                name="chevron-right"
-                size={28}
-                color="#19232e"
-              />
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.buttonPrevContainer}>
-            <TouchableOpacity
-              style={[styles.previousButton, styles.outlinedButton]}
-              onPress={handlePrevPress}>
-              <View style={styles.header}>
-                <Icon
-                  style={styles.iconPrev}
-                  name="chevron-left"
-                  size={28}
-                  color="#19232e"
-                />
-                <Text style={[styles.buttonText, styles.outlinedButtonText]}>
-                  ย้อนกลับ
+      <ScrollView>
+        {step1 && (
+          <>
+            <View style={styles.card}>
+              <View style={{flexDirection: 'row'}}>
+                <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
+                  โครงการ:
                 </Text>
-                <Text style={styles.buttonText}></Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '400',
+                    marginTop: 10,
+                    marginLeft: 20,
+                  }}>
+                  {props.projectName}
+                </Text>
               </View>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      )}
-      {step3 && (
-        ''
-//         <ScrollView style={styles.scrollView}>
-//           <Text style={styles.title}>สรุปสัญญา:</Text>
+              <View style={{flexDirection: 'row'}}>
+                <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
+                  ลูกค้า:
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '400',
+                    marginTop: 10,
+                    marginLeft: 40,
+                  }}>
+                  {props.customerName}
+                </Text>
+              </View>
+              <View style={{flexDirection: 'row'}}>
+                <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>
+                  ยอดรวม:
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '400',
+                    marginTop: 10,
+                    marginLeft: 22,
+                  }}>
+                  {Number(props.allTotal)
+                    .toFixed(2)
+                    .replace(/\d(?=(\d{3})+\.)/g, '$&,')}{' '}
+                  บาท
+                </Text>
+              </View>
+            </View>
 
-//           <View style={styles.card3}>
-//             <Text style={styles.keyAddress}>ชื่อโครงการ</Text>
-//             <Text style={styles.valueAddres}>
-//               {' '}
-//               โครงการ{splitText(contract.projectName, 50)}
-//             </Text>
+            <View style={styles.stepContainer}>
+              <SmallDivider />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  width: '70%',
+                }}>
+                <Text style={styles.title}>วันที่ทำสัญญา:</Text>
+                <View style={{marginTop: 10}}>
+                  <DatePickerContract
+                    label=""
+                    date="today"
+                    onDateSelected={props.handleDateSigne}
+                  />
+                </View>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  width: '70%',
+                }}>
+                <Text style={styles.title}>วันที่วัดหน้างาน:</Text>
 
-//             <View style={[styles.row, styles.alternateRow]}>
-//               <Text style={styles.key}>ลูกค้า:</Text>
-//               <Text style={styles.value}>{customer.name}</Text>
-//             </View>
-//             <View style={styles.row}>
-//               <Text style={styles.key}>ยอดรวม:</Text>
-//               <Text style={styles.value}>{quotation.allTotal} บาท</Text>
-//             </View>
-//             <View style={[styles.row, styles.alternateRow]}>
-//               <Text style={styles.key}>วันที่ทำสัญญา:</Text>
-//               <Text style={styles.value}>{signDate}</Text>
-//             </View>
-//             <Text style={styles.keyAddress}>สถาณที่ติดตั้งงาน:</Text>
-//             <Text style={styles.valueAddres}>{signAddress}</Text>
-//             <View style={[styles.row, styles.alternateRow]}>
-//               <Text style={styles.key}>วันที่วัดหน้างาน:</Text>
-//               <Text style={styles.value}>{signDate}</Text>
-//             </View>
-//             <View style={styles.row}>
-//               <Text style={styles.key}>เริ่มงานภายใน:</Text>
-//               <Text style={styles.value}>{contract.workAfterGetDeposit} วัน หลังอนุมัติสัญญา </Text>
-//             </View>
-//             <View style={[styles.row, styles.alternateRow]}>
-//               <Text style={styles.key}>ใช้เวลาเตรียมงาน:</Text>
-//               <Text style={styles.value}>{contract.prepareDay} วัน</Text>
-//             </View>
-//             <View style={styles.row}>
-//               <Text style={styles.key}>ใช้เวลาติดตั้งงาน:</Text>
-//               <Text style={styles.value}>{contract.installingDay} วัน </Text>
-//             </View>
-//             <View style={[styles.row, styles.alternateRow]}>
-//               <Text style={styles.key}>ใช้เวลาทำงานทั้งหมด:</Text>
-//               <Text style={styles.value}>{contract.finishedDay} วัน</Text>
-//             </View>
-//             <View style={styles.row}>
-//               <Text style={styles.key}>รับประกันงานติดตั้ง:</Text>
-//               <Text style={styles.value}>{contract.warantyYear} เดือน </Text>
-//             </View>
-//             <View style={[styles.row, styles.alternateRow]}>
-//               <Text style={styles.key}>ลูกค้าตรวจงานภายใน:</Text>
-//               <Text style={styles.value}>{contract.offerCheck} วัน</Text>
-//             </View>
-//           </View>
+                <View style={{marginTop: 10}}>
+                  <DatePickerContract
+                    label=""
+                    date="today"
+                    onDateSelected={props.handleDateServay}
+                  />
+                </View>
+              </View>
+              <View style={{marginTop: 10}}></View>
+              <SmallDivider />
+              <View style={{marginTop: 10, alignSelf: 'flex-start'}}>
+                <Text style={styles.title}>สถาณที่ติดตั้งงาน:</Text>
+                <Controller
+                  control={control}
+                  render={({field}) => (
+                    <TextInput
+                      multiline
+                      style={styles.input}
+                      placeholder="Address"
+                      value={field.value}
+                      onChangeText={field.onChange}
+                    />
+                  )}
+                  name="address"
+                  rules={{required: true}}
+                />
+                {errors.address && (
+                  <Text style={styles.error}>This field is required.</Text>
+                )}
+              </View>
+            </View>
+          </>
+        )}
+      </ScrollView>
 
-
-// <View style={{justifyContent: 'center', alignItems: 'center'}}>
-
-//           <TouchableOpacity
-//             style={[
-//               styles.step3Button,
-//               {
-//                 backgroundColor: errors.address ? '#ccc' : '#0073BA',
-//                 opacity: errors.address ? 0.5 : 1,
-//               },
-//             ]}
-//             onPress={() => handleStep3Press()}
-//             disabled={!!errors.address}>
-//             <View style={styles.header}>
-//               <Text style={styles.buttonText}></Text>
-
-//               <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
-//               <Icon
-//                 style={styles.icon}
-//                 name="chevron-right"
-//                 size={28}
-//                 color="#19232e"
-//               />
-//             </View>
-//           </TouchableOpacity>
-
-//           <View style={styles.buttonPrevContainer}>
-//             <TouchableOpacity
-//               style={[styles.previousButton, styles.outlinedButton]}
-//               onPress={handlePrevPress}>
-//               <View style={styles.header}>
-//                 <Icon
-//                   style={styles.iconPrev}
-//                   name="chevron-left"
-//                   size={28}
-//                   color="#19232e"
-//                 />
-
-//                 <Text style={[styles.buttonText, styles.outlinedButtonText]}>
-//                   ย้อนกลับ
-//                 </Text>
-//                 <Text style={styles.buttonText}></Text>
-//               </View>
-//             </TouchableOpacity>
-//           </View>
-//           </View>
-//         </ScrollView>
-      )}
     </View>
   );
 };
@@ -615,24 +437,21 @@ const {width} = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 30,
+    width,
     // justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: 'white',
   },
   stepContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     marginVertical: 20,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+    borderWidth: 0.5,
+    borderRadius: 8,
     padding: 10,
     backgroundColor: 'white',
     width: width * 0.8,
@@ -645,7 +464,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    paddingHorizontal: 50,
+    paddingHorizontal: 20,
   },
   button: {
     backgroundColor: '#007AFF',
@@ -697,24 +516,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  outlinedButtonText: {
-    color: '#0073BA',
-  },
-  icon: {
-    color: 'white',
-    marginTop: -2.5,
-  },
-  iconPrev: {
-    color: '#0073BA',
-  },
+
   submitedButton: {
     backgroundColor: '#0073BA',
     paddingVertical: 12,
     paddingHorizontal: 5,
     borderRadius: 5,
     height: 40,
-    width: '90%',
-    marginTop: 50,
   },
   yesButton: {
     backgroundColor: '#0073BA',
@@ -765,15 +573,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 5,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
+    // elevation: 3,
+    // shadowColor: '#000',
+    // shadowOffset: {width: 0, height: 2},
+    // shadowOpacity: 0.3,
+    // shadowRadius: 3,
     padding: 20,
-    marginVertical: 20,
-    width: '90%',
-    alignSelf: 'center',
+    marginVertical: 10,
+    width: '80%',
+    alignSelf: 'baseline',
   },
   card3: {
     backgroundColor: '#ffffff',
@@ -819,6 +627,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   scrollView: {
-    width: '95%'
+    width: '95%',
   },
 });

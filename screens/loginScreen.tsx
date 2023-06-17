@@ -10,7 +10,7 @@ import React, {useState, useEffect} from 'react';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {StackNavigationProp} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { LoginManager, AccessToken,LoginButton,Profile } from 'react-native-fbsdk-next';
 import {
   GoogleSignin,
   statusCodes,
@@ -54,6 +54,15 @@ const LoginScreen = ({navigation}: Props) => {
     }
   };
 
+  const signOut = async () => {
+    try {
+      await GoogleSignin.signOut();
+      console.log('Signing out')
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   async function confirmCode() {
     try {
       await confirm?.confirm(code);
@@ -62,7 +71,34 @@ const LoginScreen = ({navigation}: Props) => {
     }
   }
 
-
+  async function onFacebookButtonPress() {
+    LoginManager.logInWithPermissions(["public_profile"]).then(
+      function(result) {
+        if (result.isCancelled) {
+          console.log("Login cancelled");
+        } else {
+          console.log(
+            "Login success with data: " +
+              JSON.stringify(result)
+          );
+        }
+      },
+      function(error) {
+        console.log("Login fail with error: " + error);
+      }
+    );
+   Profile.getCurrentProfile().then(
+      function(currentProfile) {
+        if (currentProfile) {
+          console.log("The current logged user is: " +
+            currentProfile.email
+            + ". His profile id is: " +
+            currentProfile.userID
+          );
+        }
+      }
+    );
+  }
 
   const [error, setError] = useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
@@ -130,6 +166,50 @@ const LoginScreen = ({navigation}: Props) => {
       <TouchableOpacity style={styles.loginBtn} onPress={loginWithEmail}>
         <Text style={styles.loginText}>Login</Text>
       </TouchableOpacity>
+      <Button
+      title="Facebook Sign-In"
+      onPress={() => onFacebookButtonPress().then(() => console.log('Signed in with Facebook!'))}
+    />
+    <LoginButton
+          onLoginFinished={
+            (error, result) => {
+              if (error) {
+                console.log("login has error: " + result.error);
+              } else if (result.isCancelled) {
+                console.log("login is cancelled.");
+              } else {
+                AccessToken.getCurrentAccessToken().then(
+                  (data) => {
+                    console.log('successs login',data.accessToken.toString())
+                  }
+                )
+              }
+            }
+          }
+          onLogoutFinished={() => console.log("logout.")}/>
+
+{/* <Button title={'Sign in with Google'} onPress={() =>  {
+    GoogleSignin.configure({
+        // offlineAccess: true,
+        // accountName:'com.mobile.trustwork',
+        webClientId:'74243864435-ru5lii0kjqsqn9henfcn6v6unlg53le2.apps.googleusercontent.com',
+        iosClientId: '74243864435-459ndmbeg0fn74qe8oqdtg742344gc44.apps.googleusercontent.com',
+    });
+GoogleSignin.hasPlayServices().then((hasPlayService) => {
+        if (hasPlayService) {
+             GoogleSignin.signIn().then((userInfo) => {
+                       console.log(JSON.stringify(userInfo))
+             }).catch((e) => {
+             console.log("ERROR IS 1: " + JSON.stringify(e));
+             })
+        }
+}).catch((e) => {
+    console.log("ERROR IS 2: " + JSON.stringify(e));
+})
+}} />
+
+<Button title={'Google sign out'} onPress={() =>   signOut()}/> */}
+
 
       {error && <Text style={styles.errorText}>{error.message}</Text>}
       <View style={styles.signInContainer}>

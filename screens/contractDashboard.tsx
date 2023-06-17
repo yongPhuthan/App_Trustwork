@@ -1,4 +1,4 @@
-import {StyleSheet, View, Text} from 'react-native';
+import {StyleSheet, View, Text, Button} from 'react-native';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
 import CardDashBoard from '../components/CardDashBoard';
 import {FlatList, TouchableOpacity} from 'react-native-gesture-handler';
@@ -14,6 +14,7 @@ import Modal from 'react-native-modal';
 import CardApprovedDashBoard from '../components/CardApprovedDashBoard';
 import messaging from '@react-native-firebase/messaging';
 import CreateContractScreen from './contract/createContractScreen';
+import { allTotal } from '../redux/Actions';
 
 type Props = {};
 interface Quotation {
@@ -41,15 +42,18 @@ type RootStackParamList = {
   QuotationScreen: undefined;
   WebViewScreen: {id: string};
   EditQuotation: {id: string};
-  CreateContractScreen:{id: string};
+  CreateContractScreen: {id: string};
   Dashboard: undefined;
+  ContractSteps:undefined
+  ContractOptions:{id: string, customerName:string, allTotal :number,sellerId:string,};
 };
 
 const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   const [isExtended, setIsExtended] = React.useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
-  
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   const handleModalClose = () => {
     setShowModal(false); // Step 4
@@ -63,6 +67,10 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   const fabStyle = {width: 50};
   const handleFABPress = () => {
     // Do something when FAB is pressed
+  };
+  const handleSelectScreen = (id: string) => {
+    setSelectedItemId(id);
+    setModalVisible(true);
   };
 
   const fetchDashboardData = async (email: string, authToken: string) => {
@@ -120,13 +128,13 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     //   const enabled =
     //     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
     //     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-  
+
     //   if (enabled) {
     //     console.log('Authorization status:', authStatus);
     //     getFCMToken();
     //   }
     // }
-  
+
     // async function getFCMToken() {
     //   const fcmToken = await messaging().getToken();
     //   if (fcmToken) {
@@ -139,7 +147,6 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     const fetchData = async () => {
       const user = await getTokenAndEmail();
       if (user) {
-
         const {token, email} = user;
         if (email && token) {
           const data = await fetchDashboardData(email, token);
@@ -150,36 +157,54 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     };
     fetchData();
     // requestUserPermission();
-
   }, []);
-  const handleSelectScreen = (id: string) => {
-    navigation.navigate('CreateContractScreen', {
-      id,
-    });
+
+  const handleYesResponse = () => {
+    // navigation.navigate('CreateContractScreen', {
+    //   id: selectedItemId,
+    // });
+    console.log('data navigate',quotationData[0]?.id,quotationData[0]?.customer?.name)
+        navigation.navigate('ContractOptions',{
+          id: quotationData[0]?.id,
+          sellerId: companyData.id,
+          allTotal:quotationData[0]?.allTotal,
+          customerName:quotationData[0]?.customer?.name
+        });
+    setModalVisible(false);
   };
 
-  const handleNewQuotationPress = () => {
-    navigation.navigate('Quotation');
+  // const handleSelectScreen = (id: string) => {
+  //   navigation.navigate('CreateContractScreen', {
+  //     id,
+  //   });
+  // };
+  const handleCloseResponse = () => {
+    setModalVisible(false);
   };
+  const handleNoResponse = () => {
+    setModalVisible(false);
+  };
+
+ 
 
   // const requestUserPermission = async () => {
   //   const authStatus = await messaging().requestPermission();
   //   const enabled =
   //     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
   //     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-  
+
   //   if (enabled) {
   //     console.log('Authorization status:', authStatus);
   //   }
   // };
-  
-
+  console.log('ID SELLER', companyData?.id)
 
   const renderItem = ({item}: {item: Quotation}) => (
     <>
-      {/* <TouchableOpacity onPress={() => handleEditQuotationPress(item.id)}>
+      <View>
         <View>
           <CardApprovedDashBoard
+            onPress={() => handleSelectScreen(item.id)}
             status={item.status}
             date={item.dateOffer}
             price={item.allTotal}
@@ -188,25 +213,26 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
             unit={'quotation.'}
           />
         </View>
-      </TouchableOpacity> */}
-      <View>
-      <View>
-          <CardApprovedDashBoard
-          onPress={()=>handleSelectScreen(item.id)}
-            status={item.status}
-            date={item.dateOffer}
-            price={item.allTotal}
-            customerName={item.customer?.name}
-            description={'quotation.'}
-            unit={'quotation.'}
-          />
+      </View>
+      <Modal style={styles.modalContainer} onBackdropPress={handleCloseResponse} isVisible={isModalVisible}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={styles.modalText}>ท่านได้นัดลูกค้าเข้าดูพื้นที่หน้างานโครงการนี้แล้วหรือยัง ?
+          </Text>
+          <TouchableOpacity style={styles.button}  onPress={handleYesResponse} >
+           <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button}  onPress={handleNoResponse} >
+           <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
+          </TouchableOpacity>
+
+                    <Text style={styles.RedText}> *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา</Text>
+
         </View>
 
-      </View>
+      </Modal>
 
     </>
   );
-
 
   return (
     <View style={{flex: 1}}>
@@ -218,7 +244,6 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
       {/* <NewCustomerBtn
     handlePress={()=>handleNewQuotationPress()}
     /> */}
-
     </View>
   );
 };
@@ -251,15 +276,21 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   modalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
+    borderRadius: 10,
     padding: 20,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    width: '90%',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: '40%',
-    left: 0,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%'
   },
   selectedQuotationText: {
     fontSize: 18,
@@ -286,4 +317,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Sukhumvit set',
     paddingTop: 10,
   },
+  button: {
+    backgroundColor: '#0073BA',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    height: 50,
+    width:250,
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  whiteText: {
+    color: '#FFFFFF',
+    fontSize:16,
+    fontWeight:'500',
+    alignSelf:'center'
+  },
+  RedText: {
+  marginTop:10,
+    fontSize:14,
+    alignSelf:'center'
+  },
+
 });

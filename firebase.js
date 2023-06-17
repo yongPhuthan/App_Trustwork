@@ -1,8 +1,7 @@
 // Import the functions you need from the SDKs you need
 import firebase from '@react-native-firebase/app';
 import functions from '@react-native-firebase/functions';
-
-
+import messaging from '@react-native-firebase/messaging';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAlFmHGPiZC-XXlfQN37zbz5gV6dYDAsrU',
@@ -19,10 +18,8 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-
-
 // if (__DEV__) {
-// let emulatorHost = 'http://localhost';
+//   let emulatorHost = 'http://localhost';
 //   if (Platform.OS === 'android') {
 //     emulatorHost = 'http://124.120.205.238';
 //   }
@@ -31,8 +28,6 @@ if (!firebase.apps.length) {
 
 //   console.log('emulator' + emulatorHost);
 // }
-
-
 
 console.log('App name: ', firebase.app().name);
 

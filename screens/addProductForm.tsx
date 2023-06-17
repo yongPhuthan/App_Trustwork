@@ -273,10 +273,17 @@ const AddProductForm = ({navigation, route}: Props) => {
 />
 
         </View>
-        <View></View>
+        <View style={{marginTop:20}}></View>
+        <SmallDivider />
+
         <View>
           {selectedAudit?.length > 0 ? (
             <View style={styles.cardContainer}>
+                   <Text style={{marginBottom:20, fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',}}>
+                    มาตรฐานของบริการนี้:
+                  </Text>
               {selectedAudit?.map((item: any) => (
                 <TouchableOpacity
                   key={item.id}
@@ -442,14 +449,18 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   selectButton: {
-    backgroundColor: '#0073BA',
+    // backgroundColor: '#0073BA',
+    backgroundColor: 'white',
+    borderColor:'gray',
+borderWidth:1,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 5,
     marginTop: 20,
   },
   selectButtonText: {
-    color: '#fff',
+    // color: '#fff',
+    color:'black',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -488,7 +499,7 @@ const styles = StyleSheet.create({
     padding: 10,
     flexDirection: 'row',
     width: '100%',
-    marginBottom: 10,
+    marginBottom: 30,
     justifyContent: 'space-between',
   },
   cardTitle: {

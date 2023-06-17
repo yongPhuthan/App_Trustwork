@@ -46,6 +46,7 @@ export const Store = createContext<ContextType>({
     selectedContract: [],
     allTotal: 0,
     periodPercent: [],
+    // isEmulator:true,
     isEmulator: false,
   },
   dispatch: () => {},

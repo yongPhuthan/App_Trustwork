@@ -45,6 +45,8 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Trustwork/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-Trustwork-TrustworkTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trustwork-TrustworkTests.release.xcconfig"; path = "Target Support Files/Pods-Trustwork-TrustworkTests/Pods-Trustwork-TrustworkTests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F2076E2D2A34BD89007FD6CE /* Trustwork-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Trustwork-Bridging-Header.h"; sourceTree = "<group>"; };
+		F2A74B422A358B5400C43873 /* Trustwork.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Trustwork.entitlements; path = Trustwork/Trustwork.entitlements; sourceTree = "<group>"; };
 		F2BBD7142A0025E5002DFA1C /* TrustworkRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = TrustworkRelease.entitlements; path = Trustwork/TrustworkRelease.entitlements; sourceTree = "<group>"; };
 		F2C87AEB29FE4EEA0010A6A0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -89,6 +91,7 @@
 		13B07FAE1A68108700A75B9A /* Trustwork */ = {
 			isa = PBXGroup;
 			children = (
+				F2A74B422A358B5400C43873 /* Trustwork.entitlements */,
 				F2BBD7142A0025E5002DFA1C /* TrustworkRelease.entitlements */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
@@ -96,6 +99,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
+				F2076E2D2A34BD89007FD6CE /* Trustwork-Bridging-Header.h */,
 			);
 			name = Trustwork;
 			sourceTree = "<group>";
@@ -213,7 +217,7 @@
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1420;
 					};
 				};
 			};
@@ -226,6 +230,9 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			packageReferences = (
+				F2042D0F2A35144B004A7D04 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */,
+			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -505,6 +512,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Trustwork/Trustwork.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Trustwork/Info.plist;
@@ -520,6 +528,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = Trustwork;
+				SWIFT_OBJC_BRIDGING_HEADER = "Trustwork-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -548,6 +557,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.mobile.trustwork;
 				PRODUCT_NAME = Trustwork;
+				SWIFT_OBJC_BRIDGING_HEADER = "Trustwork-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -721,6 +731,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F2042D0F2A35144B004A7D04 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/facebook/facebook-ios-sdk";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }
