@@ -38,6 +38,7 @@
     "react-native-check-box": "^2.1.7",
     "react-native-currency-input": "^1.1.0",
     "react-native-dropdown-picker": "^5.4.6",
+    "react-native-dropdown-select-list": "^2.0.4",
     "react-native-elements": "^3.4.3",
     "react-native-extra-dimensions-android": "^1.2.5",
     "react-native-fbsdk-next": "^11.2.1",

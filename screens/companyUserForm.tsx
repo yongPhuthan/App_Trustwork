@@ -1,14 +1,21 @@
 import React, {useState, useEffect} from 'react';
+
 import {
   View,
-  Text,
+
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+
   Image,
+  Button, Modal, Text,
   SafeAreaView,
+  FlatList,
   TextInput,
 } from 'react-native';
+import {  List } from 'react-native-paper';
+import { MultipleSelectList,SelectList } from 'react-native-dropdown-select-list'
+
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {firebase as firebaseFunction} from '@react-native-firebase/functions';
@@ -124,6 +131,19 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
   const [userEmail, setUserEmail] = useState('');
   const [page, setPage] = useState(1);
   const [bizType, setBizType] = useState('individual');
+  const [selectedCategories, setSelectedCategories] = useState<object[]>([]);
+  const [visible, setVisible] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const [isModalVisible, setModalVisible] = useState<boolean>(false);
+
+  const categories: object[] = [   {key:'1', value:'Mobiles', disabled:true},
+  {key:'2', value:'Appliances'},
+  {key:'3', value:'Cameras'},
+  {key:'4', value:'Computers', disabled:true},
+  {key:'5', value:'Vegetables'},
+  {key:'6', value:'Diary Products'},
+  {key:'7', value:'Drinks'},];
 
   const {mutate, isLoading, isError} = useMutation(createCompanySeller, {
     onSuccess: () => {
@@ -135,6 +155,8 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
       console.log(error.response);
     },
   });
+  const showModal = () => setVisible(true);
+  const hideModal = () => setVisible(false);
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const handleFunction = async () => {
@@ -220,11 +242,34 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
       .signOut()
       .then(() => console.log('User signed out!'));
   };
+  const handleCategorySelect = (category) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter(item => item !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
+  useEffect(() => {
+    if (
+      bizName &&
+      userName &&
+      userLastName &&
+      bizType &&
+      address &&
+      officeTel &&
+      mobileTel &&
+      (bizType !== 'business' || userPosition) &&
+      taxID
+    ) {
+      setCurrentStep(2);
+    }
+  }, [bizName, userName, userLastName, bizType, address, officeTel, mobileTel, userPosition, taxID]);
 
   const renderPage = () => {
+
     return (
       <SafeAreaView style={{marginTop: 30}}>
-        <Text style={styles.title}>ตั้งค่าหัวเอกสาร</Text>
+        <Text style={styles.title}>ตั้งค่า หัวเอกสาร</Text>
 
         <TextInput
           placeholder="ชื่อธุรกิจ - ชื่อบริษัท"
@@ -232,7 +277,7 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
           value={bizName}
           onChangeText={setBizName}
         />
-        <Text style={styles.label}>ประเภทธุรกิจ</Text>
+        {/* <Text style={styles.label}>ประเภทธุรกิจ</Text> */}
         <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
           <CheckBox
             title="บุคคลธรรมดา"
@@ -250,7 +295,26 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
             onPress={() => setBizType('business')}
           />
         </View>
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+
+        {/* <MultipleSelectList 
+        setSelected={(val) => setSelectedCategories(val)} 
+        data={categories} 
+        save="value"
+        onSelect={() => alert(selectedCategories)} 
+        label="เลือกหมวดหมู่ธุรกิจ"
+    /> */}
+
+<SelectList 
+        setSelected={(val) => setSelectedCategories(val)} 
+        data={categories} 
+        save="value"
+        placeholder={"เลือกหมวดหมู่ธุรกิจ"}
+
+    />
+
+
+
+        <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 10}}>
           <View style={{flex: 0.45}}>
             <TextInput
               placeholder="ชื่อจริง"
@@ -314,7 +378,7 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
         <TouchableOpacity
           style={{
             alignItems: 'center',
-            marginBottom: 24,
+            marginBottom: 50,
             marginTop: 30,
             borderColor: 'gray',
             borderWidth: 1,
@@ -440,4 +504,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 30,
   },
+  modal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 20
+  }
 });

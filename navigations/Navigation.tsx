@@ -932,13 +932,7 @@ export const Navigation = () => {
   let screens = [];
   let initialRouteName: ScreenName = 'RootTab'; // Initial default route
 
-  if (!user) {
-    initialRouteName = 'SignUpScreen';
-    screens = [
-      {name: 'SignUpScreen', component: SignUpScreen},
-      {name: 'LoginScreen', component: LoginScreen},
-    ];
-  } 
+
 
 
   if (isLoading) {
