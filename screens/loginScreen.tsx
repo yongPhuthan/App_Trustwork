@@ -10,7 +10,12 @@ import React, {useState, useEffect} from 'react';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {StackNavigationProp} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LoginManager, AccessToken,LoginButton,Profile } from 'react-native-fbsdk-next';
+import {
+  LoginManager,
+  AccessToken,
+  LoginButton,
+  Profile,
+} from 'react-native-fbsdk-next';
 import {
   GoogleSignin,
   statusCodes,
@@ -30,21 +35,21 @@ type RootStackParamList = {
 const LoginScreen = ({navigation}: Props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
 
+  const [confirm, setConfirm] =
+    useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
 
-  const [confirm, setConfirm] = useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
-  
-    // verification code (OTP - One-Time-Passcode)
-    const [code, setCode] = useState('');
-  
-    // Handle login
-    function onAuthStateChanged(user:any) {
-      if (user) {
-      
-      }
+  // verification code (OTP - One-Time-Passcode)
+  const [code, setCode] = useState('');
+
+  // Handle login
+  function onAuthStateChanged(user: any) {
+    if (user) {
     }
+  }
 
-      // Handle the button press
+  // Handle the button press
   const signInWithPhoneNumber = async (phoneNumber: string) => {
     try {
       const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
@@ -57,7 +62,7 @@ const LoginScreen = ({navigation}: Props) => {
   const signOut = async () => {
     try {
       await GoogleSignin.signOut();
-      console.log('Signing out')
+      console.log('Signing out');
     } catch (error) {
       console.error(error);
     }
@@ -72,35 +77,32 @@ const LoginScreen = ({navigation}: Props) => {
   }
 
   async function onFacebookButtonPress() {
-    LoginManager.logInWithPermissions(["public_profile"]).then(
-      function(result) {
+    LoginManager.logInWithPermissions(['public_profile']).then(
+      function (result) {
         if (result.isCancelled) {
-          console.log("Login cancelled");
+          console.log('Login cancelled');
         } else {
-          console.log(
-            "Login success with data: " +
-              JSON.stringify(result)
-          );
+          console.log('Login success with data: ' + JSON.stringify(result));
         }
       },
-      function(error) {
-        console.log("Login fail with error: " + error);
-      }
+      function (error) {
+        console.log('Login fail with error: ' + error);
+      },
     );
-   Profile.getCurrentProfile().then(
-      function(currentProfile) {
-        if (currentProfile) {
-          console.log("The current logged user is: " +
-            currentProfile.email
-            + ". His profile id is: " +
-            currentProfile.userID
-          );
-        }
+    Profile.getCurrentProfile().then(function (currentProfile) {
+      if (currentProfile) {
+        console.log(
+          'The current logged user is: ' +
+            currentProfile.email +
+            '. His profile id is: ' +
+            currentProfile.userID,
+        );
       }
-    );
+    });
   }
 
-  const [error, setError] = useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
+  const [error, setError] =
+    useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
   const loginWithEmail = async () => {
@@ -114,14 +116,21 @@ const LoginScreen = ({navigation}: Props) => {
       })
       .catch(error => {
         if (
-          error.code === 'auth/user-not-found' ||
-          error.code === 'auth/wrong-password'
+          error.code === 'auth/user-not-found' 
         ) {
-          console.log('อีเมลล์หรือรหัสผ่านไม่ถูกต้อง');
+          console.log('ไม่มีผู้ใช้นี้ในระบบ');
+          setLoginError('ไม่มีผู้ใช้นี้ในระบ');
+
+        }
+        if( error.code === 'auth/wrong-password'){
+          console.log('รหัสผ่านไม่ถูกต้อง');
+          setLoginError('รหัสผ่านไม่ถูกต้อง');
         }
 
         if (error.code === 'auth/invalid-email') {
           console.log('กรอกอีเมลล์ไม่ถูกต้อง');
+          setLoginError('กรอกอีเมลล์ไม่ถูกต้อง');
+
         }
 
         console.error(error);
@@ -162,62 +171,41 @@ const LoginScreen = ({navigation}: Props) => {
         />
       </View>
 
-
       <TouchableOpacity style={styles.loginBtn} onPress={loginWithEmail}>
         <Text style={styles.loginText}>Login</Text>
       </TouchableOpacity>
       <Button
-      title="Facebook Sign-In"
-      onPress={() => onFacebookButtonPress().then(() => console.log('Signed in with Facebook!'))}
-    />
-    <LoginButton
-          onLoginFinished={
-            (error, result) => {
-              if (error) {
-                console.log("login has error: " + result.error);
-              } else if (result.isCancelled) {
-                console.log("login is cancelled.");
-              } else {
-                AccessToken.getCurrentAccessToken().then(
-                  (data) => {
-                    console.log('successs login',data.accessToken.toString())
-                  }
-                )
-              }
-            }
-          }
-          onLogoutFinished={() => console.log("logout.")}/>
-
-{/* <Button title={'Sign in with Google'} onPress={() =>  {
-    GoogleSignin.configure({
-        // offlineAccess: true,
-        // accountName:'com.mobile.trustwork',
-        webClientId:'74243864435-ru5lii0kjqsqn9henfcn6v6unlg53le2.apps.googleusercontent.com',
-        iosClientId: '74243864435-459ndmbeg0fn74qe8oqdtg742344gc44.apps.googleusercontent.com',
-    });
-GoogleSignin.hasPlayServices().then((hasPlayService) => {
-        if (hasPlayService) {
-             GoogleSignin.signIn().then((userInfo) => {
-                       console.log(JSON.stringify(userInfo))
-             }).catch((e) => {
-             console.log("ERROR IS 1: " + JSON.stringify(e));
-             })
+        title="Facebook Sign-In"
+        onPress={() =>
+          onFacebookButtonPress().then(() =>
+            console.log('Signed in with Facebook!'),
+          )
         }
-}).catch((e) => {
-    console.log("ERROR IS 2: " + JSON.stringify(e));
-})
-}} />
-
-<Button title={'Google sign out'} onPress={() =>   signOut()}/> */}
+      />
+      <LoginButton
+        onLoginFinished={(error, result) => {
+          if (error) {
+            console.log('login has error: ' + result.error);
+          } else if (result.isCancelled) {
+            console.log('login is cancelled.');
+          } else {
+            AccessToken.getCurrentAccessToken().then(data => {
+              console.log('successs login', data.accessToken.toString());
+            });
+          }
+        }}
+        onLogoutFinished={() => console.log('logout.')}
+      />
+            {loginError !== '' && <Text style={styles.errorText}>{loginError}</Text>}
 
 
       {error && <Text style={styles.errorText}>{error.message}</Text>}
       <View style={styles.signInContainer}>
-    <Text style={styles.signInText}>ยังไม่มีบัญชีผู้ใช้? </Text>
-    <TouchableOpacity onPress={() => navigation.navigate('SignUpScreen')}>
-      <Text style={styles.signInLink}>ลงทะเบียน</Text>
-    </TouchableOpacity>
-  </View>
+        <Text style={styles.signInText}>ยังไม่มีบัญชีผู้ใช้? </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('SignUpScreen')}>
+          <Text style={styles.signInLink}>ลงทะเบียน</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -230,14 +218,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fbfbfb',
     alignItems: 'center',
     justifyContent: 'center',
-    },
-    logo: {
+  },
+  logo: {
     fontWeight: 'bold',
     fontSize: 50,
     color: '#012d62', // #4
     marginBottom: 40,
-    },
-    inputView: {
+  },
+  inputView: {
     width: '80%',
     backgroundColor: 'white', // #5
     borderRadius: 5,
@@ -249,13 +237,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 5,
-    },
-    inputText: {
+  },
+  inputText: {
     height: 50,
     width: '90%',
     color: '#003f5c',
-    },
-    inputPhoneText: {
+  },
+  inputPhoneText: {
     height: 50,
     color: 'white',
     borderWidth: 1,
@@ -265,13 +253,13 @@ const styles = StyleSheet.create({
     margin: 5,
     textDecorationColor: 'white',
     textAlign: 'center',
-    },
-    inputFieldsContainer: {
+  },
+  inputFieldsContainer: {
     flexDirection: 'row',
     justifyContent: 'center', // Center the input fields
     flexWrap: 'wrap', // Wrap input fields if they don't fit in a single line
-    },
-    loginBtn: {
+  },
+  loginBtn: {
     width: '80%',
     backgroundColor: '#0c5caa', // #2
     borderRadius: 10,
@@ -280,30 +268,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 40,
     marginBottom: 10,
-    },
-    loginText: {
+  },
+  loginText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-    },
-    errorText: {
+  },
+  errorText: {
     color: 'red',
     marginTop: 10,
-    },
-    signInContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 20,
-    },
-    signInText: {
-      color: '#888',
-      fontSize: 16,
-    },
-    signInLink: {
-      color: '#0c5caa',
-      fontSize: 16,
-      fontWeight: 'bold',
-      textDecorationLine: 'underline',
-    }
-    
-    });
+  },
+  signInContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  signInText: {
+    color: '#888',
+    fontSize: 16,
+  },
+  signInLink: {
+    color: '#0c5caa',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+});

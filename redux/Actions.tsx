@@ -177,6 +177,11 @@ export const reset_contract = () => ({
   type: contrains.RESET_CONTRACT,
 });
 
+export const get_companyID = (payload:string) => ({
+  type: contrains.GET_COMPANYID,
+  payload,
+});
+
 // COMPONENTS  => ACTION
 
 export const docCounter = (payload: number) => {
@@ -387,5 +392,11 @@ export const resetContract = () => {
 export const isEmulator = (payload: boolean) => {
   return (dispatch: any) => {
     dispatch(is_emulator(payload));
+  };
+};
+
+export const getCompanyID = (payload: string) => {
+  return (dispatch: any) => {
+    dispatch(get_companyID(payload));
   };
 };

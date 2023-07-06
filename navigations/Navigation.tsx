@@ -55,12 +55,15 @@ import {
   MediaType,
 } from 'react-native-image-picker';
 import Modal from 'react-native-modal';
+import Lottie from 'lottie-react-native';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faFile,
   faDrawPolygon,
   faCog,
   faBell,
+
   faChevronRight,
   faCashRegister,
   faCoins,
@@ -70,13 +73,15 @@ import {
 import EditCompanyForm from '../screens/editCompanyForm';
 import {ScrollView} from 'react-native-gesture-handler';
 import AuditCategory from '../screens/auditCategory';
-import ContractSteps from '../screens/contract/contractSteps';
+// import ContractSteps from '../screens/contract/contractSteps';
 // import FontAwesomeIcon from 'react-native-vector-icons/FontAwesomeIcon5';
 
 type Props = {};
 interface SettingScreenProps {
   navigation: StackNavigationProp<ParamListBase, 'TopUpScreen'>;
 }
+type ScreenName = 'SignUpScreen' | 'CompanyUserFormScreen' | 'RootTab'; // Add all possible screen names here
+
 type Company = {
   bizName: string;
   userName: string;
@@ -86,6 +91,7 @@ type Company = {
   companyNumber: string;
   userEmail: string;
   mobileTel: string;
+  balance: number;
 };
 
 type ParamListBase = {
@@ -96,7 +102,7 @@ type ParamListBase = {
   AddProductForm: undefined;
   TopUpScreen: undefined;
   LayoutScreen: undefined;
-  CreateContractScreen:{id: string};
+  CreateContractScreen: {id: string};
   RootTab: undefined;
   QuotationScreen: undefined;
   Dashboard: undefined;
@@ -203,30 +209,30 @@ function SettingsScreen({navigation}: SettingScreenProps) {
 
   useFocusEffect(
     useCallback(() => {
-      const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+      const unsubscribe = firebase.auth().onAuthStateChanged(async user => {
         if (user) {
           setUser(user);
-  
+
           // Remove the AsyncStorage data
-          await removeDataFromAsyncStorage("companyData");
-  
+          await removeDataFromAsyncStorage('companyData');
+
           let fetchedCompanyUser = await fetchCompanyUser(
-            user?.email || "",
-            isEmulator
+            user?.email || '',
+            isEmulator,
           );
           await saveCompanyData(fetchedCompanyUser);
-  
+
           setCompany(fetchedCompanyUser);
           setLogo(fetchedCompanyUser.logo);
         } else {
           setUser(null);
         }
       });
-  
+
       return () => unsubscribe();
-    }, [])
+    }, []),
   );
-  
+
   const [logo, setLogo] = useState<string | null>(null);
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
 
@@ -305,11 +311,15 @@ function SettingsScreen({navigation}: SettingScreenProps) {
     </>
   );
 
-  const handleLogout = () => {
-    console.log('Logout confirmed');
-    toggleLogoutModal();
+  const handleLogout = async () => {
+    try {
+      await auth().signOut();
+      toggleLogoutModal();
+    } catch (error) {
+      console.error('Failed to sign out: ', error);
+    }
   };
-  console.log('company', JSON.stringify(company));
+  console.log('companyooo', JSON.stringify(company));
 
   return (
     <>
@@ -436,9 +446,9 @@ function SettingsScreen({navigation}: SettingScreenProps) {
                     color: '#333',
                     marginRight: 8,
                   }}>
-                {Number(company?.balance)
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+                  {Number(company?.balance)
+                    .toFixed(2)
+                    .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
                 </Text>
                 <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
               </View>
@@ -809,7 +819,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
             name="SelectContract"
             component={SelectContract}
           />
-          
+
           <Stack.Screen
             options={{
               headerStyle: {
@@ -858,19 +868,19 @@ function QuotationScreen({navigation}: NavigationScreen) {
             name="WebViewScreen"
             component={WebViewScreen}
           />
-           <Stack.Screen
-              options={{
-                headerStyle: {
-                  backgroundColor: '#0c5caa',
-                },
-                headerTintColor: '#fff',
-                headerTitle: 'สร้างสัญญา',
-                // headerBackTitle: '',
-                headerTruncatedBackTitle: '',
-              }}
-              name="CreateContractScreen"
-              component={CreateContractScreen}
-            />
+          <Stack.Screen
+            options={{
+              headerStyle: {
+                backgroundColor: '#0c5caa',
+              },
+              headerTintColor: '#fff',
+              headerTitle: 'สร้างสัญญา',
+              // headerBackTitle: '',
+              headerTruncatedBackTitle: '',
+            }}
+            name="CreateContractScreen"
+            component={CreateContractScreen}
+          />
         </>
       </Stack.Navigator>
     </>
@@ -884,238 +894,112 @@ interface NavigationScreen {
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<ParamListBase>();
 
-const Navigation = ({navigation}: NavigationScreen) => {
+export const Navigation = () => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  const [company, setCompany] = useState<Company>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const {
-    state: {client_name, isEmulator, client_tel, client_tax},
+    state: {isEmulator},
     dispatch,
   }: any = useContext(Store);
 
   useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+    const unsubscribe = firebase.auth().onAuthStateChanged(async user => {
       if (user) {
         setUser(user);
+  
+        // After setting the user, fetch the company user
+        setIsLoading(true);
+        try {
+          const data = await fetchCompanyUser(user?.email, isEmulator);
+          setCompany(data);
+          setIsError(false);
+        } catch (error) {
+          setIsError(true);
+        } finally {
+          setIsLoading(false);
+        }
       } else {
         setUser(null);
+        setCompany(null); // clear the company if no user is signed in
       }
     });
+  
     return unsubscribe;
   }, []);
 
+  let screens = [];
+  let initialRouteName: ScreenName = 'RootTab'; // Initial default route
+
   if (!user) {
+    initialRouteName = 'SignUpScreen';
+    screens = [
+      {name: 'SignUpScreen', component: SignUpScreen},
+      {name: 'LoginScreen', component: LoginScreen},
+    ];
+  } 
+
+
+  if (isLoading) {
     return (
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="SignUpScreen"
-            component={SignUpScreen}
-            options={{
-              headerTransparent: true,
-              headerBackTitle: '',
-              headerTruncatedBackTitle: '',
-              headerTitle: '',
-            }}
-          />
-          <Stack.Screen
-            options={{
-              headerTransparent: true,
-              headerBackTitle: '',
-              headerTruncatedBackTitle: '',
-              headerTitle: '',
-            }}
-            name="LoginScreen"
-            component={LoginScreen}
-          />
-          <Stack.Screen
-            options={{
-              headerStyle: {
-                backgroundColor: '#19232e',
-              },
-              headerTintColor: '#fff',
-              headerBackTitle: '',
-              headerTruncatedBackTitle: '',
-            }}
-            name="CompanyUserFormScreen"
-            component={CompanyUserFormScreen}
-          />
-           
-        </Stack.Navigator>
-      </NavigationContainer>
+      <View style={styles.loadingContainer}>
+        <Lottie
+          style={{width: '25%'}}
+          source={require('../assets/animation/lf20_rwq6ciql.json')}
+          autoPlay
+          loop
+        />
+      </View>
     );
   }
-  const backEditQuotation = () => {
-    navigation.goBack();
-  };
-  // useEffect(() => {
-  //   async function requestUserPermission() {
-  //     const authStatus = await messaging().requestPermission();
-  //     const enabled =
-  //       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-  //       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  if (!user) {
+    initialRouteName = 'SignUpScreen';
+    screens = [
+      {name: 'SignUpScreen', component: SignUpScreen},
+      {name: 'LoginScreen', component: LoginScreen},
+    ];
+  } else {
+    // User is authenticated. Now check for company.
+    if (!company) {
+      initialRouteName = 'CompanyUserFormScreen';
+      screens = [
+        {name: 'CompanyUserFormScreen', component: CompanyUserFormScreen},
+      ];
+    } else {
+      initialRouteName = 'RootTab';
+      screens = [
+        {name: 'RootTab', component: RootTab},
+        {name: 'SelectContract', component: SelectContract},
+        {name: 'QuotationScreen', component: QuotationScreen},
+        {name: 'EditQuotationScreen', component: EditQuotation},
+        {name: 'EditProductForm', component: EditProductForm},
+        {name: 'EditClientForm', component: EditClientForm},
+        {name: 'EditCompanyForm', component: EditCompanyForm},
+        {name: 'AddProductForm', component: AddProductForm},
+        {name: 'DocViewScreen', component: DocViewScreen},
+        {name: 'TopUpScreen', component: TopUpScreen},
+        {name: 'CreateContractScreen', component: CreateContractScreen},
+        {name: 'InstallmentScreen', component: InstallmentScreen},
+        {name: 'ContractOptions', component: ContractOption},
+        {name: 'CompanyUserFormScreen', component: CompanyUserFormScreen},
+      ];
+    }
+  }
 
-  //     if (enabled) {
-  //       console.log('Authorization status:', authStatus);
-  //       getFCMToken();
-  //     }
-  //   }
+  console.log('COMPANY', JSON.stringify(company));
+  console.log('USER', JSON.stringify(user));
 
-  //   async function getFCMToken() {
-  //     const fcmToken = await messaging().getToken();
-  //     if (fcmToken) {
-  //       console.log('Your Firebase Token is:', fcmToken);
-  //     } else {
-  //       console.log('Failed to get Firebase Token');
-  //     }
-  //   }
-
-  //   requestUserPermission();
-  // }, []);
   return (
-    <>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName={'RootTab'}>
-          <>
-            <Stack.Screen
-              options={{headerShown: false}}
-              name="RootTab"
-              component={RootTab}
-            />
-            <Stack.Screen
-              options={{headerShown: false}}
-              name="SelectContract"
-              component={SelectContract}
-            />
-            <Stack.Screen
-              options={{headerShown: false}}
-              name="QuotationScreen"
-              component={QuotationScreen}
-            />
-            <Stack.Screen
-              options={{
-                headerBackTitle: '',
-                headerTitle: 'แก้ไขใบเสนอราคา',
-                headerTruncatedBackTitle: '',
-              }}
-              name="EditQuotationScreen"
-              component={EditQuotation}
-            />
-            <Stack.Screen
-              options={{
-                headerStyle: {
-                  backgroundColor: '#19232e',
-                },
-                headerTintColor: '#fff',
-                headerBackTitle: '',
-                headerTruncatedBackTitle: '',
-              }}
-              name="EditProductForm"
-              component={EditProductForm}
-            />
-            <Stack.Screen
-              options={{
-                headerStyle: {
-                  backgroundColor: '#19232e',
-                },
-                headerTintColor: '#fff',
-                headerBackTitle: '',
-                headerTruncatedBackTitle: '',
-              }}
-              name="EditClientForm"
-              component={EditClientForm}
-            />
-            <Stack.Screen
-              options={{
-                headerStyle: {
-                  backgroundColor: '#19232e',
-                },
-                headerTintColor: '#fff',
-                headerBackTitle: '',
-                headerTruncatedBackTitle: '',
-              }}
-              name="EditCompanyForm"
-              component={EditCompanyForm}
-            />
-            <Stack.Screen
-              options={{
-                headerStyle: {
-                  backgroundColor: '#19232e',
-                },
-                headerTintColor: '#fff',
-                headerBackTitle: '',
-                headerTruncatedBackTitle: '',
-              }}
-              name="AddProductForm"
-              component={AddProductForm}
-            />
-            <Stack.Screen
-              options={{
-                headerStyle: {
-                  backgroundColor: '#0c5caa',
-                },
-                headerTintColor: '#fff',
-                headerTitle: 'ตัวอย่างสัญญา',
-                headerBackTitle: '',
-                headerTruncatedBackTitle: '',
-              }}
-              name="DocViewScreen"
-              component={DocViewScreen}
-            />
-            <Stack.Screen
-              options={{
-                headerStyle: {
-                  backgroundColor: '#0c5caa',
-                },
-                headerTintColor: '#fff',
-                headerTitle: 'เติมเครดิต',
-                headerBackTitle: '',
-                headerTruncatedBackTitle: '',
-              }}
-              name="TopUpScreen"
-              component={TopUpScreen}
-            />
-             <Stack.Screen
-              options={{
-                headerStyle: {
-                  backgroundColor: '#0c5caa',
-                },
-                headerTintColor: '#fff',
-                headerTitle: 'สร้างสัญญา',
-                headerBackTitle: '',
-                headerTruncatedBackTitle: '',
-              }}
-              name="CreateContractScreen"
-              component={CreateContractScreen}
-            />
-            <Stack.Screen
-            options={{
-              headerStyle: {
-                backgroundColor: '#042d60',
-              },
-              headerTintColor: '#fff',
-              headerBackTitle: '',
-              headerTitle: 'เลือกการแบ่งจ่ายงวดงาน',
-              headerTruncatedBackTitle: '',
-            }}
-            name="InstallmentScreen"
-            component={InstallmentScreen}
-          />
-        <Stack.Screen
-            options={{
-             
-              headerTruncatedBackTitle: '',
-              headerBackTitle: '',
-              headerTitle: 'ร่างสัญญา',
-           
-            }}
-            name="ContractOptions"
-            component={ContractOption}
-          />
-          
-           
-          </>
-        </Stack.Navigator>
-      </NavigationContainer>
-    </>
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName={initialRouteName}
+        screenOptions={{headerShown: false}}>
+        {screens.map(({name, component}) => (
+          <Stack.Screen key={name} name={name} component={component} />
+        ))}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 
@@ -1140,5 +1024,10 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#042d60',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

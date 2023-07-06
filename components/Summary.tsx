@@ -69,8 +69,11 @@ const Summary = (props: Props) => {
     <View style={styles.container}>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>{props.title}</Text>
-        <Text style={styles.summaryPrice}>{Number(props.price).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
+        <Text style={styles.summaryPrice}>
+          {Number(props.price)
+            .toFixed(2)
+            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+        </Text>
       </View>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>ส่วนลดรวม</Text>
@@ -86,185 +89,194 @@ const Summary = (props: Props) => {
       </View>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>ส่วนลดเป็นเงิน</Text>
-        <Text style={styles.summaryPrice}>{Number(discountValue).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
+        <Text style={styles.summaryPrice}>
+          {Number(discountValue)
+            .toFixed(2)
+            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+        </Text>
       </View>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>ยอดรวมหลังหักส่วนลด</Text>
-        <Text style={styles.summaryPrice}>{Number(sumAfterDiscount).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
+        <Text style={styles.summaryPrice}>
+          {Number(sumAfterDiscount)
+            .toFixed(2)
+            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+        </Text>
       </View>
-     <SmallDivider />
+      <SmallDivider />
       <View style={styles.summary}>
-      <Text style={styles.summaryTaxVat}>หัก ณ ที่จ่าย</Text>
-    <Switch
-      trackColor={{false: '#767577', true: '#81b0ff'}}
-      thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
-      ios_backgroundColor="#3e3e3e"
-      onValueChange={() => setPickerVisible(!pickerVisible)}
-      value={pickerVisible}
-      style={Platform.select({
-        ios: {
-          transform: [{scaleX: 0.7}, {scaleY: 0.7}],marginTop:5
-        },
-        android: {
-
-        },
-      })}
-    />
- 
-</View>
-{
-  pickerVisible && (
-    <View style={styles.pickerWrapper}>
-      <View style={styles.pickerAndroidContainer}>
-        <RNPickerSelect
-          onValueChange={value => setSelectedValue(value)}
-          items={data}
-          value={selectedValue}
-          style={pickerSelectStyles}
+        <Text style={styles.summaryTaxVat}>หัก ณ ที่จ่าย</Text>
+        <Switch
+          trackColor={{false: '#767577', true: '#81b0ff'}}
+          thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={() => setPickerVisible(!pickerVisible)}
+          value={pickerVisible}
+          style={Platform.select({
+            ios: {
+              transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+              marginTop: 5,
+            },
+            android: {},
+          })}
         />
       </View>
-      <Text style={styles.summaryText}>{Number(vat3Amount.toFixed(2)).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
+      {pickerVisible && (
+        <View style={styles.pickerWrapper}>
+          <View style={styles.pickerAndroidContainer}>
+            <RNPickerSelect
+              onValueChange={value => setSelectedValue(value)}
+              items={data}
+              value={selectedValue}
+              style={pickerSelectStyles}
+            />
+          </View>
+          <Text style={styles.summaryText}>
+            {Number(vat3Amount.toFixed(2))
+              .toFixed(2)
+              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+          </Text>
+        </View>
+      )}
+
+      <SmallDivider />
+
+      <View style={styles.summary}>
+        <Text style={[styles.summaryTaxVat]}>ภาษีมูลค่าเพิ่ม </Text>
+        <Switch
+          trackColor={{false: '#767577', true: '#81b0ff'}}
+          thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={() => setVat7(!vat7)}
+          value={vat7}
+          style={[
+            {},
+            Platform.select({
+              ios: {
+                transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+              },
+              android: {},
+            }),
+          ]}
+        />
+      </View>
+      {vat7 && (
+        <View style={styles.pickerWrapper}>
+          <Text style={styles.summaryText}> 7 % </Text>
+
+          <Text
+            style={Platform.select({
+              ios: {
+                fontSize: 16,
+              },
+              android: {
+                fontSize: 16,
+                marginVertical: 10,
+              },
+            })}>
+            {Number(vat7Amount.toFixed(2))
+              .toFixed(2)
+              .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+          </Text>
+        </View>
+      )}
+      <SmallDivider />
+      <View style={styles.summaryTotal}>
+        <Text style={styles.totalSummary}>รวมทั้งสิ้น</Text>
+        <Text style={styles.totalSummary}>
+          {Number(total)
+            .toFixed(2)
+            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+        </Text>
+      </View>
     </View>
-  )
-}
-
-<SmallDivider />
-
-
-  <View style={styles.summary}>
-    <Text style={[styles.summaryTaxVat,]}>ภาษีมูลค่าเพิ่ม </Text>
-    <Switch
-      trackColor={{false: '#767577', true: '#81b0ff'}}
-      thumbColor={pickerVisible ? '#ffffff' : '#f4f3f4'}
-      ios_backgroundColor="#3e3e3e"
-      onValueChange={() => setVat7(!vat7)}
-      value={vat7}
-      style={[{
-       
-      }, Platform.select({
-        ios: {
-          transform: [{scaleX: 0.7}, {scaleY: 0.7}]
-        },
-        android: {
-
-        },
-      })]}
-    />
-  
-  </View>
-  {vat7 && (
-    <View style={styles.pickerWrapper}>
-            <Text style={styles.summaryText}> 7 % </Text>
-
-            <Text
-      style={Platform.select({
-        ios: {
-          fontSize: 16,
-        },
-        android: {
-          fontSize: 16,
-          marginVertical: 10,
-        },
-      })}>
-      {Number(vat7Amount.toFixed(2)).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
-    </Text>
-    </View>
-  )}
-<SmallDivider />
-  <View style={styles.summaryTotal}>
-    <Text style={styles.totalSummary}>รวมทั้งสิ้น</Text>
-    <Text style={styles.totalSummary}>{Number(total).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
-  </View>
-</View>
-);
+  );
 };
 
 export default Summary;
 
 const styles = StyleSheet.create({
-summary: {
-flexDirection: 'row',
-justifyContent: 'space-between',
-},
-summaryTax: {
-flexDirection: 'row',
-marginTop: 20,
-justifyContent: 'space-between',
-},
-summaryTotal: {
-flexDirection: 'row',
-marginBottom: 100,
-justifyContent: 'space-between',
-},
-container: {
-width: windowWidth * 0.7,
-alignSelf: 'flex-end',
-},
-summaryText: {
-fontSize: 16,
-marginVertical: 10,
-},
-summaryTaxVat: {
-fontSize: 16,
-marginVertical: 10,
-},
-totalSummary: {
-fontSize: 20,
-fontWeight: 'bold',
-marginVertical: 10,
-},
-summaryPrice: {
-fontSize: 18,
-marginVertical: 10,
-},
-pickerContainer: {
-flex: 1,
-height: 40,
-},
-inputWrapper: {
-flexDirection: 'row',
-borderWidth: 1,
-borderColor: '#ccc',
-borderRadius: 5,
-justifyContent: 'space-between',
-paddingHorizontal:5,
-height: 40,
-width: 100,
-},
-vat3Container: {
-  flexDirection: 'row',
-  alignItems: 'center',
-},
-pickerWrapper: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: 10,
-  marginBottom: 10,
-},
-pickerAndroidContainer: {
-  borderWidth: 0.2,
-  borderColor: 'gray',
-  height:40,
-  borderRadius: 5,
-  backgroundColor: 'white',
-  width: 120,
-  alignSelf: 'flex-start',
-  justifyContent: 'center',
-},
-input: {
-flex: 1,
-paddingHorizontal: 10,
-paddingVertical: 5,
-fontSize: 16,
-textAlign: 'right',
-height: '100%',
-},
+  summary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  summaryTax: {
+    flexDirection: 'row',
+    marginTop: 20,
+    justifyContent: 'space-between',
+  },
+  summaryTotal: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    justifyContent: 'space-between',
+  },
+  container: {
+    // width: windowWidth * 0.7,
+        // alignSelf: 'flex-end',
+
+        width: windowWidth * 0.85 ,
+
+  },
+  summaryText: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  summaryTaxVat: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  totalSummary: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  summaryPrice: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
+  pickerContainer: {
+    flex: 1,
+    height: 40,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    justifyContent: 'space-between',
+    paddingHorizontal: 5,
+    height: 40,
+    width: 100,
+  },
+  vat3Container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pickerWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  pickerAndroidContainer: {
+    borderWidth: 0.2,
+    borderColor: 'gray',
+    height: 40,
+    borderRadius: 5,
+    backgroundColor: 'white',
+    width: 120,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+  },
+  input: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    fontSize: 16,
+    textAlign: 'right',
+    height: '100%',
+  },
 });
 
 const pickerSelectStyles = StyleSheet.create({
@@ -290,5 +302,3 @@ const pickerSelectStyles = StyleSheet.create({
     paddingRight: 30, // to ensure the text is never behind the icon
   },
 });
-
-

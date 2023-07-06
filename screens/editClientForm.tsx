@@ -58,7 +58,7 @@ const EditClientForm = ({navigation, route}: Props) => {
       <View style={styles.subContainer}>
         <Controller
           control={control}
-          name="userName"
+          name="name"
           rules={{required: true}}
           render={({field: {onChange, onBlur, value}}) => (
             <TextInput
@@ -104,7 +104,7 @@ const EditClientForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="mobileTel"
+          name="phone"
         />
  
 
@@ -120,7 +120,7 @@ const EditClientForm = ({navigation, route}: Props) => {
               value={value}
             />
           )}
-          name="companyNumber"
+          name="taxId"
         />
 
         <Button title="บันทึก" onPress={handleSubmit(onSubmit)} />

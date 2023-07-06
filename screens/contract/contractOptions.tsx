@@ -289,9 +289,7 @@ const ContractOption = ({navigation}: Props) => {
         adjustPerDay === ''
       );
     } else if (step === 2) {
-      return (
-        address === ''
-      );
+      return address === '';
     }
   };
 
@@ -345,8 +343,9 @@ const ContractOption = ({navigation}: Props) => {
                 <View style={styles.inputContainerForm}>
                   <TextInput
                     style={{width: 30}}
-                    value={workingDays}
-                    onChangeText={setWorkingDays}
+                    value={Number(workingDays)}
+                    onChangeText={text => setWorkingDays(Number(text))}
+
                     // placeholder="Working Days"
                     placeholderTextColor="#A6A6A6"
                     keyboardType="numeric"
@@ -367,7 +366,7 @@ const ContractOption = ({navigation}: Props) => {
                   <TextInput
                     style={{width: 30}}
                     value={installingDay}
-                    onChangeText={setInstallingDay}
+                    onChangeText={text => setInstallingDay(Number(text))}
                     placeholderTextColor="#A6A6A6"
                     keyboardType="numeric"
                   />
@@ -387,7 +386,8 @@ const ContractOption = ({navigation}: Props) => {
                   <TextInput
                     style={{width: 30}}
                     value={workAfterGetDeposit}
-                    onChangeText={setWorkAfterGetDeposit}
+                    onChangeText={text => setWorkAfterGetDeposit(Number(text))}
+
                     keyboardType="numeric"
                   />
                   <Text style={styles.inputSuffix}>วัน</Text>
@@ -406,7 +406,8 @@ const ContractOption = ({navigation}: Props) => {
                   <TextInput
                     style={{width: 30}}
                     value={prepareDay}
-                    onChangeText={setPrepareDay}
+                    onChangeText={text => setPrepareDay(Number(text))}
+
                     keyboardType="numeric"
                   />
                   <Text style={styles.inputSuffix}>วัน</Text>
@@ -425,7 +426,8 @@ const ContractOption = ({navigation}: Props) => {
                   <TextInput
                     style={{width: 30}}
                     value={finishedDay}
-                    onChangeText={setFinishedDay}
+                    onChangeText={text => setFinishedDay(Number(text))}
+
                     keyboardType="numeric"
                   />
                   <Text style={styles.inputSuffix}>วัน</Text>
@@ -444,7 +446,9 @@ const ContractOption = ({navigation}: Props) => {
                   <TextInput
                     style={{width: 30}}
                     value={workCheckDay}
-                    onChangeText={setWorkCheckDay}
+                    onChangeText={text => setWorkCheckDay(Number(text))}
+
+                  
                     keyboardType="numeric"
                   />
                   <Text style={styles.inputSuffix}>วัน</Text>
@@ -463,7 +467,9 @@ const ContractOption = ({navigation}: Props) => {
                   <TextInput
                     style={{width: 30}}
                     value={workCheckEnd}
-                    onChangeText={setWorkCheckEnd}
+                    onChangeText={text => setWorkCheckEnd(Number(text))}
+
+                  
                     keyboardType="numeric"
                   />
                   <Text style={styles.inputSuffix}>วัน</Text>
@@ -483,7 +489,9 @@ const ContractOption = ({navigation}: Props) => {
                   <TextInput
                     style={{width: 30}}
                     value={adjustPerDay}
-                    onChangeText={setAdjustPerDay}
+               
+                    onChangeText={text => setAdjustPerDay(Number(text))}
+
                     keyboardType="numeric"
                   />
                   <Text style={styles.inputSuffix}>วัน</Text>
@@ -526,38 +534,39 @@ const ContractOption = ({navigation}: Props) => {
         {step === 3 && (
           <>
             <Installment
-            handleBackPress={handleBackPress}
+              handleBackPress={handleBackPress}
               data={{
                 projectName,
-                warantyYear:Number(warantyTimeWork),
-                warantyTimeWork:Number(warantyTimeWork),
+                warantyYear: Number(warantyTimeWork),
+                warantyTimeWork: Number(warantyTimeWork),
                 workingDays,
-                installingDay:Number(installingDay),
-                adjustPerDay:Number(adjustPerDay),
-                workAfterGetDeposit:Number(workAfterGetDeposit),
+                installingDay: Number(installingDay),
+                adjustPerDay: Number(adjustPerDay),
+                workAfterGetDeposit: Number(workAfterGetDeposit),
                 signDate,
                 servayDate,
-                prepareDay:Number(prepareDay),
-                finishedDay:Number(finishedDay),
-                workCheckDay:Number(workCheckDay),
-                workCheckEnd:Number(workCheckEnd),
-                total:Number(data.allTotal),
-                signAddress:address,
-                quotationId:data.id,
-                sellerId:data.sellerId,
+                prepareDay: Number(prepareDay),
+                finishedDay: Number(finishedDay),
+                workCheckDay: Number(workCheckDay),
+                workCheckEnd: Number(workCheckEnd),
+                total: Number(data.allTotal),
+                signAddress: address,
+                quotationId: data.id,
+                sellerId: data.sellerId,
               }}
             />
           </>
         )}
-        { step !== 3 && <ContractFooter
-        finalStep={false}
-          // finalStep={step === 3}
-          onBack={handleBackPress}
-          onNext={handleNextPress}
-          isLoading={false}
-          disabled={fieldsAreEmpty()}
-        /> }
-        
+        {step !== 3 && (
+          <ContractFooter
+            finalStep={false}
+            // finalStep={step === 3}
+            onBack={handleBackPress}
+            onNext={handleNextPress}
+            isLoading={false}
+            disabled={fieldsAreEmpty()}
+          />
+        )}
       </SafeAreaView>
     </>
   );

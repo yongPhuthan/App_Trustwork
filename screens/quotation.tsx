@@ -33,6 +33,7 @@ import axios, {AxiosResponse, AxiosError} from 'axios';
 import {HOST_URL, DEV_API_URL, PROD_API_URL} from '@env';
 import messaging from '@react-native-firebase/messaging';
 import Lottie from 'lottie-react-native';
+import SmallDivider from '../components/styles/SmallDivider';
 
 type RootStackParamList = {
   Quotation: undefined;
@@ -165,6 +166,7 @@ const Quotation = ({navigation}: Props) => {
       client_tel,
       client_tax,
       isEmulator,
+      companyID,
     },
     dispatch,
   }: any = useContext(Store);
@@ -179,7 +181,12 @@ const Quotation = ({navigation}: Props) => {
   const [discountValue, setDiscountValue] = useState(0);
   const [summaryAfterDiscount, setSumAfterDiscount] = useState(0);
   const [vat7Amount, setVat7Amount] = useState(0);
+  const [vat5Amount, setVat5Amount] = useState(0);
+
   const [vat3Amount, setVat3Amount] = useState(0);
+  
+  const [productWarantyYear, setProductWarantyYear] = useState(0);
+  const [skillWarantyYear, setSkillWarantyYear] = useState(0);
   const [customerName, setCustomerName] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [docNumber, setDocnumber] = useState('');
@@ -218,7 +225,7 @@ const Quotation = ({navigation}: Props) => {
     {
       onSuccess: data => {
         setCompanyUser(data);
-        console.log('company', JSON.stringify(data[0]));
+        dispatch(stateAction.get_companyID(data.user.id))
       },
     },
   );
@@ -295,13 +302,22 @@ const Quotation = ({navigation}: Props) => {
           dateOffer,
           FCMToken: fcnToken,
           docNumber,
+          skillWarantyYear,
+          productWarantyYear,
           summaryAfterDiscount,
           allTotal: totalPrice,
           sellerSignature: '',
           offerContract: idContractList,
-          userId: companyUser?.id,
+          userId: companyID
         },
       };
+      if (vat3Amount > 0) {
+        apiData.data.taxName = 'vat3';
+        apiData.data.taxValue = vat3Amount;
+      } else if (vat5Amount > 0) {
+        apiData.data.taxName = 'vat5';
+        apiData.data.taxValue = vat5Amount;
+      }
       // await mutate(apiData);
       // navigation.navigate('InstallmentScreen', {data: apiData});
       navigation.navigate('SelectContract', {data: apiData});
@@ -432,6 +448,7 @@ const Quotation = ({navigation}: Props) => {
           ) : (
             <AddClient handleAddClient={handleAddClientForm} />
           )}
+        
           <View style={styles.header}>
             <Icon
               style={styles.icon}
@@ -439,7 +456,6 @@ const Quotation = ({navigation}: Props) => {
               size={20}
               color="#19232e"
             />
-
             <Text style={styles.label}>บริการ-สินค้า</Text>
           </View>
           {serviceList.map((item: any, index: number) => (
@@ -452,14 +468,55 @@ const Quotation = ({navigation}: Props) => {
           ))}
 
           <AddServices handleAddProductFrom={handleAddProductForm} />
-
           <Divider />
+               <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  marginTop: 10,
+                }}>
+                <Text style={styles.labelWaranty}>รับประกันงานติดตั้งกี่ปี</Text>
+                <View style={styles.inputContainerForm}>
+                  <TextInput
+                    style={{width: 30}}
+                    value={skillWarantyYear} 
+                    onChangeText={text => setSkillWarantyYear(Number(text))}
+                    placeholderTextColor="#A6A6A6"
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.inputSuffix}>ปี</Text>
+                </View>
+              </View>
+               
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  marginTop: 10,
+                }}>
+                <Text style={styles.labelWaranty}>รับประกันวัสดุอุปกรณ์กี่ปี</Text>
+                <View style={styles.inputContainerForm}>
+                  <TextInput
+                    style={{width: 30}}
+                    value={productWarantyYear}
+                    onChangeText={text => setProductWarantyYear(Number(text))}
+                    placeholderTextColor="#A6A6A6"
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.inputSuffix}>ปี</Text>
+                </View>
+              </View>
+          <Divider />
+     
           <Summary
             title={'ยอดรวม'}
             price={totalPrice}
             onValuesChange={handleValuesChange}
           />
+     
         </View>
+
+     
 
         {/* {selectedContract.length > 0 ? (
           <View style={styles.cardContainer}>
@@ -601,5 +658,26 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  inputContainerForm: {
+    marginBottom: 10,
+    borderWidth: 0.5,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 15,
+    width: 80,
+  },
+  inputSuffix: {
+    alignSelf: 'flex-end',
+    alignItems: 'flex-end',
+  },
+  labelWaranty: {
+    // fontFamily: 'sukhumvit set',
+    fontSize: 16,
+    fontWeight: '400',
+    marginTop: 15,
+    marginBottom: 10,
   },
 });

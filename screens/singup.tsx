@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import React, {useState} from 'react';
+import firestore from '@react-native-firebase/firestore';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {StackNavigationProp} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,17 +27,24 @@ type RootStackParamList = {
   CompanyUserFormScreen: undefined;
 };
 
+
 const SignUpScreen = ({navigation}: Props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [registrationCode, setRegistrationCode] = useState(''); 
+  const codeArray = [123456789, 234567891, 345678912, 456789123, 567891234, 678912345, 789123456, 891234567, 912345678, 987654321];
+
   const [error, setError] =
     useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
+
+  // Calculated state to disable the button if the required information isn't entered
+  const isButtonDisabled = !email || !password || !confirmPassword;
 
   const signUpEmail = async () => {
     await AsyncStorage.setItem('userEmail', email);
     await AsyncStorage.setItem('userPassword', password);
-
+  
     if (password !== confirmPassword) {
       setError({
         code: 'auth/passwords-not-matching',
@@ -53,6 +61,46 @@ const SignUpScreen = ({navigation}: Props) => {
       return;
     }
 
+    // checkRegistrationCode from Firestore logic here
+    const docRef = firestore().collection('registrationCodes').doc(registrationCode);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      setError({
+        code: 'auth/invalid-registration-code',
+        message: 'รหัสลงทะเบียนไม่ถูกต้อง',
+        userInfo: {
+          authCredential: null,
+          resolver: null,
+        },
+        name: 'FirebaseAuthError',
+        namespace: '',
+        nativeErrorCode: '',
+        nativeErrorMessage: '',
+      });
+      return;
+    }
+  
+    if (doc.data()?.used) {
+      setError({
+        code: 'auth/registration-code-used',
+        message: 'รหัสลงทะเบียนนี้ถูกใช้แล้ว',
+        userInfo: {
+          authCredential: null,
+          resolver: null,
+        },
+        name: 'FirebaseAuthError',
+        namespace: '',
+        nativeErrorCode: '',
+        nativeErrorMessage: '',
+      });
+      return;
+    }
+  
+    // If the code is valid and not used, mark it as used
+    await docRef.update({ used: true });
+  
+
     auth()
       .createUserWithEmailAndPassword(email, password)
       .then(() => {
@@ -60,22 +108,24 @@ const SignUpScreen = ({navigation}: Props) => {
         navigation.navigate('CompanyUserFormScreen');
       })
       .catch(error => {
+        let errorMessage = '';
         if (error.code === 'auth/email-already-in-use') {
-          console.log('อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว');
+          errorMessage = 'อีเมลล์นี้ถูกสมัครสมาชิกไปแล้ว';
         }
-
+  
         if (error.code === 'auth/invalid-email') {
-          console.log('กรอกอีเมลล์ไม่ถูกต้อง');
+          errorMessage = 'กรอกอีเมลล์ไม่ถูกต้อง';
         }
-
-        setError(error);
-        console.error(error);
+  
+        setError({...error, message: errorMessage});
       });
   };
 
-  return (
+  
+ return (
     <View style={styles.container}>
       <Text style={styles.logo}>Trustwork</Text>
+  
       <View style={styles.inputView}>
         <TextInput
           style={styles.inputText}
@@ -105,12 +155,24 @@ const SignUpScreen = ({navigation}: Props) => {
           value={confirmPassword}
         />
       </View>
+      <View style={styles.inputView}> 
+        <TextInput
+          style={styles.inputText}
+          placeholder="Registration Code..."
+          placeholderTextColor="#888"
+          onChangeText={setRegistrationCode}
+          value={registrationCode}
+        />
+      </View>
+      {error && <Text style={styles.errorText}>{error.message}</Text>}
 
-      <TouchableOpacity style={styles.loginBtn} onPress={signUpEmail}>
+
+
+
+      <TouchableOpacity style={styles.loginBtn} onPress={signUpEmail} disabled={isButtonDisabled}>
         <Text style={styles.loginText}>ลงทะเบียน</Text>
       </TouchableOpacity>
 
-      {error && <Text style={styles.errorText}>{error.message}</Text>}
       <View style={styles.signInContainer}>
         <Text style={styles.signInText}>มีบัญชีผู้ใช้แล้ว? </Text>
         <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
@@ -121,6 +183,7 @@ const SignUpScreen = ({navigation}: Props) => {
   );
 };
 export default SignUpScreen;
+
 
 const windowWidth = Dimensions.get('window').width;
 

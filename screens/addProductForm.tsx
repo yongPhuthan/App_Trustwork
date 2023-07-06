@@ -51,7 +51,6 @@ const AddProductForm = ({navigation, route}: Props) => {
 
   const [count, setCount] = useState(0);
   const [discountPercent, setDiscountPercent] = useState(0);
-
   const [qty, setQuantity] = useState(1);
   const [unitPrice, setPrice] = useState(0);
   const [total, setTotalCost] = useState(0);
@@ -81,7 +80,6 @@ const AddProductForm = ({navigation, route}: Props) => {
     };
     dispatch(stateAction.service_list(newServiceItem as any));
     dispatch(stateAction.reset_audit());
-    console.log('serviceList' + serviceList);
 
     navigation.goBack();
   };
@@ -95,6 +93,8 @@ const AddProductForm = ({navigation, route}: Props) => {
   //   });
   // };
   const handleSelectAudit = (data: FormData) => {
+    console.log('DATA QUOTATION', JSON.stringify(data))
+
     navigation.navigate('SelectAudit', {
       title: data.title,
       description: data.description,
@@ -110,7 +110,6 @@ const AddProductForm = ({navigation, route}: Props) => {
       setTotalCost(0);
     }
   }, [qty, unitPrice, discountPercent]);
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.subContainer}>
@@ -148,23 +147,22 @@ const AddProductForm = ({navigation, route}: Props) => {
         <View style={styles.summary}>
           <Text style={styles.priceHead}>ราคา:</Text>
           <Controller
-  control={control}
-  name="unitPrice"
-  defaultValue=""
-  render={({field: {onChange, value}}) => (
-    <TextInput
-      style={[styles.input, {textAlign: 'right'}]} // Add textAlign property
-      placeholder="0"
-      keyboardType="number-pad"
-      onChangeText={value => {
-        onChange(value);
-        setPrice(parseFloat(value));
-      }}
-      value={value}
-    />
-  )}
-/>
-
+            control={control}
+            name="unitPrice"
+            defaultValue=""
+            render={({field: {onChange, value}}) => (
+              <TextInput
+                style={[styles.input, {textAlign: 'right'}]} // Add textAlign property
+                placeholder="0"
+                keyboardType="number-pad"
+                onChangeText={value => {
+                  onChange(value);
+                  setPrice(parseFloat(value));
+                }}
+                value={value}
+              />
+            )}
+          />
         </View>
         <View style={styles.summary}>
           <Text style={styles.price}>จำนวน:</Text>
@@ -225,7 +223,7 @@ const AddProductForm = ({navigation, route}: Props) => {
             )}
           />
         </View>
-         {/* ปิดส่วนลดแยกรายการ */}
+        {/* ปิดส่วนลดแยกรายการ */}
         {/* <View style={styles.summary}>
           <Text style={styles.price}>ส่วนลด(%):</Text>
           <Controller
@@ -252,44 +250,47 @@ const AddProductForm = ({navigation, route}: Props) => {
           <Text style={styles.price}>รวมเป็นเงิน:</Text>
 
           <Controller
-  control={control}
-  name="total"
-  defaultValue=""
-  render={({field: {value}}) => (
-    <TextInput
-      style={styles.priceSummary}
-      placeholder="0"
-      keyboardType="number-pad"
-      value={
-        qty > 0
-          ? Number(qty * unitPrice )
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, '$&,')
-          : '0'
-      }
-      editable={false}
-    />
-  )}
-/>
-
+            control={control}
+            name="total"
+            defaultValue=""
+            render={({field: {value}}) => (
+              <TextInput
+                style={styles.priceSummary}
+                placeholder="0"
+                keyboardType="number-pad"
+                value={
+                  qty > 0
+                    ? Number(qty * unitPrice)
+                        .toFixed(2)
+                        .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                    : '0'
+                }
+                editable={false}
+              />
+            )}
+          />
         </View>
-        <View style={{marginTop:20}}></View>
+        <View style={{marginTop: 20}}></View>
         <SmallDivider />
 
         <View>
           {selectedAudit?.length > 0 ? (
             <View style={styles.cardContainer}>
-                   <Text style={{marginBottom:20, fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',}}>
-                    มาตรฐานของบริการนี้:
-                  </Text>
+              <Text
+                style={{
+                  marginBottom: 20,
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  color: '#333',
+                }}>
+                มาตรฐานของบริการนี้:
+              </Text>
               {selectedAudit?.map((item: any) => (
                 <TouchableOpacity
                   key={item.id}
                   style={styles.card}
                   onPress={handleSubmit(handleSelectAudit)}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardTitle}>{item.auditShowTitle}</Text>
                   <Icon name="chevron-right" size={24} color="gray" />
                 </TouchableOpacity>
               ))}
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
     width: 150,
     textAlign: 'right', // Add textAlign property
   },
-  
+
   inputName: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
   priceHead: {
     fontSize: 18,
     color: 'black',
-    marginTop:10
+    marginTop: 10,
   },
   counter: {
     fontSize: 18,
@@ -451,8 +452,8 @@ const styles = StyleSheet.create({
   selectButton: {
     // backgroundColor: '#0073BA',
     backgroundColor: 'white',
-    borderColor:'gray',
-borderWidth:1,
+    borderColor: 'gray',
+    borderWidth: 1,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 5,
@@ -460,7 +461,7 @@ borderWidth:1,
   },
   selectButtonText: {
     // color: '#fff',
-    color:'black',
+    color: 'black',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',

@@ -81,11 +81,11 @@ const backHome =()=>{
           )}
           <View style={styles.buttonRow}>
           <Button 
-              buttonStyle={styles.button}
+              buttonStyle={styles.homeButtonWhite}
               title="กลับหน้าแรก"
               onPress={backHome}
               titleStyle={styles.buttonHomeText}
-              icon={<Icon name="home" type="font-awesome" size={20} color="white" />}
+              icon={<Icon name="home" type="font-awesome" size={20} color="black" />}
               iconPosition='left'
             />
             <Button 
@@ -220,6 +220,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25, // for iOS
     shadowRadius: 3.84, // for iOS
   },
+homeButtonWhite: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    borderRadius: 5,
+    borderWidth:0.5,
+    elevation: 2, // for Android
+    shadowColor: '#000', // for iOS
+    shadowOffset: {width: 0, height: 2}, // for iOS
+    shadowOpacity: 0.25, // for iOS
+    shadowRadius: 3.84, // for iOS
+  },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -230,7 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
-    color:'white'
+    color:'black'
   },
 
 });

@@ -3,16 +3,21 @@ import {
   View,
   Text,
   TouchableOpacity,
+  ActivityIndicator,
   StyleSheet,
   Image,
+  SafeAreaView,
   TextInput,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {firebase as firebaseFunction} from '@react-native-firebase/functions';
 import firebase from '../firebase';
-import { useMutation } from 'react-query';
-import { RadioButton } from 'react-native-paper';
+import {useMutation} from 'react-query';
+import {CheckBox} from '@rneui/themed';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+
+import {faUpload, faCloudUpload} from '@fortawesome/free-solid-svg-icons';
 import {
   launchImageLibrary,
   MediaType,
@@ -70,40 +75,43 @@ interface MyError {
 //   return ;
 // };
 
-const createCompanySeller = async (data:any) => {
+const createCompanySeller = async (data: any) => {
   const user = auth().currentUser;
   if (!user) {
     throw new Error('User is not logged in');
   }
   try {
-    console.log('user',user)
-    const response = await fetch('https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createCompanySeller', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user?.uid}`,
+    console.log('user', user);
+    const response = await fetch(
+      'https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createCompanySeller',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user?.uid}`,
+        },
+        body: JSON.stringify({data}),
       },
-      body: JSON.stringify({ data }),
-    });
+    );
     console.log('Response:', response.status);
 
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return ;
+    return;
   } catch (error) {
     console.error(error);
     throw new Error('There was an error processing the request');
   }
 };
 
-
-
-
 const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
   const [bizName, setBizName] = useState<string>('');
   const [userName, setUserName] = useState<string>('');
+  const [userPosition, setUserPosition] = useState<string>('');
+
   const [userLastName, setUserLastName] = useState<string>('');
+  const [taxID, setTaxID] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [officeTel, setOfficeTel] = useState<string>('');
   const [mobileTel, setMobileTel] = useState<string>('');
@@ -117,7 +125,7 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
   const [page, setPage] = useState(1);
   const [bizType, setBizType] = useState('individual');
 
-  const { mutate, isLoading, isError } = useMutation(createCompanySeller, {
+  const {mutate, isLoading, isError} = useMutation(createCompanySeller, {
     onSuccess: () => {
       navigation.navigate('Quotation');
       console.log();
@@ -130,16 +138,20 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const handleFunction = async () => {
+
     const data = {
       id: uuidv4(),
       bizName,
       userName,
       userLastName,
+      userPosition: userPosition === '' ? 'individual' : userPosition,
+
       address,
       officeTel,
       mobileTel,
       bizType,
-      logo,
+      logo: logo || 'logo',
+
       companyNumber,
     };
     // call the mutation function instead of the fetch function
@@ -182,20 +194,20 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
     });
   };
 
-  const uploadImageToFirebase = async (imagePath:string) => {
+  const uploadImageToFirebase = async (imagePath: string) => {
     if (!imagePath) {
       console.log('No image path provided');
       return;
     }
-  
+
     const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
     const storageRef = storage().ref(`images/${filename}`);
     await storageRef.putFile(imagePath);
-  
+
     const downloadUrl = await storageRef.getDownloadURL();
     return downloadUrl;
   };
-  
+
   const handleNextPage = () => {
     setPage(page + 1);
   };
@@ -209,154 +221,157 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
       .then(() => console.log('User signed out!'));
   };
 
-  // const handleFunction = async () => {
-  //   const user = auth().currentUser;
-  //   const data = {
-  //     id: uuidv4(), // assuming the user's UID will be used as the companyUser's ID
-  //     bizName,
-  //     userName,
-  //     userLastName,
-  //     address,
-  //     officeTel,
-  //     mobileTel,
-  //     bizType,
-  //     logo,
-  //     companyNumber,
-  //   };
-  //   await fetch('http://localhost:5001/workerfirebase-f1005/asia-southeast1/createCompanySeller', {
-      
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Authorization': `Bearer ${user?.uid}`,
-  //     },
-  //     body: JSON.stringify({ data }),
-  //   })
-  //   .then((response) => {
-  //     if (!response.ok) {
-  //       throw new Error('Network response was not ok');
-  //     }
-  //     navigation.navigate('Quotation');
-
-  //     // return response.text();
-  //   })
-  //   .then((data) => {
-  //     console.log(data);
-  //   })
-  //   .catch((error) => {
-  //     console.error('There was a problem calling the function:', error);
-  //     console.log(error.response);
-  //   });
-    
-      
-  // };
-
-  const renderPage1 = () => {
+  const renderPage = () => {
     return (
-      <>
-        <Text style={styles.label}>Biz Name</Text>
+      <SafeAreaView style={{marginTop: 30}}>
+        <Text style={styles.title}>ตั้งค่าหัวเอกสาร</Text>
+
         <TextInput
+          placeholder="ชื่อธุรกิจ - ชื่อบริษัท"
           style={styles.input}
           value={bizName}
           onChangeText={setBizName}
         />
-        <Text style={styles.label}>User Name</Text>
-        <TextInput
-          style={styles.input}
-          value={userName}
-          onChangeText={setUserName}
-        />
-        <Text style={styles.label}>User Last Name</Text>
-        <TextInput
-          style={styles.input}
-          value={userLastName}
-          onChangeText={setUserLastName}
-        />
-  
-        <Text style={styles.label}>Account Type</Text>
-        <View>
-          <Text>Individual</Text>
-          <RadioButton
-            value="individual"
-            status={bizType === 'individual' ? 'checked' : 'unchecked'}
+        <Text style={styles.label}>ประเภทธุรกิจ</Text>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <CheckBox
+            title="บุคคลธรรมดา"
+            checkedIcon="dot-circle-o"
+            uncheckedIcon="circle-o"
+            checked={bizType === 'individual'}
             onPress={() => setBizType('individual')}
           />
-        </View>
-        <View>
-          <Text>Business</Text>
-          <RadioButton
-            value="business"
-            status={bizType === 'business' ? 'checked' : 'unchecked'}
+
+          <CheckBox
+            title="บริษัท-หจก"
+            checkedIcon="dot-circle-o"
+            uncheckedIcon="circle-o"
+            checked={bizType === 'business'}
             onPress={() => setBizType('business')}
           />
         </View>
-        <TouchableOpacity
-              style={{alignItems: 'center', marginBottom: 24}}
-              onPress={handleLogoUpload}>
-             {logo ? (
-          <Image
-            source={{
-              uri: logo,
-            }}
-            style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
-          />
-        ) : (
-          <Image
-            source={{
-              uri: 'gs://workerfirebase-f1005.appspot.com/static/image.png',
-            }}
-            style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
-          />
-        )}
-            </TouchableOpacity>
-  
-        <TouchableOpacity style={styles.button} onPress={handleNextPage}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-      </>
-    );
-  };
-  
-  const renderPage2 = () => {
-    return (
-      <>
-        <Text style={styles.label}>Address</Text>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <View style={{flex: 0.45}}>
+            <TextInput
+              placeholder="ชื่อจริง"
+              style={styles.input}
+              value={userName}
+              onChangeText={setUserName}
+            />
+          </View>
+          <View style={{flex: 0.45}}>
+            <TextInput
+              placeholder="นามสกุล"
+              style={styles.input}
+              value={userLastName}
+              onChangeText={setUserLastName}
+            />
+          </View>
+        </View>
+        {bizType === 'business' && (
         <TextInput
-          style={styles.input}
+            placeholder="ตำแหน่งในบริษัท"
+            style={styles.input}
+            value={userPosition}
+            onChangeText={setUserPosition}
+        />
+    )}
+        <TextInput
+          placeholder="ที่อยู่ร้าน"
+          style={[styles.input, {height: 100}]} // Set height as needed
           value={address}
           onChangeText={setAddress}
+          multiline
+          numberOfLines={3}
         />
-        <Text style={styles.label}>Office Tel</Text>
-        <TextInput
-          style={styles.input}
-          value={officeTel}
-          onChangeText={setOfficeTel}
-        />
-        <Text style={styles.label}>Mobile Tel</Text>
-        <TextInput
-          style={styles.input}
-          value={mobileTel}
-          onChangeText={setMobileTel}
-        />
-        <TouchableOpacity style={styles.button} onPress={handlePrevPage}>
-          <Text style={styles.buttonText}>Previous</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleFunction}>
-          <Text style={styles.buttonText}>{isLoading ? 'Submitting...' : 'Submit'}</Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={signOutPage}>
-          <Text style={styles.buttonText}>sign out page</Text>
+        <TextInput
+          placeholder="เลขภาษี(ถ้ามี)"
+          style={styles.input}
+          value={taxID}
+          onChangeText={setTaxID}
+        />
+
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <View style={{flex: 0.45}}>
+            <TextInput
+              placeholder="เบอร์โทรบริษัท"
+              style={styles.input}
+              value={officeTel}
+              onChangeText={setOfficeTel}
+            />
+          </View>
+          <View style={{flex: 0.45}}>
+            <TextInput
+              placeholder="เบอร์มือถือ"
+              style={styles.input}
+              value={mobileTel}
+              onChangeText={setMobileTel}
+            />
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={{
+            alignItems: 'center',
+            marginBottom: 24,
+            marginTop: 30,
+            borderColor: 'gray',
+            borderWidth: 1,
+            borderRadius: 5,
+            borderStyle: 'dotted',
+            padding: 10,
+          }}
+          onPress={handleLogoUpload}>
+          {logo ? (
+            <Image
+              source={{uri: logo}}
+              style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+            />
+          ) : (
+            <View>
+              <FontAwesomeIcon
+                icon={faCloudUpload}
+                style={{marginVertical: 5, marginHorizontal: 50}}
+                size={32}
+                color="gray"
+              />
+              <Text style={{textAlign: 'center', color: 'gray'}}>
+                อัพโหลดโลโก้ธุรกิจ
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
-      </>
+      </SafeAreaView>
     );
   };
-  
-
-
+  const isButtonDisabled =
+    !bizName ||
+    !userName ||
+    !userLastName ||
+    !bizType ||
+    !address ||
+    !officeTel ||
+    !mobileTel ||
+    (bizType === 'business' && !userPosition) ||
+    !taxID;
   return (
-    <View style={styles.container}>
-      {page === 1 ? renderPage1() : renderPage2()}
+    <View style={{flex: 1}}>
+      <ScrollView style={styles.container}>{renderPage()}</ScrollView>
+      <TouchableOpacity
+        disabled={isButtonDisabled}
+        style={[
+          styles.button,
+          isButtonDisabled ? styles.disabledButton : styles.enabledButton,
+          {justifyContent: 'center', alignItems: 'center'}, // Add these to center content
+        ]}
+        onPress={handleFunction}>
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text style={styles.buttonText}>บันทึก</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
@@ -376,10 +391,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    backgroundColor: '#F5F5F5',
     borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
+    marginVertical: 5,
+    borderWidth: 0.5,
+    borderColor: 'black',
     paddingHorizontal: 10,
     paddingVertical: 8,
     marginBottom: 10,
@@ -387,14 +402,42 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#0066C0',
     color: '#FFFFFF',
-    padding: 10,
     borderRadius: 5,
     marginTop: 20,
+    height: 50, // Adjust as necessary
+    padding: 10, // Adjust as necessary
   },
   buttonText: {
     color: '#FFFFFF',
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  enabledButton: {
+    backgroundColor: '#0066C0',
+    borderRadius: 5,
+    marginTop: 10,
+    width: '70%',
+    alignSelf: 'center',
+    height: 40,
+    padding: 10,
+    marginBottom: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+    borderRadius: 5,
+    marginTop: 10,
+    width: '70%',
+    alignSelf: 'center',
+    height: 40,
+    padding: 10,
+    marginBottom: 10,
+  },
+  title: {
+    textAlign: 'center',
+    color: '#333',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 30,
   },
 });

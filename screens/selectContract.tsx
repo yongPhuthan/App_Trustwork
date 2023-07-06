@@ -157,14 +157,14 @@ const SelectContract = ({navigation}: Props) => {
     defaultChecked: selectedContracts.some(a => a.id === contract.id),
   }));
 
-console.log("data Quotation ==", JSON.stringify(quotation.services))
+console.log("data Quotation ==", JSON.stringify(quotation))
 
   return (
     <View style={{flex: 1}}>
       <ScrollView style={styles.container}>
         <View style={styles.contentContainer}>
           <View style={styles.headerContainer}>
-            <Text style={styles.headerTitle}>Select Contracts</Text>
+            <Text style={styles.headerTitle}>เลือกข้อเสนอสัญญา</Text>
           </View>
 
           <View style={styles.contractListContainer}>

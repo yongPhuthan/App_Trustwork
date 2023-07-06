@@ -7,19 +7,23 @@ import {ScrollView} from 'react-native-gesture-handler';
 import {useRoute} from '@react-navigation/native';
 import {Store} from '../redux/Store';
 import * as stateAction from '../redux/Actions';
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import {HOST_URL, DEV_API_URL, PROD_API_URL} from '@env';
+import {useQuery} from 'react-query';
+import Lottie from 'lottie-react-native';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'SelectAudit'>;
   route: RouteProp<ParamListBase, 'SelectAudit'>;
-  title:string;
-  onPress:()=>void
+  title: string;
+  onPress: () => void;
   // onGoBack: (data: string) => void;
 };
 type Audit = {
   title: string;
   description: string;
 
-  number:number;
+  number: number;
   imageUri: string;
   id: number;
 };
@@ -34,42 +38,84 @@ const ModernCard: React.FC<Props> = ({title, onPress}) => {
   );
 };
 
+const fetchAudits = async (id: string, isEmulator: boolean) => {
+  const user = auth().currentUser;
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  const idToken = await user.getIdToken();
+  let url;
+  if (isEmulator) {
+    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/appQueryAudits2`;
+  } else {
+    console.log('isEmulator Fetch', isEmulator);
+    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/appQueryAudits2`;
+  }
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({id}),
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
 const SelectAudit = ({navigation}: Props) => {
   const [selectedAudits, setSelectedAudits] = useState<Audit[]>([]);
   const route = useRoute();
   const [showCards, setShowCards] = useState(true);
-  const [headerText, setHeaderText] = useState("");
-
+  const [headerText, setHeaderText] = useState('');
+  const [audits, setAudits] = useState(null);
 
   const {title, description}: any = route.params;
 
   const {
-    state: {selectedAudit},
+    state: {selectedAudit, companyID, isEmulator},
     dispatch,
   }: any = useContext(Store);
-  const audits: Audit[] = [
+  const {data, isLoading, isError} = useQuery(
+    ['queryAudits', companyID],
+    () => fetchAudits(companyID, isEmulator).then(res => res),
     {
-      id: 1,
-      number:101,
-      title: 'ตรวจเช็คการป้องกันน้ำ',
-      description: ' การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน',
-      imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680677569/gttirwz80fd4vsa11q2k.jpg',
+      onSuccess: data => {
+        setAudits(data);
+        console.log('audit data', JSON.stringify(data));
+      },
     },
-    {
-      id: 2,
-      number:102,
-      title: 'ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน',
-      description: 'ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน',
-      imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680680642/aluminium/gpiopwyc5is4pynbvnq7.jpg',
-    },
-    {
-      id: 3,
-      number:103,
-      title: 'ตรวจเช็คตำแหน่งความเอียงของประตู',
-      description: 'ทดสอบตำแหน่งของประตูจะต้องอยู่ในองศาที่ดี ตำแหน่งการติดตั้งไม่เบี้ยวหากตำแหน่งของประตูไม่ได้อยู่ในองศาที่ดีจะต้องแก้ไขให้เรียบร้อยก่อนเบิกงวดงาน',
-      imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680680851/aluminium/ynpf4mn8cgg4pms2i4xa.jpg',
-    },
-  ];
+  );
+
+  // const audits: Audit[] = [
+  //   {
+  //     id: 1,
+  //     number:101,
+  //     title: 'ตรวจเช็คการป้องกันน้ำ',
+  //     description: ' การทดสอบการรั่วซึมของน้ำด้วยการฉีดน้ำ(สำหรับงานภายนอกอาคารหรือประตูทางเข้าบ้าน) สัญญาว่างานที่ส่งมอบจะต้องผ่านการทดสอบการฉีดน้ำเพื่อทดสอบการรั่วซึมก่อนส่งมอบงาน หากมีน้ำรั่วซึมเข้าไปภายในบ้านให้ถือว่าการทดสอบนี้ยังไม่ผ่านให้ผู้รับจ้างปรับปรุงแก้ไขจนกระทั่งน้ำไม่สามารถซึมผ่านได้ก่อนที่จะส่งงวดงานหรือเบิกเงินงวดงาน',
+  //     imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680677569/gttirwz80fd4vsa11q2k.jpg',
+  //   },
+  //   {
+  //     id: 2,
+  //     number:102,
+  //     title: 'ตรวจเช็คช่องระหว่างระหว่างขอบประตูทุกบาน',
+  //     description: 'ทดสอบช่องระหว่างประตู ต้องปิดสนิทรอบด้าน ตรวจสอบให้แน่ใจว่าปิดประตูสนิทแล้วไม่ควรจะมีรูหรือช่องอากาศที่ตามองเห็นทุกด้านของทุกประตูที่ติดตั้งก่อนเบิกเงินงวดงาน',
+  //     imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680680642/aluminium/gpiopwyc5is4pynbvnq7.jpg',
+  //   },
+  //   {
+  //     id: 3,
+  //     number:103,
+  //     title: 'ตรวจเช็คตำแหน่งความเอียงของประตู',
+  //     description: 'ทดสอบตำแหน่งของประตูจะต้องอยู่ในองศาที่ดี ตำแหน่งการติดตั้งไม่เบี้ยวหากตำแหน่งของประตูไม่ได้อยู่ในองศาที่ดีจะต้องแก้ไขให้เรียบร้อยก่อนเบิกงวดงาน',
+  //     imageUri: 'https://res.cloudinary.com/trustworkco/image/upload/v1680680851/aluminium/ynpf4mn8cgg4pms2i4xa.jpg',
+  //   },
+  // ];
+
   const handleSelectAudit = (audit: Audit) => {
     const existingIndex = selectedAudits.findIndex(
       a => a.title === audit.title,
@@ -98,18 +144,37 @@ const SelectAudit = ({navigation}: Props) => {
     }
   }, [selectedAudit]);
 
-  // Create a new array of audits with the `defaultChecked` prop set
-  const auditsWithChecked = audits.map(audit => ({
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Lottie
+          style={{width: '25%'}}
+          source={require('../assets/animation/lf20_rwq6ciql.json')}
+          autoPlay
+          loop
+        />
+      </View>
+    );
+  }
+  if (isError) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>ERROR</Text>
+      </View>
+    );
+  }
+  const auditsWithChecked = audits?.map(audit => ({
     ...audit,
     defaultChecked: selectedAudits.some(a => a.id === audit.id),
   }));
-
   return (
     <View style={{flex: 1}}>
-      <ScrollView style={styles.container}> 
+      <ScrollView style={styles.container}>
         <View style={styles.contentContainer}>
           <View style={styles.headerContainer}>
-            <Text style={styles.headerTitle}>มาตรฐานงานติดตั้ง {headerText} </Text>
+            <Text style={styles.headerTitle}>
+              มาตรฐานงานติดตั้ง {headerText}{' '}
+            </Text>
             {/* Text "Window here" */}
           </View>
           {/* Tile & description part */}
@@ -122,8 +187,9 @@ const SelectAudit = ({navigation}: Props) => {
             <View style={styles.cardsContainer}>
               <TouchableOpacity
                 onPress={() => {
-                  setHeaderText("บานเฟี้ยม");
-                  setShowCards(false)}}
+                  setHeaderText('บานเฟี้ยม');
+                  setShowCards(false);
+                }}
                 style={styles.card}>
                 <View style={styles.cardContent}>
                   <Text style={styles.title}>Window</Text>
@@ -132,14 +198,14 @@ const SelectAudit = ({navigation}: Props) => {
             </View>
           ) : (
             <View style={styles.auditListContainer}>
-              {auditsWithChecked.map((audit, index) => (
+              {auditsWithChecked.map((audit:any, index:number) => (
                 <CardAudit
                   key={index}
-                  title={audit.title}
+                  title={audit.auditShowTitle}
                   description={audit.description}
                   number={audit.number}
                   defaultChecked={audit.defaultChecked}
-                  imageUri={audit.imageUri}
+                  imageUri={audit.image}
                   onPress={() => handleSelectAudit(audit)}
                 />
               ))}
@@ -184,7 +250,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#323232',
 
-   fontFamily:'Sukhumvit set'
+    fontFamily: 'Sukhumvit set',
   },
   titleContainer: {
     flexDirection: 'column',
@@ -203,11 +269,9 @@ const styles = StyleSheet.create({
   auditListContainer: {
     flexDirection: 'column',
     justifyContent: 'space-between',
-
   },
   cardAudit: {
     height: 200, // Set a fixed height for the CardAudit component
-
   },
   buttonContainer: {
     backgroundColor: '#2196F3',
@@ -230,7 +294,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 4,
     bottom: 0,
-
 
     width: '100%',
 
@@ -263,7 +326,7 @@ const styles = StyleSheet.create({
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop:40,
+    marginTop: 40,
     justifyContent: 'space-between',
   },
   cardAuditView: {
@@ -277,5 +340,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

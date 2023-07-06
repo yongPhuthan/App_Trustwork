@@ -1,5 +1,5 @@
 export const DOC_COUNTER = 'DOC_COUNTER';
-
+export const GET_COMPANYID = 'GET_COMPANYID';
 // reader
 export const ALL_DATA = 'ALL_DATA';
 

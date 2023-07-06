@@ -155,7 +155,7 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
   const handleNewQuotationPress = () => {
     navigation.navigate('Quotation');
   };
-
+console.log('company',JSON.stringify(companyData));
   const renderItem = ({item}: {item: Quotation}) => (
     <>
       <TouchableOpacity onPress={() => handleModal()}>
