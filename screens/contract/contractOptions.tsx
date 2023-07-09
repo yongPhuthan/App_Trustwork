@@ -118,38 +118,7 @@ const ContractOption = ({navigation}: Props) => {
     state: {selectedContract, isEmulator},
     dispatch,
   }: any = useContext(Store);
-  const handleSubmit = async () => {
-    const apiData = {
-      id: uuidv4(),
-      quotationId: data.data.id,
-      projectName,
-      signAddress: data.data.signAddress,
-      warantyYear: warantyTimeWork,
-      workingDays,
-      workAfterGetDeposit,
-      prepareDay,
-      finishedDay,
-      signDate: data.data.signDate,
-      adjustPerDay,
-      servayDate: data.data.servayDate,
-      workCheckDay,
-      workCheckEnd,
-      installingDay,
-    };
-    console.log({
-      projectName,
-      warantyYear: warantyTimeWork,
-      workingDays,
-      workAfterGetDeposit,
-      servayDate,
-      prepareDay,
-      finishedDay,
-      adjustPerDay,
-    });
-    console.log('api data', JSON.stringify(data.data));
 
-    // await mutate({data: apiData, isEmulator});
-  };
   const handleStartDateSelected = (date: Date) => {
     const formattedDate = thaiDateFormatter.format(date);
     // setServayDate(formattedDate);
@@ -293,7 +262,7 @@ const ContractOption = ({navigation}: Props) => {
     }
   };
 
-  console.log('signDATE', signDate);
+  console.log('signDATE', installingDay);
 
   return (
     <>

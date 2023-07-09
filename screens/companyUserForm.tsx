@@ -2,19 +2,22 @@ import React, {useState, useEffect} from 'react';
 
 import {
   View,
-
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-
   Image,
-  Button, Modal, Text,
+  Button,
+  Modal,
+  Text,
   SafeAreaView,
   FlatList,
   TextInput,
 } from 'react-native';
-import {  List } from 'react-native-paper';
-import { MultipleSelectList,SelectList } from 'react-native-dropdown-select-list'
+import {List} from 'react-native-paper';
+import {
+  MultipleSelectList,
+  SelectList,
+} from 'react-native-dropdown-select-list';
 
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -55,6 +58,7 @@ type RootStackParamList = {
     bankaccount: object;
     conditions: string;
   };
+  RootTab: undefined;
   AddProductForm: undefined;
   SignUpScreen: undefined;
   EditProductForm: undefined;
@@ -134,20 +138,22 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
   const [selectedCategories, setSelectedCategories] = useState<object[]>([]);
   const [visible, setVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-
+  const [isImageUpload, setIsImageUpload] = useState(false);
   const [isModalVisible, setModalVisible] = useState<boolean>(false);
 
-  const categories: object[] = [   {key:'1', value:'Mobiles', disabled:true},
-  {key:'2', value:'Appliances'},
-  {key:'3', value:'Cameras'},
-  {key:'4', value:'Computers', disabled:true},
-  {key:'5', value:'Vegetables'},
-  {key:'6', value:'Diary Products'},
-  {key:'7', value:'Drinks'},];
+  const categories: object[] = [
+    {key: '1', value: 'Mobiles', disabled: true},
+    {key: '2', value: 'อลูมิเนียม'},
+    {key: '3', value: 'ฝ้าซีลาย'},
+    {key: '4', value: 'Computers', disabled: true},
+    {key: '5', value: 'งานเหล็กลังคา'},
+    {key: '6', value: 'งานกระเบื้อง'},
+    {key: '7', value: 'งานปูน'},
+  ];
 
   const {mutate, isLoading, isError} = useMutation(createCompanySeller, {
     onSuccess: () => {
-      navigation.navigate('Quotation');
+      navigation.navigate('RootTab');
       console.log();
     },
     onError: (error: MyError) => {
@@ -160,14 +166,13 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const handleFunction = async () => {
-
     const data = {
       id: uuidv4(),
       bizName,
       userName,
       userLastName,
       userPosition: userPosition === '' ? 'individual' : userPosition,
-
+      rules: [selectedCategories],
       address,
       officeTel,
       mobileTel,
@@ -176,7 +181,6 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
 
       companyNumber,
     };
-    // call the mutation function instead of the fetch function
     mutate(data);
   };
 
@@ -217,6 +221,7 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
   };
 
   const uploadImageToFirebase = async (imagePath: string) => {
+    setIsImageUpload(true);
     if (!imagePath) {
       console.log('No image path provided');
       return;
@@ -227,6 +232,8 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
     await storageRef.putFile(imagePath);
 
     const downloadUrl = await storageRef.getDownloadURL();
+    setIsImageUpload(false);
+
     return downloadUrl;
   };
 
@@ -242,9 +249,11 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
       .signOut()
       .then(() => console.log('User signed out!'));
   };
-  const handleCategorySelect = (category) => {
+  const handleCategorySelect = category => {
     if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter(item => item !== category));
+      setSelectedCategories(
+        selectedCategories.filter(item => item !== category),
+      );
     } else {
       setSelectedCategories([...selectedCategories, category]);
     }
@@ -263,14 +272,55 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
     ) {
       setCurrentStep(2);
     }
-  }, [bizName, userName, userLastName, bizType, address, officeTel, mobileTel, userPosition, taxID]);
+  }, [
+    bizName,
+    userName,
+    userLastName,
+    bizType,
+    address,
+    officeTel,
+    mobileTel,
+    userPosition,
+    taxID,
+  ]);
 
   const renderPage = () => {
-
     return (
-      <SafeAreaView style={{marginTop: 30}}>
+      <View style={{marginTop: 40}}>
         <Text style={styles.title}>ตั้งค่า หัวเอกสาร</Text>
+        <TouchableOpacity
+          style={{
+            alignItems: 'center',
+            marginBottom: 10,
 
+            borderColor: 'gray',
+            borderWidth: 1,
+            borderRadius: 5,
+            borderStyle: 'dotted',
+            padding: 10,
+          }}
+          onPress={handleLogoUpload}>
+          {isImageUpload ? (
+            <ActivityIndicator size="small" color="gray" />
+          ) : logo ? (
+            <Image
+              source={{uri: logo}}
+              style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
+            />
+          ) : (
+            <View>
+              <FontAwesomeIcon
+                icon={faCloudUpload}
+                style={{marginVertical: 5, marginHorizontal: 50}}
+                size={32}
+                color="gray"
+              />
+              <Text style={{textAlign: 'center', color: 'gray'}}>
+                อัพโหลดโลโก้ธุรกิจ
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
         <TextInput
           placeholder="ชื่อธุรกิจ - ชื่อบริษัท"
           style={styles.input}
@@ -304,17 +354,19 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
         label="เลือกหมวดหมู่ธุรกิจ"
     /> */}
 
-<SelectList 
-        setSelected={(val) => setSelectedCategories(val)} 
-        data={categories} 
-        save="value"
-        placeholder={"เลือกหมวดหมู่ธุรกิจ"}
+        <SelectList
+          setSelected={val => setSelectedCategories(val)}
+          data={categories}
+          save="value"
+          placeholder={'เลือกหมวดหมู่ธุรกิจ'}
+        />
 
-    />
-
-
-
-        <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 10}}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginTop: 10,
+          }}>
           <View style={{flex: 0.45}}>
             <TextInput
               placeholder="ชื่อจริง"
@@ -333,13 +385,13 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
           </View>
         </View>
         {bizType === 'business' && (
-        <TextInput
+          <TextInput
             placeholder="ตำแหน่งในบริษัท"
             style={styles.input}
             value={userPosition}
             onChangeText={setUserPosition}
-        />
-    )}
+          />
+        )}
         <TextInput
           placeholder="ที่อยู่ร้าน"
           style={[styles.input, {height: 100}]} // Set height as needed
@@ -349,12 +401,7 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
           numberOfLines={3}
         />
 
-        <TextInput
-          placeholder="เลขภาษี(ถ้ามี)"
-          style={styles.input}
-          value={taxID}
-          onChangeText={setTaxID}
-        />
+
 
         <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
           <View style={{flex: 0.45}}>
@@ -374,39 +421,16 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
             />
           </View>
         </View>
+        <TextInput
+          placeholder="เลขภาษี(ถ้ามี)"
+          style={styles.input}
+          value={taxID}
+          onChangeText={setTaxID}
+        />
+        <View style={{       marginBottom: 50,}}></View>
 
-        <TouchableOpacity
-          style={{
-            alignItems: 'center',
-            marginBottom: 50,
-            marginTop: 30,
-            borderColor: 'gray',
-            borderWidth: 1,
-            borderRadius: 5,
-            borderStyle: 'dotted',
-            padding: 10,
-          }}
-          onPress={handleLogoUpload}>
-          {logo ? (
-            <Image
-              source={{uri: logo}}
-              style={{width: 100, aspectRatio: 2, resizeMode: 'contain'}}
-            />
-          ) : (
-            <View>
-              <FontAwesomeIcon
-                icon={faCloudUpload}
-                style={{marginVertical: 5, marginHorizontal: 50}}
-                size={32}
-                color="gray"
-              />
-              <Text style={{textAlign: 'center', color: 'gray'}}>
-                อัพโหลดโลโก้ธุรกิจ
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </SafeAreaView>
+
+      </View>
     );
   };
   const isButtonDisabled =
@@ -420,14 +444,14 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
     (bizType === 'business' && !userPosition) ||
     !taxID;
   return (
-    <View style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1}}>
       <ScrollView style={styles.container}>{renderPage()}</ScrollView>
       <TouchableOpacity
         disabled={isButtonDisabled}
         style={[
           styles.button,
           isButtonDisabled ? styles.disabledButton : styles.enabledButton,
-          {justifyContent: 'center', alignItems: 'center'}, // Add these to center content
+          {justifyContent: 'center', alignItems: 'center'},
         ]}
         onPress={handleFunction}>
         {isLoading ? (
@@ -436,7 +460,7 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
           <Text style={styles.buttonText}>บันทึก</Text>
         )}
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -468,6 +492,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     borderRadius: 5,
     marginTop: 20,
+    width: 100,
     height: 50, // Adjust as necessary
     padding: 10, // Adjust as necessary
   },
@@ -507,11 +532,11 @@ const styles = StyleSheet.create({
   modal: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   modalContent: {
     backgroundColor: 'white',
     padding: 20,
-    borderRadius: 20
-  }
+    borderRadius: 20,
+  },
 });

@@ -3,6 +3,7 @@ import {
   Text,
   View,
   TextInput,
+  ActivityIndicator,
   TouchableOpacity,
   Button,
 } from 'react-native';
@@ -36,6 +37,7 @@ const LoginScreen = ({navigation}: Props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const [confirm, setConfirm] =
     useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
@@ -106,12 +108,13 @@ const LoginScreen = ({navigation}: Props) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
   const loginWithEmail = async () => {
+    setIsLoading(true)
     await AsyncStorage.setItem('userEmail', email);
     await AsyncStorage.setItem('userPassword', password);
     auth()
       .signInWithEmailAndPassword(email, password)
       .then(() => {
-        console.log('User signed in successfully!');
+        setIsLoading(false)
         navigation.navigate('Dashboard');
       })
       .catch(error => {
@@ -135,6 +138,7 @@ const LoginScreen = ({navigation}: Props) => {
 
         console.error(error);
       });
+      setIsLoading(false)
   };
 
   // useEffect(() => {
@@ -170,9 +174,14 @@ const LoginScreen = ({navigation}: Props) => {
           value={password}
         />
       </View>
+      {loginError !== '' && <Text style={styles.errorText}>{loginError}</Text>}
 
       <TouchableOpacity style={styles.loginBtn} onPress={loginWithEmail}>
-        <Text style={styles.loginText}>Login</Text>
+      {isLoading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text style={styles.loginText}>Login</Text>
+          )}
       </TouchableOpacity>
       <Button
         title="Facebook Sign-In"
@@ -196,7 +205,6 @@ const LoginScreen = ({navigation}: Props) => {
         }}
         onLogoutFinished={() => console.log('logout.')}
       />
-            {loginError !== '' && <Text style={styles.errorText}>{loginError}</Text>}
 
 
       {error && <Text style={styles.errorText}>{error.message}</Text>}

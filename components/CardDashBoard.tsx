@@ -7,13 +7,22 @@ import {
 } from 'react-native';
 import React from 'react';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faFile, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
+import {
+  faFile,
+  faDrawPolygon,
+  faCog,
+  faBell,
+  faChevronRight,
+  faCashRegister,
+  faCoins,
+} from '@fortawesome/free-solid-svg-icons';
 type Props = {
   customerName: string;
   price: number;
   unit: string;
   description: string;
   date: string;
+  end:string;
   status: any;
 };
 
@@ -24,11 +33,13 @@ const CardDashBoard = (props: Props) => {
     <TouchableOpacity style={styles.subContainer}>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>{props.customerName}</Text>
-        <Text style={styles.summaryPrice}>{Number(props.price).toFixed(2)
-                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')}</Text>
+        <Text style={styles.summaryPrice}>
+          {Number(props.price)
+            .toFixed(2)
+            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+        </Text>
 
-                  <FontAwesomeIcon icon={faChevronRight} size={24} color="#19232e" />
-
+        {/* <FontAwesomeIcon icon={faChevronRight} size={24} color="#19232e" /> */}
       </View>
       <View
         style={{
@@ -65,7 +76,7 @@ const CardDashBoard = (props: Props) => {
 
       <View style={styles.telAndTax}>
         <Text>เสนอราคา {props.date}</Text>
-        <Text>สิ้นสุด {props.date}</Text>
+        <Text>สิ้นสุด {props.end}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -81,6 +92,7 @@ const styles = StyleSheet.create({
     height: 'auto',
     borderColor: '#ccc',
     marginVertical: 10,
+    width:windowWidth,
     paddingHorizontal: 10,
     paddingVertical: 15,
     shadowColor: '#000',
@@ -91,6 +103,7 @@ const styles = StyleSheet.create({
   },
   summary: {
     flexDirection: 'row',
+    width: '99%',
     justifyContent: 'space-between',
   },
   description: {
@@ -99,7 +112,7 @@ const styles = StyleSheet.create({
   },
   telAndTax: {
     flexDirection: 'row',
-    width: '90%',
+    width: '100%',
     justifyContent: 'space-between',
     marginTop: 10,
   },
@@ -118,8 +131,9 @@ const styles = StyleSheet.create({
     width: '60%',
   },
   summaryPrice: {
-    fontSize: 18,
-    width: '50%',
+    fontSize: 16,
+    alignSelf: 'flex-end',
+
   },
   icon: {
     width: '10%',

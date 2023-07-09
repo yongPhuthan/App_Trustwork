@@ -21,7 +21,7 @@ import firebase from '../firebase';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import SignUpScreen from '../screens/singup';
 import {createStackNavigator} from '@react-navigation/stack';
-import CompanyUserFormScreen from '../screens/companyUserForm';
+import EditCompanyUserFormScreen from '../screens/companyUserForm';
 import Quotation from '../screens/quotation';
 import AddClientForm from '../screens/addClientForm';
 import AddProductForm from '../screens/addProductForm';
@@ -63,16 +63,18 @@ import {
   faDrawPolygon,
   faCog,
   faBell,
-
   faChevronRight,
   faCashRegister,
   faCoins,
   faSign,
+  faFileCirclePlus,
   faSignature,
 } from '@fortawesome/free-solid-svg-icons';
 import EditCompanyForm from '../screens/editCompanyForm';
 import {ScrollView} from 'react-native-gesture-handler';
 import AuditCategory from '../screens/auditCategory';
+import EditContractOption from '../screens/contract/edit/editContractOptions';
+import EditContractScreen from '../screens/contract/edit/editContractScreen';
 // import ContractSteps from '../screens/contract/contractSteps';
 // import FontAwesomeIcon from 'react-native-vector-icons/FontAwesomeIcon5';
 
@@ -510,10 +512,10 @@ function SettingsScreen({navigation}: SettingScreenProps) {
       <Modal isVisible={isLogoutModalVisible}>
         <View style={{backgroundColor: 'white', padding: 20, borderRadius: 10}}>
           <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15}}>
-            Confirm Logout
+           Logout
           </Text>
           <Text style={{fontSize: 16, marginBottom: 20}}>
-            Are you sure you want to logout?
+            ยืนยันออกจากระบบ ?
           </Text>
           <View
             style={{
@@ -529,7 +531,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
                 borderRadius: 5,
               }}
               onPress={toggleLogoutModal}>
-              <Text style={{fontSize: 16}}>Cancel</Text>
+              <Text style={{fontSize: 16}}>ยกเลิก</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{
@@ -539,7 +541,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
                 borderRadius: 5,
               }}
               onPress={handleLogout}>
-              <Text style={{fontSize: 16, color: 'white'}}>Logout</Text>
+              <Text style={{fontSize: 16, color: 'white'}}>ออกจากระบบ</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -555,7 +557,7 @@ function RootTab({navigation}: NavigationScreen) {
     <>
       <Tab.Navigator
         screenOptions={{
-          tabBarActiveTintColor: '#0050f0',
+          tabBarActiveTintColor: '#0c5caa',
           tabBarInactiveTintColor: 'gray',
           tabBarItemStyle: {
             borderTopWidth: 3,
@@ -685,7 +687,7 @@ function QuotationScreen({navigation}: NavigationScreen) {
               headerTruncatedBackTitle: '',
             }}
             name="CompanyUserFormScreen"
-            component={CompanyUserFormScreen}
+            component={EditCompanyUserFormScreen}
           />
           <Stack.Screen
             options={{
@@ -908,7 +910,7 @@ export const Navigation = () => {
     const unsubscribe = firebase.auth().onAuthStateChanged(async user => {
       if (user) {
         setUser(user);
-  
+
         // After setting the user, fetch the company user
         setIsLoading(true);
         try {
@@ -925,16 +927,9 @@ export const Navigation = () => {
         setCompany(null); // clear the company if no user is signed in
       }
     });
-  
+
     return unsubscribe;
   }, []);
-
-  let screens = [];
-  let initialRouteName: ScreenName = 'RootTab'; // Initial default route
-
-
-
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -947,54 +942,50 @@ export const Navigation = () => {
       </View>
     );
   }
-  if (!user) {
-    initialRouteName = 'SignUpScreen';
-    screens = [
-      {name: 'SignUpScreen', component: SignUpScreen},
-      {name: 'LoginScreen', component: LoginScreen},
-    ];
-  } else {
-    // User is authenticated. Now check for company.
-    if (!company) {
-      initialRouteName = 'CompanyUserFormScreen';
-      screens = [
-        {name: 'CompanyUserFormScreen', component: CompanyUserFormScreen},
-      ];
-    } else {
-      initialRouteName = 'RootTab';
-      screens = [
-        {name: 'RootTab', component: RootTab},
-        {name: 'SelectContract', component: SelectContract},
-        {name: 'QuotationScreen', component: QuotationScreen},
-        {name: 'EditQuotationScreen', component: EditQuotation},
-        {name: 'EditProductForm', component: EditProductForm},
-        {name: 'EditClientForm', component: EditClientForm},
-        {name: 'EditCompanyForm', component: EditCompanyForm},
-        {name: 'AddProductForm', component: AddProductForm},
-        {name: 'DocViewScreen', component: DocViewScreen},
-        {name: 'TopUpScreen', component: TopUpScreen},
-        {name: 'CreateContractScreen', component: CreateContractScreen},
-        {name: 'InstallmentScreen', component: InstallmentScreen},
-        {name: 'ContractOptions', component: ContractOption},
-        {name: 'CompanyUserFormScreen', component: CompanyUserFormScreen},
-      ];
-    }
-  }
+const screens = [
+  {name: 'RootTab', component: RootTab},
+  {name: 'SelectContract', component: SelectContract},
+  {name: 'QuotationScreen', component: QuotationScreen},
+  {name: 'EditContractOption', component: EditContractOption},
+  {name: 'EditContractScreen', component: EditContractScreen},
+  {name: 'EditQuotationScreen', component: EditQuotation},
+  {name: 'EditProductForm', component: EditProductForm},
+  {name: 'EditClientForm', component: EditClientForm},
+  {name: 'EditCompanyForm', component: EditCompanyForm},
+  {name: 'AddProductForm', component: AddProductForm},
+  {name: 'DocViewScreen', component: DocViewScreen},
+  {name: 'TopUpScreen', component: TopUpScreen},
+  {name: 'CreateContractScreen', component: CreateContractScreen},
+  {name: 'InstallmentScreen', component: InstallmentScreen},
+  {name: 'ContractOptions', component: ContractOption},
+  {name: 'CompanyUserFormScreen', component: EditCompanyUserFormScreen},
+  {name: 'SignUpScreen', component: SignUpScreen},
+  {name: 'LoginScreen', component: LoginScreen},
+];
 
-  console.log('COMPANY', JSON.stringify(company));
-  console.log('USER', JSON.stringify(user));
+let initialRouteName: ScreenName = 'RootTab'; 
 
-  return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={initialRouteName}
-        screenOptions={{headerShown: false}}>
-        {screens.map(({name, component}) => (
-          <Stack.Screen key={name} name={name} component={component} />
-        ))}
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+if (!user) {
+  initialRouteName = 'SignUpScreen';
+} else if (!company) {
+  initialRouteName = 'CompanyUserFormScreen';
+}
+
+console.log('COMPANY', JSON.stringify(company));
+console.log('USER', JSON.stringify(user));
+
+return (
+  <NavigationContainer>
+    <Stack.Navigator
+      initialRouteName={initialRouteName}
+      screenOptions={{headerShown: false}}>
+      {screens.map(({name, component}) => (
+        <Stack.Screen key={name} name={name} component={component} />
+      ))}
+    </Stack.Navigator>
+  </NavigationContainer>
+);
+
 };
 
 export default Navigation;

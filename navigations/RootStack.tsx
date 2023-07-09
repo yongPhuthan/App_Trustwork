@@ -9,7 +9,7 @@ import SelectContract from '../screens/selectContract';
 import SelectAudit from '../screens/selectAudit';
 import EditProductForm from '../screens/editProductForm';
 import SignUpScreen from '../screens/singup';
-import CompanyUserFormScreen from '../screens/companyUserForm';
+import EditCompanyUserFormScreen from '../screens/companyUserForm';
 import ContactInfoScreen from '../screens/contactInfoScreen';
 import SettingCompany from '../screens/settingCompany';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
@@ -126,7 +126,7 @@ const RootStack = ({navigation}: DashboardScreenProps) => {
               headerTruncatedBackTitle: '',
             }}
             name="CompanyUserFormScreen"
-            component={CompanyUserFormScreen}
+            component={EditCompanyUserFormScreen}
           />
           <Stack.Screen
             options={{

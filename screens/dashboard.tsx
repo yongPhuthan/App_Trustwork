@@ -18,6 +18,8 @@ import {Store} from '../redux/Store';
 import Modal from 'react-native-modal';
 import {FAB} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useQuery} from 'react-query';
+import Lottie from 'lottie-react-native';
 
 // import Modal from 'react-native-modal';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -39,6 +41,7 @@ type Props = {};
 interface Quotation {
   id: string;
   allTotal: number;
+  dateEnd:string;
   status: string;
   dateOffer: string;
   docNumber: string;
@@ -62,8 +65,7 @@ type RootStackParamList = {
   QuotationScreen: undefined;
   EditQuotation: {id: string};
   Dashboard: undefined;
-  CreateContractScreen:{id: string};
-
+  CreateContractScreen: {id: string};
 };
 
 const Dashboard = ({navigation}: DashboardScreenProps) => {
@@ -89,28 +91,6 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
     setShowModal(false); // Step 4
   };
 
-  const fetchDashboardData = async (email: string, authToken: string) => {
-    let url;
-    if (isEmulator) {
-      url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryDashBoard`;
-    } else {
-      url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryDashBoard`;
-    }
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: email,
-      }),
-    });
-    const data = await response.json();
-    await AsyncStorage.setItem('dashboardData', JSON.stringify(data));
-
-    return data;
-  };
   const getTokenAndEmail = async () => {
     const currentUser = auth().currentUser;
     if (currentUser) {
@@ -122,40 +102,75 @@ const Dashboard = ({navigation}: DashboardScreenProps) => {
       return null;
     }
   };
- 
-  useEffect(() => {
-    const fetchData = async () => {
-      const user = await getTokenAndEmail();
-      if (user) {
-        console.log('user', user);
-        const {token, email} = user;
-    
-        if (email) {
-          // Always fetch data from the database
-          const data = await fetchDashboardData(email, token);
-    
-          // Sort the quotation data by dateOffer in descending order
-          if (data && data[1]) {
-            data[1].sort((a:Quotation, b:Quotation) => {
-              const dateA = new Date(a.dateOffer);
-              const dateB = new Date(b.dateOffer);
-              return dateB.getTime() - dateA.getTime();  // sort in descending order
-            });
-          }
-    
-          setCompanyData(data[0]);
-          setQuotationData(data[1]);
+
+  const fetchDashboardData = async () => {
+    let url;
+    if (isEmulator) {
+      url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryDashBoard`;
+    } else {
+      url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryDashBoard`;
+    }
+    const user = await getTokenAndEmail();
+    if (user) {
+      console.log('user', user);
+      const {token, email} = user;
+
+      if (email) {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+          }),
+        });
+        const data = await response.json();
+        await AsyncStorage.setItem('dashboardData', JSON.stringify(data));
+        if (data && data[1]) {
+          data[1].sort((a: Quotation, b: Quotation) => {
+            const dateA = new Date(a.dateOffer);
+            const dateB = new Date(b.dateOffer);
+            return dateB.getTime() - dateA.getTime();
+          });
         }
+        return data;
       }
-    };
-    
-    fetchData();
-  }, []);
-  
+    }
+  };
+
+  const user = getTokenAndEmail();
+
+  const {isLoading, error, data} = useQuery(
+    ['dashboardData'],
+    fetchDashboardData,
+    {
+      enabled: !!user,
+      onSuccess: data => {
+        setCompanyData(data[0]);
+        setQuotationData(data[1]);
+      },
+    },
+  );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Lottie
+          style={{width: '25%'}}
+          source={require('../assets/animation/lf20_rwq6ciql.json')}
+          autoPlay
+          loop
+        />
+      </View>
+    );
+  }
+
   const handleNewQuotationPress = () => {
     navigation.navigate('Quotation');
   };
-console.log('company',JSON.stringify(companyData));
+  console.log('company', JSON.stringify(companyData));
   const renderItem = ({item}: {item: Quotation}) => (
     <>
       <TouchableOpacity onPress={() => handleModal()}>
@@ -163,6 +178,7 @@ console.log('company',JSON.stringify(companyData));
           <CardDashBoard
             status={item.status}
             date={item.dateOffer}
+            end={item.dateEnd}
             price={item.allTotal}
             customerName={item.customer?.name}
             description={'quotation.'}
@@ -284,27 +300,30 @@ console.log('company',JSON.stringify(companyData));
 
     navigation.navigate('QuotationScreen');
   };
-
   return (
     <>
-      <View>
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <FlatList
           data={quotationData}
           renderItem={renderItem}
           keyExtractor={item => item.id}
+          ListEmptyComponent={
+            <View
+              style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+              <Text>คลิก+ด้านล่างเพื่อสร้างใบเสนอราคา</Text>
+            </View>
+          }
+          contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
         />
-
-
       </View>
 
-        <FAB
-          style={styles.fab}
-          icon="plus"
-          color="white"
-          onPress={() => createNewQuotation()}
-          theme={{colors: {accent: 'white'}}}
-        />
-        
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        color="white"
+        onPress={() => createNewQuotation()}
+        theme={{colors: {accent: 'white'}}}
+      />
     </>
   );
 };
@@ -345,7 +364,7 @@ const styles = StyleSheet.create({
     width: '90%',
     alignItems: 'center',
     position: 'absolute',
-    bottom:0,
+    bottom: 0,
     // bottom: '40%',
     left: 0,
   },
@@ -395,6 +414,11 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     height: 56,
     width: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

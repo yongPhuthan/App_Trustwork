@@ -1,14 +1,30 @@
 import {
   StyleSheet,
-  Dimensions,
-  Text,
   View,
-  TouchableOpacity,
+  Text,
+  Dimensions,
+  Platform,
+  TouchableNativeFeedback,
 } from 'react-native';
-import React from 'react';
+import Modal from 'react-native-modal';
+import {TouchableOpacity} from 'react-native-gesture-handler';
+import {
+  NavigationContainer,
+  NavigationContext,
+  useNavigation,
+} from '@react-navigation/native';
+import React, {useState, useContext, useEffect, useMemo} from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faFile, faDrawPolygon, faCog, faBell,faChevronRight, faCashRegister, faCoins} from '@fortawesome/free-solid-svg-icons';
+import {
+  faFile,
+  faDrawPolygon,
+  faCog,
+  faBell,
+  faChevronRight,
+  faCashRegister,
+  faCoins,
+} from '@fortawesome/free-solid-svg-icons';
 type Props = {
   customerName: string;
   price: number;
@@ -20,65 +36,164 @@ type Props = {
 };
 
 const windowWidth = Dimensions.get('window').width;
-
 const CardApprovedDashBoard = (props: Props) => {
+  const [showModal, setShowModal] = useState(false);
+  const navigation = useNavigation();
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const handleModal = () => {
+    setShowModal(true);
+  };
+  const handleModalClose = () => {
+    setShowModal(false); // Step 4
+  };
+
+  const handleShowModalClose = () => {
+    setShowModal(false);
+  };
+  const handleCloseResponse = () => {
+    setModalVisible(false);
+  };
+  const handleNoResponse = () => {
+    setModalVisible(false);
+  };
+  const handleYesResponse = () => {
+    // navigation.navigate('CreateContractScreen', {
+    //   id: selectedItemId,
+    // });
+  };
+
   return (
-    <View style={styles.subContainer}>
-      <View style={styles.summary}>
-        <Text style={styles.summaryText}>{props.customerName}</Text>
-        <Text style={styles.summaryPrice}>{props.price}บาท</Text>
+    <>
+      {props.status === 'approved' && (
+        <View style={styles.subContainer}>
+          <View style={styles.summary}>
+            <Text style={styles.summaryText}>{props.customerName}</Text>
+            <Text style={styles.summaryPrice}>
+              {Number(props.price)
+                .toFixed(2)
+                .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+            </Text>
+          </View>
 
-      </View>
-
-
-      <View style={styles.telAndTax}>
-      <View
-        style={{
-          backgroundColor:
-            props.status === 'pending'
-              ? '#ccc'
-              : props.status === 'approved'
-              ? '#43a047'
-              : props.status === 'signed'
-              ? '#2196f3'
-              : '#ccc',
-          borderRadius: 4,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          marginTop: 8,
-          alignSelf: 'flex-start',
-        }}>
-        <Text
-          style={{
-            color: props.status === 'pending' ? '#000' : '#fff',
-            fontSize: 12,
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-          }}>
-          {props.status === 'pending'
-            ? 'รออนุมัติ'
-            : props.status === 'approved'
-            ? 'อนุมัติแล้ว'
-            : props.status === 'signed'
-            ? 'เซ็นเอกสารแล้ว'
-            : 'รออนุมัติ'}
-        </Text>
-      </View>
-      <View style={{   marginTop: 8,}}>
-      <Text>วันที่อนุมัติ {props.date}</Text>
-
-      </View>
-      </View>
-      <TouchableOpacity style={styles.button} onPress={() => props.onPress()}>
-        <View style={styles.header}>
-          <Text style={styles.buttonText}>เริ่มทำสัญญา</Text>
-          <FontAwesomeIcon style={styles.iconButton} icon={faChevronRight} size={24} color="white" />
-
-      
-
+          <View style={styles.telAndTax}>
+            <View
+              style={{
+                backgroundColor:
+                  props.status === 'pending'
+                    ? '#ccc'
+                    : props.status === 'approved'
+                    ? '#43a047'
+                    : props.status === 'signed'
+                    ? '#2196f3'
+                    : props.status === 'contract'
+                    ? '#ccc'
+                    : '#ccc',
+                borderRadius: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                marginTop: 8,
+                alignSelf: 'flex-start',
+              }}>
+              <Text
+                style={{
+                  color: props.status === 'pending' ? '#000' : '#fff',
+                  fontSize: 12,
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                }}>
+                {props.status === 'pending'
+                  ? 'รออนุมัติ'
+                  : props.status === 'approved'
+                  ? 'อนุมัติแล้ว'
+                  : props.status === 'signed'
+                  ? 'เซ็นเอกสารแล้ว'
+                  : props.status === 'contract'
+                  ? 'ทำสัญญาแล้ว'
+                  : 'รออนุมัติ'}
+              </Text>
+            </View>
+            {props.status === 'approved' && (
+              <View style={{marginTop: 8}}>
+                <Text>วันที่อนุมัติ {props.date}</Text>
+              </View>
+            )}
+          </View>
+          {props.status === 'approved' && (
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => props.onPress()}>
+              <View style={styles.container}>
+                <Text style={styles.buttonText}>เริ่มทำสัญญา</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          {props.status === 'contract' && ''}
         </View>
-      </TouchableOpacity>
-    </View>
+      )}
+
+      {props.status === 'contract' && (
+        <>
+          <TouchableOpacity onPress={() => handleModal()}>
+            <View style={styles.subContainer}>
+              <View style={styles.summary}>
+                <Text style={styles.summaryText}>{props.customerName}</Text>
+                <Text style={styles.summaryPrice}>
+                  {Number(props.price)
+                    .toFixed(2)
+                    .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+                </Text>
+              </View>
+
+              <View style={styles.telAndTax}>
+                <View
+                  style={{
+                    backgroundColor:
+                      props.status === 'pending'
+                        ? '#ccc'
+                        : props.status === 'approved'
+                        ? '#43a047'
+                        : props.status === 'signed'
+                        ? '#2196f3'
+                        : props.status === 'contract'
+                        ? '#ccc'
+                        : '#ccc',
+                    borderRadius: 4,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    marginTop: 8,
+                    alignSelf: 'flex-start',
+                  }}>
+                  <Text
+                    style={{
+                      color: props.status === 'pending' ? '#000' : '#fff',
+                      fontSize: 12,
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                    }}>
+                    {props.status === 'pending'
+                      ? 'รออนุมัติ'
+                      : props.status === 'approved'
+                      ? 'อนุมัติแล้ว'
+                      : props.status === 'signed'
+                      ? 'เซ็นเอกสารแล้ว'
+                      : props.status === 'contract'
+                      ? 'ทำสัญญาแล้ว'
+                      : 'รออนุมัติ'}
+                  </Text>
+                </View>
+                {props.status === 'approved' && (
+                  <View style={{marginTop: 8}}>
+                    <Text>วันที่อนุมัติ {props.date}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </TouchableOpacity>
+
+        </>
+      )}
+    </>
   );
 };
 
@@ -156,24 +271,72 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '99%',
-marginTop:30,
+    marginTop: 30,
     height: 40,
-    // backgroundColor: '#0073BA',
-    backgroundColor: '#ec7211',
-
+    backgroundColor: '#988a42',
     borderRadius: 5,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
-    marginRight: 8,
-    marginTop: 1,
+    marginRight: 5,
   },
   iconButton: {
     color: 'white',
-    marginLeft: 10,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', // adjust this as needed
+  },
+  closeButtonText: {
+    fontSize: 20,
+    borderBottomWidth: 1,
+    borderColor: 'white',
+    paddingBottom: 10,
+    paddingTop: 10,
+    fontWeight: 'bold',
+    fontFamily: 'Sukhumvit set',
+  },
+  modalContainer2: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    width: '90%',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+    // bottom: '40%',
+    left: 0,
+  },
+  whiteText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    alignSelf: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  RedText: {
+    marginTop: 10,
+    fontSize: 14,
+    alignSelf: 'center',
   },
 });

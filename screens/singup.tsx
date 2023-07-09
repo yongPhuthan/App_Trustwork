@@ -3,6 +3,7 @@ import {
   Text,
   View,
   TextInput,
+  ActivityIndicator,
   TouchableOpacity,
   Keyboard,
   Dimensions,
@@ -33,8 +34,7 @@ const SignUpScreen = ({navigation}: Props) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [registrationCode, setRegistrationCode] = useState(''); 
-  const codeArray = [123456789, 234567891, 345678912, 456789123, 567891234, 678912345, 789123456, 891234567, 912345678, 987654321];
-
+const [isLoading, setIsLoading] = useState(false);
   const [error, setError] =
     useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
 
@@ -42,6 +42,7 @@ const SignUpScreen = ({navigation}: Props) => {
   const isButtonDisabled = !email || !password || !confirmPassword;
 
   const signUpEmail = async () => {
+    setIsLoading(true)
     await AsyncStorage.setItem('userEmail', email);
     await AsyncStorage.setItem('userPassword', password);
   
@@ -104,7 +105,7 @@ const SignUpScreen = ({navigation}: Props) => {
     auth()
       .createUserWithEmailAndPassword(email, password)
       .then(() => {
-        console.log('User account created & signed in!');
+        setIsLoading(false)
         navigation.navigate('CompanyUserFormScreen');
       })
       .catch(error => {
@@ -119,6 +120,9 @@ const SignUpScreen = ({navigation}: Props) => {
   
         setError({...error, message: errorMessage});
       });
+      setIsLoading(false)
+
+
   };
 
   
@@ -158,7 +162,7 @@ const SignUpScreen = ({navigation}: Props) => {
       <View style={styles.inputView}> 
         <TextInput
           style={styles.inputText}
-          placeholder="Registration Code..."
+          placeholder="Code ลงทะเบียน "
           placeholderTextColor="#888"
           onChangeText={setRegistrationCode}
           value={registrationCode}
@@ -169,8 +173,12 @@ const SignUpScreen = ({navigation}: Props) => {
 
 
 
-      <TouchableOpacity style={styles.loginBtn} onPress={signUpEmail} disabled={isButtonDisabled}>
-        <Text style={styles.loginText}>ลงทะเบียน</Text>
+      <TouchableOpacity  style={styles.loginBtn} onPress={signUpEmail} disabled={isButtonDisabled}>
+      {isLoading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text style={styles.loginText}>ลงทะเบียน</Text>
+          )}
       </TouchableOpacity>
 
       <View style={styles.signInContainer}>

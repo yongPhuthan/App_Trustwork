@@ -7,7 +7,7 @@ import {ScrollView} from 'react-native-gesture-handler';
 import {useRoute} from '@react-navigation/native';
 import {Store} from '../redux/Store';
 import * as stateAction from '../redux/Actions';
-import {useMutation} from 'react-query';
+import {useMutation,useQueryClient} from 'react-query';
 import axios, {AxiosResponse, AxiosError} from 'axios';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {HOST_URL} from '@env';
@@ -84,6 +84,7 @@ const createContract = async ({ data, isEmulator }: { data: any, isEmulator: boo
 
 const SelectContract = ({navigation}: Props) => {
   const [selectedContracts, setSelectedContracts] = useState<Contract[]>([]);
+  const queryClient = useQueryClient();  
   const [fcnToken,setFtmToken] = useState('')
   const {
     state: {selectedContract,isEmulator},
@@ -114,7 +115,9 @@ const SelectContract = ({navigation}: Props) => {
   };
 
   const {mutate} = useMutation(createContract, {
+    
     onSuccess: data => {
+      queryClient.invalidateQueries(['dashboardData']);
       const newId = quotation.id.slice(0, 8);
       navigation.navigate('WebViewScreen', {id:newId});
     },
