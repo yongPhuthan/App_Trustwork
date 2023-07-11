@@ -1,4 +1,4 @@
-import React, {useState, useEffect,useCallback} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ import {
 import SmallDivider from './styles/SmallDivider';
 import ContractFooter from './styles/ContractFooter';
 import {HOST_URL} from '@env';
+import {PeriodPercentType} from '../types/docType';
 
 interface InstallmentDetail {
   installment: number;
@@ -47,6 +48,7 @@ type StackNavigatorParams = {
 type Props = {
   data: any;
   handleBackPress: () => void;
+  periodPercent: PeriodPercentType[];
 };
 interface MyError {
   response: object;
@@ -82,7 +84,7 @@ const updateContract = async (input: UpdateContractInput): Promise<any> => {
   return responseData; // Return the data
 };
 
-const Installment = (props: Props) => {
+const EditInstallment = (props: Props) => {
   const route = useRoute();
   const dataProps: any = props.data;
   const totalPrice = dataProps.total;
@@ -90,8 +92,9 @@ const Installment = (props: Props) => {
   const [installmentDetails, setInstallmentDetails] = useState<
     InstallmentDetail[]
   >([]);
+  const percentagesProps = Object.values(props.periodPercent).map(installment => installment.percentage);
 
-  const [percentages, setPercentages] = useState<{[key: number]: number}>({});
+  const [percentages, setPercentages] = useState<{[key: number]: number}>(percentagesProps);
   const [isPercentagesValid, setIsPercentagesValid] = useState<boolean>(true);
   const [percentageValid, setPercentageValid] = useState<{
     [key: number]: number;
@@ -108,39 +111,20 @@ const Installment = (props: Props) => {
     control,
     formState: {errors},
     watch,
+    reset,
     formState: {isDirty, dirtyFields, isValid},
     getValues,
     setValue,
   } = useForm({
     defaultValues: {
-      installments: [
-        {
-          amount: 0,
-          percentage: 0,
-          details: '',
-        },
-      ],
+      installments: props.periodPercent,
     },
   });
 
-  const {fields, append, remove} = useFieldArray({
-    control,
-    name: 'installments',
-  });
-
-  const {mutate,isLoading} = useMutation(updateContract, {
-    onSuccess: data => {
-      const newId = dataProps.quotationId.slice(0, 8);
-      navigation.navigate('DocViewScreen', {
-        id:newId,
-      });
-    },
-    onError: (error: MyError) => {
-      console.error('There was a problem calling the function:', error);
-      console.log(error.response);
-    },
-  });
   useEffect(() => {
+
+    setInstallments(Object.values(watch('installments')).length);
+
     const totalPercentage = Object.values(percentages).reduce(
       (acc, percentage) => acc + percentage,
       0,
@@ -158,8 +142,20 @@ const Installment = (props: Props) => {
     }
   }, [percentages]);
 
-  const handleSave = useCallback( async() => {
+  const {mutate, isLoading} = useMutation(updateContract, {
+    onSuccess: data => {
+      const newId = dataProps.quotationId.slice(0, 8);
+      navigation.navigate('DocViewScreen', {
+        id: newId,
+      });
+    },
+    onError: (error: MyError) => {
+      console.error('There was a problem calling the function:', error);
+      console.log(error.response);
+    },
+  });
 
+  const handleSave = useCallback(async () => {
     if (!isPercentagesValid) {
       Alert.alert('Error', errorMessage?.toString() || 'Error');
       return;
@@ -173,21 +169,22 @@ const Installment = (props: Props) => {
         details: installmentDetailsText[Number(key)],
       }),
     );
-      dataProps.id = uuidv4(),
-      dataProps.periodPercent = newInstallmentDetails;
+    (dataProps.id = uuidv4()),
+      (dataProps.periodPercent = newInstallmentDetails);
 
-      await mutate({data: dataProps, isEmulator: false});
 
+      console.log(dataProps)
+    // await mutate({data: dataProps, isEmulator: false});
 
     // Update periodPercent in data
-  }, [isPercentagesValid, errorMessage, percentages, installmentDetailsText, dataProps]);
+  }, [
+    isPercentagesValid,
+    errorMessage,
+    percentages,
+    installmentDetailsText,
+    dataProps,
+  ]);
 
-  const handleStep3Press = async () => {
-    // setStep3(false);
-    // setStep2(true);
-    // navigation.navigate('InstallmentScreen')
-    await mutate({data: dataProps, isEmulator: true});
-  };
 
   const DropdownIcon = () => (
     <Icon
@@ -204,20 +201,21 @@ const Installment = (props: Props) => {
     }));
   }, []);
 
-  const handleInstallmentDetailsTextChange = useCallback((value: string, index: number) => {
-
-    setInstallmentDetailsText(prevState => ({
-      ...prevState,
-      [index]: value,
-    }));
-  }, []);
+  const handleInstallmentDetailsTextChange = useCallback(
+    (value: string, index: number) => {
+      setInstallmentDetailsText(prevState => ({
+        ...prevState,
+        [index]: value,
+      }));
+    },
+    [],
+  );
 
   const pickerItems = [2, 3, 4, 5, 6, 7, 8, 9, 10].map(value => ({
     label: `แบ่งชำระ ${value} งวด`,
     value,
   }));
-  console.log('watch:', props.data);
-  console.log('percen lenght:', Object.values(percentages).length);
+
 
   const renderItem = ({item, index}: {item: any; index: number}) => (
     <View style={styles.card}>
@@ -235,12 +233,11 @@ const Installment = (props: Props) => {
               <TextInput
                 style={{width: 40, textAlign: 'center'}}
                 placeholder="0"
+                value={field.value ? field.value.toString() : ''}
                 onChangeText={value => {
                   field.onChange(value);
                   handlePercentageChange(value, index);
                 }}
-
-            
                 keyboardType="numeric"
               />
             )}
@@ -251,7 +248,7 @@ const Installment = (props: Props) => {
           <Text style={styles.inputSuffix}>%</Text>
         </View>
         <Text style={styles.amountText}>
-          {(!isNaN(totalPrice * percentages[index])
+          {(!isNaN(totalPrice * Number(percentages[index]))
             ? (totalPrice * percentages[index]) / 100
             : 0
           ).toFixed(2)}{' '}
@@ -268,7 +265,7 @@ const Installment = (props: Props) => {
                 multiline
                 style={styles.Multilines}
                 placeholder="Address"
-              
+                value={field.value ? field.value.toString() : ''}
                 onChangeText={value => {
                   field.onChange(value);
                   handleInstallmentDetailsTextChange(value, index);
@@ -306,6 +303,7 @@ const Installment = (props: Props) => {
           บาท
         </Text>
         <RNPickerSelect
+        value={installments}
           onValueChange={value => setInstallments(value)}
           items={pickerItems}
           placeholder={{label: 'เลือกจำนวนงวด', value: null}}
@@ -322,12 +320,12 @@ const Installment = (props: Props) => {
         )}
       </View>
       <ContractFooter
-      isLoading={isLoading}
+        isLoading={isLoading}
         finalStep={true}
         // finalStep={step === 3}
         onBack={props.handleBackPress}
         onNext={handleSave}
-        disabled={!isDirty || !isValid}
+        disabled={false}
       />
     </KeyboardAvoidingView>
   );
@@ -523,4 +521,4 @@ const pickerSelectStyles = StyleSheet.create({
     fontSize: 16,
   },
 });
-export default Installment;
+export default EditInstallment;

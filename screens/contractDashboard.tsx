@@ -4,11 +4,12 @@ import {
   Text,
   Dimensions,
   Platform,
+  TouchableOpacity,
   TouchableNativeFeedback,
 } from 'react-native';
 import React, {useState, useContext, useEffect, useMemo} from 'react';
 import CardDashBoard from '../components/CardDashBoard';
-import {FlatList, TouchableOpacity} from 'react-native-gesture-handler';
+import {FlatList} from 'react-native-gesture-handler';
 import FooterBtn from '../components/styles/FooterBtn';
 import NewCustomerBtn from '../components/styles/NewCustomerBtn';
 import auth from '@react-native-firebase/auth';
@@ -139,6 +140,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
       },
     },
   );
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -151,7 +153,8 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
       </View>
     );
   }
-  console.log('DATA', data);
+
+
   // useEffect(() => {
   // messaging().onNotificationOpenedApp(remoteMessage => {
   //   console.log(
@@ -214,6 +217,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
 
   const handleModal = () => {
     setShowModal(true);
+
   };
   const handleShowModalClose = () => {
     setShowModal(false);
@@ -224,6 +228,14 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   const handleNoResponse = () => {
     setModalVisible(false);
   };
+  const sortedData = useMemo(() => {
+    if (!quotationData) {
+      return null;
+    }
+    return [...quotationData].sort((a, b) => 
+      a.status === 'approved' && b.status !== 'approved' ? -1 : 1);
+  }, [quotationData]);
+  
 
   // const requestUserPermission = async () => {
   //   const authStatus = await messaging().requestPermission();
@@ -235,24 +247,11 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   //     console.log('Authorization status:', authStatus);
   //   }
   // };
-  console.log('quotationData', companyData);
 
   const renderItem = ({item}: {item: Quotation}) => (
     <>
       {item.status === 'approved' ? (
         <View>
-            <CardApprovedDashBoard
-              onPress={() => handleSelectScreen(item.id)}
-              status={item.status}
-              date={item.dateApproved}
-              price={item.allTotal}
-              customerName={item.customer?.name}
-              description={'quotation.'}
-              unit={'quotation.'}
-            />
-        </View>
-      ):(      <View>
-        <TouchableOpacity onPress={() => handleModal()}>
           <CardApprovedDashBoard
             onPress={() => handleSelectScreen(item.id)}
             status={item.status}
@@ -262,137 +261,144 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
             description={'quotation.'}
             unit={'quotation.'}
           />
-        </TouchableOpacity>
-      </View>)}
-
-
+        </View>
+      ) : (
+        <View>
+          <TouchableOpacity onPress={() => handleModal()}>
+            <CardApprovedDashBoard
+              onPress={() => handleSelectScreen(item.id)}
+              status={item.status}
+              date={item.dateApproved}
+              price={item.allTotal}
+              customerName={item.customer?.name}
+              description={'quotation.'}
+              unit={'quotation.'}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Modal
-            style={styles.modalContainer}
-            onBackdropPress={handleShowModalClose}
-            isVisible={isModalVisible}>
-            <View
-              style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-              <Text style={styles.modalText}>
-                ท่านได้นัดลูกค้าเข้าดูพื้นที่หน้างานโครงการนี้แล้วหรือยัง ?
-              </Text>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={handleYesResponse}>
-                <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={handleNoResponse}>
-                <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
-              </TouchableOpacity>
+        style={styles.modalContainer}
+        onBackdropPress={handleShowModalClose}
+        isVisible={isModalVisible}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={styles.modalText}>
+            ท่านได้นัดลูกค้าเข้าดูพื้นที่หน้างานโครงการนี้แล้วหรือยัง ?
+          </Text>
+          <TouchableOpacity style={styles.button} onPress={handleYesResponse}>
+            <Text style={styles.whiteText}> ดูหน้างานแล้ว</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleNoResponse}>
+            <Text style={styles.whiteText}>ยังไม่ได้ดูหน้างาน</Text>
+          </TouchableOpacity>
 
-              <Text style={styles.RedText}>
-                {' '}
-                *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา
-              </Text>
-            </View>
-          </Modal>
-          {Platform.OS === 'android' ? (
-            <Modal
-              backdropOpacity={0.1}
-              backdropTransitionOutTiming={100}
-              style={styles.modalContainer2}
-              isVisible={showModal}
-              onBackdropPress={handleModalClose}>
-              <TouchableNativeFeedback
-                onPress={() => {
-                  setShowModal(false); // Step 4
-                  // console.log('modal');
-                  navigation.navigate('EditContractOption', {id: item.id});
-                }}>
-                <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
-              </TouchableNativeFeedback>
-              <View
-                style={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#cccccc',
-                }}></View>
-              <TouchableNativeFeedback
-                onPress={() => {
-                  setShowModal(false);
-                  navigation.navigate('WebViewScreen', {id: item.id});
-                }}>
-                <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
-              </TouchableNativeFeedback>
-              <View
-                style={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#cccccc',
-                }}></View>
-              <TouchableNativeFeedback
-                onPress={() => {
-                  // setShowModal(false); // Step 4
-                }}>
-                <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-              </TouchableNativeFeedback>
-              <View
-                style={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#cccccc',
-                }}></View>
-            </Modal>
-          ) : (
-            <Modal
-              backdropTransitionOutTiming={100}
-              style={styles.modalContainer2}
-              isVisible={showModal}
-              onBackdropPress={handleModalClose}>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowModal(false); // Step 4
-                  // console.log('modal');
-                  navigation.navigate('EditContractOption', {id: item.id});
-                }}>
-                <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
-              </TouchableOpacity>
-              <View
-                style={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#cccccc',
-                }}></View>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowModal(false);
-                  navigation.navigate('WebViewScreen', {id: item.id});
-                }}>
-                <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
-              </TouchableOpacity>
-              <View
-                style={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#cccccc',
-                }}></View>
-              <TouchableOpacity
-                onPress={() => {
-                  // setShowModal(false); // Step 4
-                }}>
-                <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
-              </TouchableOpacity>
-              <View
-                style={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#cccccc',
-                }}></View>
-            </Modal>
-          )}
+          <Text style={styles.RedText}>
+            {' '}
+            *จำเป็นต้องดูหน้างานก่อนเริ่มทำสัญญา
+          </Text>
+        </View>
+      </Modal>
+      {Platform.OS === 'android' ? (
+        <Modal
+          backdropOpacity={0.1}
+          backdropTransitionOutTiming={100}
+          style={styles.modalContainer2}
+          isVisible={showModal}
+          onBackdropPress={handleModalClose}>
+          <TouchableNativeFeedback
+            onPress={() => {
+              setShowModal(false); // Step 4
+              // console.log('modal');
+              navigation.navigate('EditContractOption', {id: item.id});
+            }}>
+            <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
+          </TouchableNativeFeedback>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <TouchableNativeFeedback
+            onPress={() => {
+              setShowModal(false);
+              navigation.navigate('WebViewScreen', {id: item.id});
+            }}>
+            <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
+          </TouchableNativeFeedback>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <TouchableNativeFeedback
+            onPress={() => {
+              // setShowModal(false); // Step 4
+            }}>
+            <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
+          </TouchableNativeFeedback>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+        </Modal>
+      ) : (
+        <Modal
+          backdropTransitionOutTiming={100}
+          style={styles.modalContainer2}
+          isVisible={showModal}
+          onBackdropPress={handleModalClose}>
+          <TouchableOpacity
+            onPress={() => {
+              setShowModal(false); // Step 4
+              // console.log('modal');
+              navigation.navigate('EditContractOption', {id: item.id});
+            }}>
+            <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
+          </TouchableOpacity>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <TouchableOpacity
+            onPress={() => {
+              setShowModal(false);
+              navigation.navigate('WebViewScreen', {id: item.id});
+            }}>
+            <Text style={styles.closeButtonText}>ดูตัวอย่าง</Text>
+          </TouchableOpacity>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+          <TouchableOpacity
+            onPress={() => {
+              // setShowModal(false); // Step 4
+            }}>
+            <Text style={styles.deleteButtonText}>ลบเอกสาร</Text>
+          </TouchableOpacity>
+          <View
+            style={{
+              width: '100%',
+              alignSelf: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: '#cccccc',
+            }}></View>
+        </Modal>
+      )}
     </>
   );
 
@@ -400,7 +406,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     <>
       <View style={{flex: 1}}>
         <FlatList
-          data={quotationData}
+          data={sortedData}
           renderItem={renderItem}
           keyExtractor={item => item.id}
           ListEmptyComponent={

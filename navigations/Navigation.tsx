@@ -34,7 +34,7 @@ import ContractOption from '../screens/contract/contractOptions';
 import InstallmentScreen from '../screens/installmentScreen';
 import {StackNavigationProp} from '@react-navigation/stack';
 import messaging from '@react-native-firebase/messaging';
-import {useQuery} from 'react-query';
+import {useQuery, useQueryClient} from 'react-query';
 import {Store} from '../redux/Store';
 import EditContract from '../screens/editContract';
 import EditClientForm from '../screens/editClientForm';
@@ -47,6 +47,7 @@ import DocViewScreen from '../screens/docView';
 import TopUpScreen from '../screens/topUpScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useFocusEffect} from '@react-navigation/native';
+import {Badge} from 'react-native-elements';
 
 import {HOST_URL} from '@env';
 import {
@@ -74,7 +75,7 @@ import EditCompanyForm from '../screens/editCompanyForm';
 import {ScrollView} from 'react-native-gesture-handler';
 import AuditCategory from '../screens/auditCategory';
 import EditContractOption from '../screens/contract/edit/editContractOptions';
-import EditContractScreen from '../screens/contract/edit/editContractScreen';
+import {useFetchContractDashboard} from '../hooks/useFetchContractDashboard';
 // import ContractSteps from '../screens/contract/contractSteps';
 // import FontAwesomeIcon from 'react-native-vector-icons/FontAwesomeIcon5';
 
@@ -82,7 +83,7 @@ type Props = {};
 interface SettingScreenProps {
   navigation: StackNavigationProp<ParamListBase, 'TopUpScreen'>;
 }
-type ScreenName = 'SignUpScreen' | 'CompanyUserFormScreen' | 'RootTab'; // Add all possible screen names here
+type ScreenName = 'SignUpScreen' | 'CompanyUserFormScreen' | 'RootTab';
 
 type Company = {
   bizName: string;
@@ -99,7 +100,8 @@ type Company = {
 type ParamListBase = {
   Quotation: undefined;
   AddClient: undefined;
-  EditCompanyForm: undefined;
+  EditCompanyForm: {  dataProps?: Company
+  };
   AuditCategory: {title: string; description: string; serviceID: string};
   AddProductForm: undefined;
   TopUpScreen: undefined;
@@ -144,6 +146,17 @@ type ParamListBase = {
     apiData: object[];
   };
 };
+const getTokenAndEmail = async () => {
+  const currentUser = auth().currentUser;
+  if (currentUser) {
+    const token = await currentUser.getIdToken();
+    const email = currentUser.email;
+    return {token, email};
+  } else {
+    // User is not logged in
+    return null;
+  }
+};
 const saveCompanyData = async (companyData: object) => {
   try {
     await AsyncStorage.setItem('companyData', JSON.stringify(companyData));
@@ -161,35 +174,38 @@ const loadCompanyData = async () => {
   }
 };
 
-const fetchCompanyUser = async (email: string, isEmulator: boolean) => {
-  const user = auth().currentUser;
+const fetchCompanyUser = async (isEmulator: boolean) => {
+  const user = await auth().currentUser;
   if (!user) {
     throw new Error('User not authenticated');
-  }
-  const idToken = await user.getIdToken();
-  let url;
-  if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryCompanySeller2`;
   } else {
-    console.log('isEmulator Fetch', isEmulator);
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryCompanySeller2`;
-  }
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-    body: JSON.stringify({email}),
-    credentials: 'include',
-  });
-  const data = await response.json();
+    const idToken = await user.getIdToken();
+    const {email} = user;
 
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
+    let url;
+    if (isEmulator) {
+      url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryCompanySeller2`;
+    } else {
+      console.log('isEmulator Fetch', isEmulator);
+      url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryCompanySeller2`;
+    }
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({email}),
+      credentials: 'include',
+    });
+    const data = await response.json();
 
-  return data;
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    return data;
+  }
 };
 
 const removeDataFromAsyncStorage = async (key: string) => {
@@ -202,38 +218,38 @@ const removeDataFromAsyncStorage = async (key: string) => {
 };
 function SettingsScreen({navigation}: SettingScreenProps) {
   const [company, setCompany] = useState<Company>();
-
+  const [credit, setCredit] = useState(0);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const {
     state: {client_name, isEmulator, client_tel, client_tax},
     dispatch,
   }: any = useContext(Store);
 
-  useFocusEffect(
-    useCallback(() => {
-      const unsubscribe = firebase.auth().onAuthStateChanged(async user => {
-        if (user) {
-          setUser(user);
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     const unsubscribe = firebase.auth().onAuthStateChanged(async user => {
+  //       if (user) {
+  //         setUser(user);
 
-          // Remove the AsyncStorage data
-          await removeDataFromAsyncStorage('companyData');
+  //         // Remove the AsyncStorage data
+  //         await removeDataFromAsyncStorage('companyData');
 
-          let fetchedCompanyUser = await fetchCompanyUser(
-            user?.email || '',
-            isEmulator,
-          );
-          await saveCompanyData(fetchedCompanyUser);
+  //         let fetchedCompanyUser = await fetchCompanyUser(
+  //           user?.email || '',
+  //           isEmulator,
+  //         );
+  //         await saveCompanyData(fetchedCompanyUser);
 
-          setCompany(fetchedCompanyUser);
-          setLogo(fetchedCompanyUser.logo);
-        } else {
-          setUser(null);
-        }
-      });
+  //         setCompany(fetchedCompanyUser);
+  //         setLogo(fetchedCompanyUser.logo);
+  //       } else {
+  //         setUser(null);
+  //       }
+  //     });
 
-      return () => unsubscribe();
-    }, []),
-  );
+  //     return () => unsubscribe();
+  //   }, []),
+  // );
 
   const [logo, setLogo] = useState<string | null>(null);
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
@@ -243,24 +259,32 @@ function SettingsScreen({navigation}: SettingScreenProps) {
   };
   const businessDetails = [
     {id: 2, title: 'Business Address', value: company?.address || ''},
-
-    // Add more items as needed
   ];
 
-  const accountOptions = [
+  const {data, isLoading, error} = useQuery(
+    ['companySetting'],
+    () => fetchCompanyUser(isEmulator),
     {
-      id: 1,
-      title: 'แก้ไขข้อมูลธุรกิจ',
-      onPress: async () => {
-        console.log('try remove');
-        await removeDataFromAsyncStorage('companyData'); // Add this line to remove data from AsyncStorage
-
-        navigation.navigate('EditCompanyForm');
+      onSuccess: data => {
+        setCompany(data.user);
+        setLogo(data.user.logo);
+        setCredit(Number(data.balance));
       },
     },
-    // {id: 2, title: 'Upgrade', onPress: () => console.log('Upgrade pressed')},
-    {id: 3, title: 'Logout', onPress: () => toggleLogoutModal()},
-  ];
+  );
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Lottie
+          style={{width: '25%'}}
+          source={require('../assets/animation/lf20_rwq6ciql.json')}
+          autoPlay
+          loop
+        />
+      </View>
+    );
+  }
+
   const handleLogoUpload = () => {
     const options = {
       mediaType: 'photo' as MediaType,
@@ -286,33 +310,6 @@ function SettingsScreen({navigation}: SettingScreenProps) {
     });
   };
 
-  const renderItem = ({item}: any) => (
-    <>
-      <TouchableOpacity
-        style={{paddingVertical: 15, paddingHorizontal: 24}}
-        onPress={item.onPress}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}>
-          <Text style={{fontSize: 15, fontWeight: '600', color: '#333'}}>
-            {item.title}
-          </Text>
-          <FontAwesomeIcon icon={faChevronRight} size={24} color="#aaa" />
-        </View>
-      </TouchableOpacity>
-      <View
-        style={{
-          width: '90%',
-          alignSelf: 'center',
-          borderBottomWidth: 0.3,
-          borderBottomColor: '#cccccc',
-        }}></View>
-    </>
-  );
-
   const handleLogout = async () => {
     try {
       await auth().signOut();
@@ -321,7 +318,6 @@ function SettingsScreen({navigation}: SettingScreenProps) {
       console.error('Failed to sign out: ', error);
     }
   };
-  console.log('companyooo', JSON.stringify(company));
 
   return (
     <>
@@ -443,12 +439,12 @@ function SettingsScreen({navigation}: SettingScreenProps) {
               <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <Text
                   style={{
-                    fontSize: 15,
-                    fontWeight: '600',
-                    color: '#333',
+                    fontSize: 14,
+                    fontWeight: '800',
+                    color: '#ed8022',
                     marginRight: 8,
                   }}>
-                  {Number(company?.balance)
+                  {Number(credit)
                     .toFixed(2)
                     .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
                 </Text>
@@ -465,7 +461,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
             }}></View>
           <TouchableOpacity
             style={{paddingVertical: 15, paddingHorizontal: 24}}
-            onPress={() => navigation.navigate('EditCompanyForm')}>
+            onPress={() => navigation.navigate('EditCompanyForm', { dataProps: company })}>
             <View
               style={{
                 flexDirection: 'row',
@@ -512,7 +508,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
       <Modal isVisible={isLogoutModalVisible}>
         <View style={{backgroundColor: 'white', padding: 20, borderRadius: 10}}>
           <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15}}>
-           Logout
+            Logout
           </Text>
           <Text style={{fontSize: 16, marginBottom: 20}}>
             ยืนยันออกจากระบบ ?
@@ -551,7 +547,67 @@ function SettingsScreen({navigation}: SettingScreenProps) {
 }
 
 function RootTab({navigation}: NavigationScreen) {
-  const [iconName, setIconName] = useState('document');
+  let docApproved = 0;
+  const user = getTokenAndEmail();
+  const {
+    state: {isEmulator},
+    dispatch,
+  }: any = useContext(Store);
+  const fetchDocApproved = async () => {
+    let url;
+    if (isEmulator) {
+      url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryDocApproved`;
+    } else {
+      url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/queryDocApproved`;
+    }
+
+    const user = await getTokenAndEmail();
+    if (user) {
+      console.log('user', user);
+      const {token, email} = user;
+
+      if (email) {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+          }),
+        });
+        const data = await response.json();
+        if (data && data[1]) {
+          data[1].sort((a: any, b: any) => {
+            const dateA = new Date(a.dateOffer);
+            const dateB = new Date(b.dateOffer);
+            return dateB.getTime() - dateA.getTime();
+          });
+        }
+        return data;
+      }
+    }
+  };
+  const [docQty, setDocQty] = useState(0);
+  const {isLoading, error, data} = useQuery(
+    ['contractDashboardData'],
+    fetchDocApproved,
+    {
+      enabled: !!user,
+      onSuccess: data => {
+        console.log('DATA LG', data);
+
+        setDocQty(data);
+      },
+    },
+  );
+
+  const BadgeComponent = () => (
+    <View style={{position: 'absolute', right: -6, top: -3}}>
+      <Badge value={docQty} status="error" />
+    </View>
+  );
 
   return (
     <>
@@ -633,7 +689,10 @@ function RootTab({navigation}: NavigationScreen) {
               </TouchableOpacity>
             ),
             tabBarIcon: ({color, size}) => (
-              <FontAwesomeIcon icon={faSignature} color={color} size={size} />
+              <View>
+                <FontAwesomeIcon icon={faSignature} color={color} size={size} />
+                {docQty > 0 && <BadgeComponent />}
+              </View>
             ),
           }}
           component={ContractDashBoard}
@@ -899,7 +958,6 @@ const Stack = createStackNavigator<ParamListBase>();
 export const Navigation = () => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [company, setCompany] = useState<Company>();
-  const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const {
     state: {isEmulator},
@@ -910,26 +968,20 @@ export const Navigation = () => {
     const unsubscribe = firebase.auth().onAuthStateChanged(async user => {
       if (user) {
         setUser(user);
-
-        // After setting the user, fetch the company user
-        setIsLoading(true);
-        try {
-          const data = await fetchCompanyUser(user?.email, isEmulator);
-          setCompany(data);
-          setIsError(false);
-        } catch (error) {
-          setIsError(true);
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        setUser(null);
-        setCompany(null); // clear the company if no user is signed in
       }
     });
 
     return unsubscribe;
   }, []);
+  const {data, isLoading, error} = useQuery(
+    ['companySetting'],
+    () => fetchCompanyUser(isEmulator),
+    {
+      onSuccess: data => {
+        setCompany(data);
+      },
+    },
+  );
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -942,50 +994,45 @@ export const Navigation = () => {
       </View>
     );
   }
-const screens = [
-  {name: 'RootTab', component: RootTab},
-  {name: 'SelectContract', component: SelectContract},
-  {name: 'QuotationScreen', component: QuotationScreen},
-  {name: 'EditContractOption', component: EditContractOption},
-  {name: 'EditContractScreen', component: EditContractScreen},
-  {name: 'EditQuotationScreen', component: EditQuotation},
-  {name: 'EditProductForm', component: EditProductForm},
-  {name: 'EditClientForm', component: EditClientForm},
-  {name: 'EditCompanyForm', component: EditCompanyForm},
-  {name: 'AddProductForm', component: AddProductForm},
-  {name: 'DocViewScreen', component: DocViewScreen},
-  {name: 'TopUpScreen', component: TopUpScreen},
-  {name: 'CreateContractScreen', component: CreateContractScreen},
-  {name: 'InstallmentScreen', component: InstallmentScreen},
-  {name: 'ContractOptions', component: ContractOption},
-  {name: 'CompanyUserFormScreen', component: EditCompanyUserFormScreen},
-  {name: 'SignUpScreen', component: SignUpScreen},
-  {name: 'LoginScreen', component: LoginScreen},
-];
+  const screens = [
+    {name: 'RootTab', component: RootTab},
+    {name: 'SelectContract', component: SelectContract},
+    {name: 'QuotationScreen', component: QuotationScreen},
+    {name: 'EditContractOption', component: EditContractOption},
+    {name: 'EditQuotationScreen', component: EditQuotation},
+    {name: 'EditProductForm', component: EditProductForm},
+    {name: 'EditClientForm', component: EditClientForm},
+    {name: 'EditCompanyForm', component: EditCompanyForm},
+    {name: 'AddProductForm', component: AddProductForm},
+    {name: 'DocViewScreen', component: DocViewScreen},
+    {name: 'TopUpScreen', component: TopUpScreen},
+    {name: 'CreateContractScreen', component: CreateContractScreen},
+    {name: 'InstallmentScreen', component: InstallmentScreen},
+    {name: 'ContractOptions', component: ContractOption},
+    {name: 'CompanyUserFormScreen', component: EditCompanyUserFormScreen},
+    {name: 'SignUpScreen', component: SignUpScreen},
+    {name: 'LoginScreen', component: LoginScreen},
+  ];
 
-let initialRouteName: ScreenName = 'RootTab'; 
+  let initialRouteName: ScreenName = 'RootTab';
 
-if (!user) {
-  initialRouteName = 'SignUpScreen';
-} else if (!company) {
-  initialRouteName = 'CompanyUserFormScreen';
-}
+  if (!user) {
+    initialRouteName = 'SignUpScreen';
+  } else if (!company) {
+    initialRouteName = 'CompanyUserFormScreen';
+  }
 
-console.log('COMPANY', JSON.stringify(company));
-console.log('USER', JSON.stringify(user));
-
-return (
-  <NavigationContainer>
-    <Stack.Navigator
-      initialRouteName={initialRouteName}
-      screenOptions={{headerShown: false}}>
-      {screens.map(({name, component}) => (
-        <Stack.Screen key={name} name={name} component={component} />
-      ))}
-    </Stack.Navigator>
-  </NavigationContainer>
-);
-
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName={initialRouteName}
+        screenOptions={{headerShown: false}}>
+        {screens.map(({name, component}) => (
+          <Stack.Screen key={name} name={name} component={component} />
+        ))}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 };
 
 export default Navigation;

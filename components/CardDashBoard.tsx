@@ -48,8 +48,8 @@ const CardDashBoard = (props: Props) => {
               ? '#ccc'
               : props.status === 'approved'
               ? '#43a047'
-              : props.status === 'signed'
-              ? '#2196f3'
+              : props.status === 'contract'
+              ? '#1079ae'
               : '#ccc',
           borderRadius: 4,
           paddingHorizontal: 8,
@@ -68,6 +68,8 @@ const CardDashBoard = (props: Props) => {
             ? 'รออนุมัติ'
             : props.status === 'approved'
             ? 'อนุมัติแล้ว'
+            : props.status === 'contract'
+            ? 'ทำสัญญาแล้ว'
             : props.status === 'signed'
             ? 'เซ็นเอกสารแล้ว'
             : 'รออนุมัติ'}

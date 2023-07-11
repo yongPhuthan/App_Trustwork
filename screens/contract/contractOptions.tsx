@@ -22,6 +22,8 @@ import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Store} from '../../redux/Store';
+import { useForm, Controller } from 'react-hook-form';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faChevronRight,
@@ -90,7 +92,7 @@ const ContractOption = ({navigation}: Props) => {
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [step, setStep] = useState(1);
   const [stepData, setStepData] = useState({});
-
+const textRequired ='จำเป็นต้องระบุ'
   const [workAfterGetDeposit, setWorkAfterGetDeposit] = useState(0);
   const [prepareDay, setPrepareDay] = useState(0);
   const [finishedDay, setFinishedDay] = useState(0);
@@ -98,6 +100,32 @@ const ContractOption = ({navigation}: Props) => {
   const [showSecondPage, setShowSecondPage] = useState(false);
   // const {updatedData, contract}: any = route.params;
   const [address, setAddress] = useState('');
+  const {
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    formState: { errors,isDirty,dirtyFields,isValid },
+  } = useForm({
+    mode:"onChange" 
+    // defaultValues: {
+    //   projectName: '',
+    //   signDate: '',
+    //   servayDate: '',
+    //   warantyTimeWork: 0,
+    //   workingDays: 0,
+    //   workCheckEnd: 0,
+    //   workCheckDay: 0,
+    //   installingDay: 0,
+    //   fcnToken: '',
+    //   adjustPerDay: 0,
+    //   workAfterGetDeposit: 0,
+    //   prepareDay: 0,
+    //   finishedDay: 0,
+    //   address: '',
+    // },
+  });
+
 
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
@@ -148,48 +176,7 @@ const ContractOption = ({navigation}: Props) => {
     setDateServay(formattedDate);
   };
 
-  const handleDonePress = async () => {
-    setIsLoadingMutation(true);
-    try {
-      const apiData = {
-        data: {
-          id: uuidv4(),
-          quotationId: data.data.id,
-          signDate: 'preview',
-          signDateStamp: 11,
-          deposit: 2,
-          signAddress: signAddress,
-          adjustPerDay: Number(adjustPerDay),
-          installingDay: Number(installingDay),
-          warantyYear: Number(warantyTimeWork),
-          prepareDay: Number(prepareDay),
-          servayDate: servayDate,
-          FCMToken: fcnToken,
-          // servayDateStamp: new Date().getTime(),
-          quotationPageQty: 1,
-          workCheckDay: Number(workCheckDay),
-          workCheckEnd: workCheckEnd,
-          warantyTimeWork: warantyTimeWork,
-          workAfterGetDeposit: workAfterGetDeposit,
-          sellerId: data.data.userId,
-          finishedDay: Number(finishedDay),
-          offerContract: 'preview',
-          selectedContract: '',
-          offerCheck: 'preview',
-          projectName: projectName,
-        },
-        quotation: data.data,
-      };
 
-      console.log('api data', JSON.stringify(apiData));
-      // await mutate({data: apiData, isEmulator});
-
-      setIsLoadingMutation(false);
-    } catch (error: Error | AxiosError | any) {
-      console.error('There was a problem calling the function:', error);
-      console.log(error.response);
-    }
-  };
 
   const handleHideSecondPage = () => {
     setShowSecondPage(false);
@@ -239,30 +226,35 @@ const ContractOption = ({navigation}: Props) => {
     // If it's not the first step, decrement the step.
     if (step > 1) {
       setStep(step - 1);
+    }else{
+      reset({
+        projectName: '',
+        signDate: '',
+        servayDate: '',
+        warantyTimeWork: 0,
+        workingDays: 0,
+        workCheckEnd: 0,
+        workCheckDay: 0,
+        installingDay: 0,
+        fcnToken: '',
+        adjustPerDay: 0,
+        workAfterGetDeposit: 0,
+        prepareDay: 0,
+        finishedDay: 0,
+        address: '',
+    });
+    navigation.goBack()
     }
   };
-  console.log('data', JSON.stringify(route.params));
-
   const fieldsAreEmpty = () => {
     if (step === 1) {
-      return (
-        projectName === '' ||
-        warantyTimeWork === '' ||
-        workingDays === '' ||
-        installingDay === '' ||
-        workAfterGetDeposit === '' ||
-        prepareDay === '' ||
-        finishedDay === '' ||
-        workCheckDay === '' ||
-        workCheckEnd === '' ||
-        adjustPerDay === ''
-      );
+     ( !isDirty || !isValid)
     } else if (step === 2) {
       return address === '';
     }
   };
 
-  console.log('signDATE', installingDay);
+console.log("WWATCH", watch('workAfterGetDeposit'))
 
   return (
     <>
@@ -270,16 +262,28 @@ const ContractOption = ({navigation}: Props) => {
         {step === 1 && (
           <ScrollView style={styles.containerForm}>
             <View style={styles.formInput}>
+              
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>ชื่อโครงการ</Text>
-                <TextInput
-                  style={styles.inputForm}
-                  value={projectName}
-                  onChangeText={setProjectName}
-                  placeholder="โครงการติดตั้ง..."
-                  placeholderTextColor="#A6A6A6"
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={styles.inputForm}
+                      placeholder="โครงการติดตั้ง..."
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="projectName"
+                  rules={{ required: true }} // This line sets the field to required
                 />
+                              {errors.projectName && <Text>{textRequired}</Text>}
+
               </View>
+
               <SmallDivider />
 
               <View
@@ -290,17 +294,32 @@ const ContractOption = ({navigation}: Props) => {
                 }}>
                 <Text style={styles.label}>รับประกันงานติดตั้งกี่ปี</Text>
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={warantyTimeWork}
-                    onChangeText={setWarantyTimeWork}
-                    // placeholder="จำนวนปี"
-                    placeholderTextColor="#A6A6A6"
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="warantyTimeWork"
+                  rules={{ required: true }} // This line sets the field to required
+                />
+
                   <Text style={styles.inputSuffix}>ปี</Text>
+
                 </View>
+
               </View>
+              {errors.warantyTimeWork && <Text  style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
+
+
               <SmallDivider />
               <View
                 style={{
@@ -310,18 +329,30 @@ const ContractOption = ({navigation}: Props) => {
                 }}>
                 <Text style={styles.label}>Working Days</Text>
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={Number(workingDays)}
-                    onChangeText={text => setWorkingDays(Number(text))}
-
-                    // placeholder="Working Days"
-                    placeholderTextColor="#A6A6A6"
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="workingDays"
+                  rules={{ required: true }} // This line sets the field to required
+                />
                   <Text style={styles.inputSuffix}>วัน</Text>
+               
+
                 </View>
+    
               </View>
+              {errors.workingDays && <Text   style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
               <SmallDivider />
               <View
                 style={{
@@ -332,16 +363,30 @@ const ContractOption = ({navigation}: Props) => {
                 <Text style={styles.label}>Installing Day</Text>
 
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={installingDay}
-                    onChangeText={text => setInstallingDay(Number(text))}
-                    placeholderTextColor="#A6A6A6"
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="installingDay"
+                  rules={{ required: true }} // This line sets the field to required
+                />
+                  
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
+               
+
               </View>
+              {errors.installingDay && <Text  style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
               <SmallDivider />
               <View
                 style={{
@@ -352,16 +397,30 @@ const ContractOption = ({navigation}: Props) => {
                 <Text style={styles.label}>Work After Get Deposit</Text>
 
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={workAfterGetDeposit}
-                    onChangeText={text => setWorkAfterGetDeposit(Number(text))}
-
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="workAfterGetDeposit"
+                  rules={{ required: true }} // This line sets the field to required
+                />
+                 
                   <Text style={styles.inputSuffix}>วัน</Text>
+
+
                 </View>
               </View>
+              {errors.workAfterGetDeposit && <Text  style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
               <SmallDivider />
               <View
                 style={{
@@ -372,16 +431,30 @@ const ContractOption = ({navigation}: Props) => {
                 <Text style={styles.label}>Prepare Days</Text>
 
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={prepareDay}
-                    onChangeText={text => setPrepareDay(Number(text))}
-
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="prepareDay"
+                  rules={{ required: true }} // This line sets the field to required
+                />
+                
                   <Text style={styles.inputSuffix}>วัน</Text>
+                 
+
                 </View>
               </View>
+              {errors.prepareDay && <Text  style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
               <SmallDivider />
               <View
                 style={{
@@ -392,16 +465,30 @@ const ContractOption = ({navigation}: Props) => {
                 <Text style={styles.label}>Finished Days</Text>
 
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={finishedDay}
-                    onChangeText={text => setFinishedDay(Number(text))}
-
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="finishedDay"
+                  rules={{ required: true }} // This line sets the field to required
+                />
+                 
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
+           
+
               </View>
+              {errors.finishedDay && <Text  style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
               <SmallDivider />
               <View
                 style={{
@@ -412,17 +499,30 @@ const ContractOption = ({navigation}: Props) => {
                 <Text style={styles.label}>Work Check Day</Text>
 
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={workCheckDay}
-                    onChangeText={text => setWorkCheckDay(Number(text))}
-
-                  
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="workCheckDay"
+                  rules={{ required: true }} // This line sets the field to required
+                />
+                 
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
+
+
               </View>
+              {errors.workCheckDay && <Text   style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
               <SmallDivider />
               <View
                 style={{
@@ -433,17 +533,30 @@ const ContractOption = ({navigation}: Props) => {
                 <Text style={styles.label}>Work Check End</Text>
 
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={workCheckEnd}
-                    onChangeText={text => setWorkCheckEnd(Number(text))}
-
-                  
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="workCheckEnd"
+                  rules={{ required: true }} // This line sets the field to required
+                />
+                 
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
+               
+
               </View>
+              {errors.workCheckEnd && <Text  style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
               <SmallDivider />
               <View
                 style={{
@@ -455,17 +568,30 @@ const ContractOption = ({navigation}: Props) => {
                 <Text style={styles.label}>Adjust Per Days</Text>
 
                 <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={adjustPerDay}
-               
-                    onChangeText={text => setAdjustPerDay(Number(text))}
-
-                    keyboardType="numeric"
-                  />
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      style={{width: 30}}
+                      placeholderTextColor="#A6A6A6"
+                    />
+                  )}
+                  name="adjustPerDay"
+                  rules={{ required: true }} // This line sets the field to required
+                />
+                 
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
+              
+
               </View>
+              {errors.adjustPerDay && <Text  style={{
+                 alignSelf:'flex-end'
+              
+                }}>{textRequired}</Text>}
               <SmallDivider />
 
               {/* <TouchableOpacity
@@ -489,7 +615,7 @@ const ContractOption = ({navigation}: Props) => {
         {step === 2 && (
           <>
             <CreateContractScreen
-              handleAddressChange={handleAddressChange} // make sure to pass the function as a prop
+              handleAddressChange={handleAddressChange}
               handleDateServay={handleDateServay}
               handleDateSigne={handleDateSigne}
               signDate={servayDate}
@@ -497,6 +623,7 @@ const ContractOption = ({navigation}: Props) => {
               projectName={projectName}
               customerName={data.customerName}
               allTotal={data.allTotal}
+              address={watch('address')}
             />
           </>
         )}
@@ -506,18 +633,18 @@ const ContractOption = ({navigation}: Props) => {
               handleBackPress={handleBackPress}
               data={{
                 projectName,
-                warantyYear: Number(warantyTimeWork),
-                warantyTimeWork: Number(warantyTimeWork),
+                warantyYear: Number(watch('warantyTimeWork')),
+                warantyTimeWork: Number(watch('warantyTimeWork')),
                 workingDays,
-                installingDay: Number(installingDay),
-                adjustPerDay: Number(adjustPerDay),
-                workAfterGetDeposit: Number(workAfterGetDeposit),
+                installingDay: Number(watch('installingDay')),
+                adjustPerDay: Number(watch('adjustPerDay')),
+                workAfterGetDeposit: Number(watch('workAfterGetDeposit')),
                 signDate,
                 servayDate,
-                prepareDay: Number(prepareDay),
-                finishedDay: Number(finishedDay),
-                workCheckDay: Number(workCheckDay),
-                workCheckEnd: Number(workCheckEnd),
+                prepareDay: Number(watch('prepareDay')),
+                finishedDay: Number(watch('finishedDay')),
+                workCheckDay: Number(watch('workCheckDay')),
+                workCheckEnd: Number(watch('workCheckEnd')),
                 total: Number(data.allTotal),
                 signAddress: address,
                 quotationId: data.id,
@@ -533,7 +660,11 @@ const ContractOption = ({navigation}: Props) => {
             onBack={handleBackPress}
             onNext={handleNextPress}
             isLoading={false}
-            disabled={fieldsAreEmpty()}
+            disabled={  (step === 1) ? 
+              ( !isDirty || !isValid):(
+                address === ''
+              )
+             } 
           />
         )}
       </SafeAreaView>

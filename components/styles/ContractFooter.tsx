@@ -1,4 +1,10 @@
-import {StyleSheet, Text, View, TouchableOpacity,ActivityIndicator} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import React from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -17,7 +23,6 @@ type Props = {
   finalStep: boolean;
   disabled: boolean;
   isLoading: boolean;
-
 };
 
 const ContractFooter = (props: Props) => {
@@ -65,7 +70,7 @@ const ContractFooter = (props: Props) => {
         ]}
         onPress={() => props.onNext()}
         disabled={props.disabled}>
-{isLoading ? (
+        {isLoading ? (
           <ActivityIndicator size="small" color="#ffffff" />
         ) : (
           <Text style={styles.buttonText}>

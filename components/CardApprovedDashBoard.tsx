@@ -156,7 +156,7 @@ const CardApprovedDashBoard = (props: Props) => {
                         : props.status === 'signed'
                         ? '#2196f3'
                         : props.status === 'contract'
-                        ? '#ccc'
+                        ? '#1079ae'
                         : '#ccc',
                     borderRadius: 4,
                     paddingHorizontal: 8,

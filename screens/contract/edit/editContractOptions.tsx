@@ -24,17 +24,15 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Store} from '../../../redux/Store';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {Contract, Quotation, Customer} from '../../../types/docType';
+import {useForm, Controller} from 'react-hook-form';
+import {PeriodPercentType} from '../../../types/docType';
 
-import {
-  faChevronRight,
-  faCashRegister,
-  faCoins,
-} from '@fortawesome/free-solid-svg-icons';
 import SmallDivider from '../../../components/styles/SmallDivider';
 import ContractFooter from '../../../components/styles/ContractFooter';
 import CreateContractScreen from '../createContractScreen';
 import Installment from '../../../components/installment';
 import Lottie from 'lottie-react-native';
+import EditInstallment from '../../../components/editInstallment';
 
 type Props = {
   navigation: StackNavigationProp<ParamListBase, 'ContractOption'>;
@@ -90,6 +88,7 @@ const fetchContract = async ({
     throw new Error('User not authenticated');
   }
   const idToken = await user.getIdToken();
+  console.log('ID', id);
 
   let url;
   if (isEmulator) {
@@ -103,7 +102,7 @@ const fetchContract = async ({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${idToken}`,
     },
-    body: JSON.stringify({id}),
+    body: JSON.stringify(id),
     credentials: 'include',
   });
   const data = await response.json();
@@ -118,30 +117,89 @@ const fetchContract = async ({
 const EditContractOption = ({navigation}: Props) => {
   const route = useRoute();
   const id: any = route?.params;
-  const [customer, setCustomer] = useState<Customer>({} as Customer);
-  const [quotation, setQuotation] = useState<Quotation>({} as Quotation);
-  const [company, setCompany] = useState('');
-  const [contract, setContract] = useState<Contract>({} as Contract);
-  const [projectName, setProjectName] = useState('');
-  const [signDate, setDateSign] = useState('');
-  const [servayDate, setDateServay] = useState('');
-  const [warantyTimeWork, setWarantyTimeWork] = useState(0);
-  const [workingDays, setWorkingDays] = useState(0);
-  const [workCheckEnd, setWorkCheckEnd] = useState(0);
-  const [workCheckDay, setWorkCheckDay] = useState(0);
-  const [installingDay, setInstallingDay] = useState(0);
   const [fcnToken, setFtmToken] = useState('');
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [step, setStep] = useState(1);
+  const [contract, setContract] = useState({});
+  const [quotation, setQuotation] = useState<Quotation>();
+  const [customer, setCustomer] = useState<Customer>();
   const [stepData, setStepData] = useState({});
-
-  const [workAfterGetDeposit, setWorkAfterGetDeposit] = useState(0);
-  const [prepareDay, setPrepareDay] = useState(0);
-  const [finishedDay, setFinishedDay] = useState(0);
-  const [adjustPerDay, setAdjustPerDay] = useState(0);
+  const textRequired = 'จำเป็นต้องระบุ';
+  const [defaultValues, setDefaultValues] = useState(null);
+  const [periodPercent, setPeriodPercent] = useState<PeriodPercentType[]>([]);
   const [showSecondPage, setShowSecondPage] = useState(false);
+  const [signDate, setDateSign] = useState('');
+  const [servayDate, setDateServay] = useState('');
   // const {updatedData, contract}: any = route.params;
   const [address, setAddress] = useState('');
+
+  const {
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    formState: {errors, isDirty, dirtyFields, isValid},
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      projectName: '',
+      signDate: '',
+      servayDate: '',
+      warantyTimeWork: '',
+      workingDays: '',
+      workCheckEnd: '',
+      workCheckDay: '',
+      installingDay: '',
+      adjustPerDay: '',
+      workAfterGetDeposit: '',
+      prepareDay: '',
+      finishedDay: '',
+      address: '',
+    },
+  });
+
+  const {data, isLoading, isError} = useQuery(
+    ['Contract', id],
+    () => fetchContract({id, isEmulator}).then(res => res),
+    {
+      onSuccess: data => {
+        console.log(data);
+        setPeriodPercent(data[0].periodPercent);
+        setContract(data[3]);
+        setQuotation(data[0]);
+        setDateSign(data[3].signDate);
+        setDateServay(data[3].servayDate);
+        setCustomer(data[1]);
+        setAddress(data[3].signAddress)
+        reset({
+          projectName: data[3].projectName,
+          warantyTimeWork: data[3].warantyTimeWork,
+          workingDays: data[3].workingDays,
+          workCheckEnd: data[3].workCheckEnd,
+          workCheckDay: data[3].workCheckDay,
+          installingDay: data[3].installingDay,
+          adjustPerDay: data[3].adjustPerDay,
+          workAfterGetDeposit: data[3].workAfterGetDeposit,
+          prepareDay: data[3].prepareDay,
+          finishedDay: data[3].finishedDay,
+          address:data[3].signAddress
+        });
+      },
+    },
+  );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Lottie
+          style={{width: '25%'}}
+          source={require('../../../assets/animation/lf20_rwq6ciql.json')}
+          autoPlay
+          loop
+        />
+      </View>
+    );
+  }
 
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
@@ -162,43 +220,21 @@ const EditContractOption = ({navigation}: Props) => {
     state: {selectedContract, isEmulator},
     dispatch,
   }: any = useContext(Store);
-  const handleSubmit = async () => {
-    const apiData = {
-      id: uuidv4(),
-      quotationId: id.data.id,
-      projectName,
-      signAddress: id.data.signAddress,
-      warantyYear: warantyTimeWork,
-      workingDays,
-      workAfterGetDeposit,
-      prepareDay,
-      finishedDay,
-      signDate: id.data.signDate,
-      adjustPerDay,
-      servayDate: id.data.servayDate,
-      workCheckDay,
-      workCheckEnd,
-      installingDay,
-    };
-    console.log({
-      projectName,
-      warantyYear: warantyTimeWork,
-      workingDays,
-      workAfterGetDeposit,
-      servayDate,
-      prepareDay,
-      finishedDay,
-      adjustPerDay,
-    });
-    console.log('api data', JSON.stringify(id.data));
 
-    // await mutate({data: apiData, isEmulator});
-  };
   const handleStartDateSelected = (date: Date) => {
     const formattedDate = thaiDateFormatter.format(date);
     // setServayDate(formattedDate);
     console.log(servayDate);
   };
+  // const {mutate} = useMutation(createContract, {
+  //   onSuccess: data => {
+  //     navigation.navigate('WebViewScreen', {id: data?.data.id});
+  //   },
+  //   onError: (error: MyError) => {
+  //     console.error('There was a problem calling the function:', error);
+  //     console.log(error.response);
+  //   },
+  // });
 
   const handleShowSecondPage = () => {
     setShowSecondPage(true);
@@ -214,74 +250,48 @@ const EditContractOption = ({navigation}: Props) => {
     setDateServay(formattedDate);
   };
 
+  const handleDonePress = async () => {
+    setIsLoadingMutation(true);
+    try {
+      const apiData = {
+        data: {
+          id: uuidv4(),
+          quotationId: id.data.id,
+          signDate: 'preview',
+          signDateStamp: 11,
+          deposit: 2,
+          signAddress: signAddress,
+          adjustPerDay: Number(adjustPerDay),
+          installingDay: Number(installingDay),
+          warantyYear: Number(warantyTimeWork),
+          prepareDay: Number(prepareDay),
+          servayDate: servayDate,
+          FCMToken: fcnToken,
+          // servayDateStamp: new Date().getTime(),
+          quotationPageQty: 1,
+          workCheckDay: Number(workCheckDay),
+          workCheckEnd: workCheckEnd,
+          warantyTimeWork: warantyTimeWork,
+          workAfterGetDeposit: workAfterGetDeposit,
+          sellerId: id.data.userId,
+          finishedDay: Number(finishedDay),
+          offerContract: 'preview',
+          selectedContract: '',
+          offerCheck: 'preview',
+          projectName: projectName,
+        },
+        quotation: id.data,
+      };
 
-  // useEffect(() => {
-  //   async function requestUserPermission() {
-  //     const authStatus = await messaging().requestPermission();
-  //     const enabled =
-  //       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-  //       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+      console.log('api data', JSON.stringify(apiData));
+      // await mutate({data: apiData, isEmulator});
 
-  //     if (enabled) {
-  //       console.log('Authorization status:', authStatus);
-  //       getFCMToken();
-  //     }
-  //   }
-
-  //   async function getFCMToken() {
-  //     const fcmToken = await messaging().getToken();
-  //     if (fcmToken) {
-  //       console.log('Your Firebase Token  document:', fcmToken);
-  //       setFtmToken(fcmToken);
-  //     } else {
-  //       console.log('Failed to get Firebase Token');
-  //     }
-  //   }
-  //   requestUserPermission();
-  // }, [selectedContract]);
-  const {data, isLoading, isError} = useQuery(
-    ['Contract', id],
-    () => fetchContract({id, isEmulator}).then(res => res),
-    {
-      onSuccess: data => {
-        console.log('DATA',data)
-        setQuotation(data[0]);
-        setCustomer(data[1]);
-        setCompany(data[2]);
-        setContract(data[3]);
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        setDateServay(`${day}-${month}-${year}`);
-        setDateSign(`${day}-${month}-${year}`);
-        setWarantyTimeWork(data[0].skillWarantyYear);
-        setWorkAfterGetDeposit(data[3].workAfterGetDeposit);
-        setInstallingDay(data[3].installingDay);
-        setPrepareDay(data[3].prepareDay);
-        setFinishedDay(data[3].finishedDay);
-        setWorkCheckDay(data[3].workCheckDay);
-        setWorkCheckEnd(data[3].workCheckEnd);
-        setAdjustPerDay(data[3].adjustPerDay);
-      },
-    },
-  );
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Lottie
-          style={{width: '25%'}}
-          source={require('../../../assets/animation/lf20_rwq6ciql.json')}
-          autoPlay
-          loop
-        />
-      </View>
-    );
-  }
-
-
-
+      setIsLoadingMutation(false);
+    } catch (error: Error | AxiosError | any) {
+      console.error('There was a problem calling the function:', error);
+      console.log(error.response);
+    }
+  };
 
   const handleNextPress = () => {
     if (step < 3) {
@@ -294,50 +304,61 @@ const EditContractOption = ({navigation}: Props) => {
     // If it's not the first step, decrement the step.
     if (step > 1) {
       setStep(step - 1);
-    }else{
-      navigation.goBack()
+    } else {
+      reset({
+        projectName: '',
+        signDate: '',
+        servayDate: '',
+        warantyTimeWork: 0,
+        workingDays: 0,
+        workCheckEnd: 0,
+        workCheckDay: 0,
+        installingDay: 0,
+        adjustPerDay: 0,
+        workAfterGetDeposit: 0,
+        prepareDay: 0,
+        finishedDay: 0,
+        address: '',
+      });
+      navigation.goBack();
     }
   };
-  console.log('data', JSON.stringify(route.params));
-
   const fieldsAreEmpty = () => {
     if (step === 1) {
-      return (
-        projectName === '' ||
-        warantyTimeWork === '' ||
-        workingDays === '' ||
-        installingDay === '' ||
-        workAfterGetDeposit === '' ||
-        prepareDay === '' ||
-        finishedDay === '' ||
-        workCheckDay === '' ||
-        workCheckEnd === '' ||
-        adjustPerDay === ''
-      );
+      !isDirty || !isValid;
     } else if (step === 2) {
       return address === '';
     }
   };
-
-  console.log('signDATE55', contract);
+  console.log('DATA', quotation?.allTotal);
 
   return (
     <>
+      {quotation && customer && contract ? (
         <SafeAreaView style={{flex: 1}}>
           {step === 1 && (
             <ScrollView style={styles.containerForm}>
               <View style={styles.formInput}>
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>ชื่อโครงการ</Text>
-                  <TextInput
-                    style={styles.inputForm}
-                    defaultValue={contract.projectName}
-                    value={projectName}
-                    onChangeText={setProjectName}
-                    placeholder="โครงการติดตั้ง..."
-                    placeholderTextColor="#A6A6A6"
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value ? value.toString() : ''}
+                        style={styles.inputForm}
+                        placeholder="โครงการติดตั้ง..."
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="projectName"
+                    rules={{required: true}} // This line sets the field to required
                   />
+                  {errors.projectName && <Text>{textRequired}</Text>}
                 </View>
+
                 <SmallDivider />
 
                 <View
@@ -348,37 +369,66 @@ const EditContractOption = ({navigation}: Props) => {
                   }}>
                   <Text style={styles.label}>รับประกันงานติดตั้งกี่ปี</Text>
                   <View style={styles.inputContainerForm}>
-                    <TextInput
-                      style={{width: 30}}
-                      value={Number(warantyTimeWork)}
-                      onChangeText={text => setWarantyTimeWork(Number(text))}
-                      placeholderTextColor="#A6A6A6"
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={value => onChange(value)}
+                          value={value ? value.toString() : ''}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="warantyTimeWork"
+                      rules={{required: true}} // This line sets the field to required
                     />
                     <Text style={styles.inputSuffix}>ปี</Text>
                   </View>
                 </View>
-                <SmallDivider />
-                {/* <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}>
-                <Text style={styles.label}>Working Days</Text>
-                <View style={styles.inputContainerForm}>
-                  <TextInput
-                    style={{width: 30}}
-                    value={Number(workingDays)}
-                    onChangeText={text => setWorkingDays(Number(text))}
+                {errors.warantyTimeWork && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
 
-                    // placeholder="Working Days"
-                    placeholderTextColor="#A6A6A6"
-                    keyboardType="numeric"
-                  />
-                  <Text style={styles.inputSuffix}>วัน</Text>
+                <SmallDivider />
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginTop: 10,
+                  }}>
+                  <Text style={styles.label}>Working Days</Text>
+                  <View style={styles.inputContainerForm}>
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={value => onChange(value)}
+                          value={value ? value.toString() : ''}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="workingDays"
+                      rules={{required: true}}
+                    />
+                    <Text style={styles.inputSuffix}>วัน</Text>
+                  </View>
                 </View>
-              </View> */}
+                {errors.workingDays && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
                 <SmallDivider />
                 <View
                   style={{
@@ -389,16 +439,32 @@ const EditContractOption = ({navigation}: Props) => {
                   <Text style={styles.label}>Installing Day</Text>
 
                   <View style={styles.inputContainerForm}>
-                    <TextInput
-                      style={{width: 30}}
-                      value={installingDay}
-                      onChangeText={text => setInstallingDay(Number(text))}
-                      placeholderTextColor="#A6A6A6"
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value ? value.toString() : ''}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="installingDay"
+                      rules={{required: true}}
                     />
+
                     <Text style={styles.inputSuffix}>วัน</Text>
                   </View>
                 </View>
+                {errors.installingDay && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
                 <SmallDivider />
                 <View
                   style={{
@@ -409,17 +475,32 @@ const EditContractOption = ({navigation}: Props) => {
                   <Text style={styles.label}>Work After Get Deposit</Text>
 
                   <View style={styles.inputContainerForm}>
-                    <TextInput
-                      style={{width: 30}}
-                      value={workAfterGetDeposit}
-                      onChangeText={text =>
-                        setWorkAfterGetDeposit(Number(text))
-                      }
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value.toString()}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="workAfterGetDeposit"
+                      rules={{required: true}}
                     />
+
                     <Text style={styles.inputSuffix}>วัน</Text>
                   </View>
                 </View>
+                {errors.workAfterGetDeposit && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
                 <SmallDivider />
                 <View
                   style={{
@@ -430,15 +511,32 @@ const EditContractOption = ({navigation}: Props) => {
                   <Text style={styles.label}>Prepare Days</Text>
 
                   <View style={styles.inputContainerForm}>
-                    <TextInput
-                      style={{width: 30}}
-                      value={prepareDay}
-                      onChangeText={text => setPrepareDay(Number(text))}
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value.toString()}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="prepareDay"
+                      rules={{required: true}}
                     />
+
                     <Text style={styles.inputSuffix}>วัน</Text>
                   </View>
                 </View>
+                {errors.prepareDay && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
                 <SmallDivider />
                 <View
                   style={{
@@ -449,15 +547,32 @@ const EditContractOption = ({navigation}: Props) => {
                   <Text style={styles.label}>Finished Days</Text>
 
                   <View style={styles.inputContainerForm}>
-                    <TextInput
-                      style={{width: 30}}
-                      value={finishedDay}
-                      onChangeText={text => setFinishedDay(Number(text))}
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value.toString()}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="finishedDay"
+                      rules={{required: true}}
                     />
+
                     <Text style={styles.inputSuffix}>วัน</Text>
                   </View>
                 </View>
+                {errors.finishedDay && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
                 <SmallDivider />
                 <View
                   style={{
@@ -468,15 +583,32 @@ const EditContractOption = ({navigation}: Props) => {
                   <Text style={styles.label}>Work Check Day</Text>
 
                   <View style={styles.inputContainerForm}>
-                    <TextInput
-                      style={{width: 30}}
-                      value={workCheckDay}
-                      onChangeText={text => setWorkCheckDay(Number(text))}
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value.toString()}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="workCheckDay"
+                      rules={{required: true}}
                     />
+
                     <Text style={styles.inputSuffix}>วัน</Text>
                   </View>
                 </View>
+                {errors.workCheckDay && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
                 <SmallDivider />
                 <View
                   style={{
@@ -487,15 +619,32 @@ const EditContractOption = ({navigation}: Props) => {
                   <Text style={styles.label}>Work Check End</Text>
 
                   <View style={styles.inputContainerForm}>
-                    <TextInput
-                      style={{width: 30}}
-                      value={workCheckEnd}
-                      onChangeText={text => setWorkCheckEnd(Number(text))}
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value.toString()}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="workCheckEnd"
+                      rules={{required: true}}
                     />
+
                     <Text style={styles.inputSuffix}>วัน</Text>
                   </View>
                 </View>
+                {errors.workCheckEnd && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
                 <SmallDivider />
                 <View
                   style={{
@@ -507,71 +656,73 @@ const EditContractOption = ({navigation}: Props) => {
                   <Text style={styles.label}>Adjust Per Days</Text>
 
                   <View style={styles.inputContainerForm}>
-                    <TextInput
-                      style={{width: 30}}
-                      value={adjustPerDay}
-                      onChangeText={text => setAdjustPerDay(Number(text))}
-                      keyboardType="numeric"
+                    <Controller
+                      control={control}
+                      render={({field: {onChange, onBlur, value}}) => (
+                        <TextInput
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value.toString()}
+                          style={{width: 30}}
+                          placeholderTextColor="#A6A6A6"
+                        />
+                      )}
+                      name="adjustPerDay"
+                      rules={{required: true}}
                     />
+
                     <Text style={styles.inputSuffix}>วัน</Text>
                   </View>
                 </View>
+                {errors.adjustPerDay && (
+                  <Text
+                    style={{
+                      alignSelf: 'flex-end',
+                    }}>
+                    {textRequired}
+                  </Text>
+                )}
                 <SmallDivider />
-
-                {/* <TouchableOpacity
-            style={styles.buttonForm}
-            onPress={handleShowSecondPage}>
-            <View style={styles.headerForm}>
-              <Text style={styles.buttonTextForm}>ต่อไป</Text>
-
-              <FontAwesomeIcon
-                style={styles.iconForm}
-                icon={faChevronRight}
-                size={18}
-                color="white"
-              />
-            </View>
-          </TouchableOpacity> */}
               </View>
             </ScrollView>
           )}
-
           {step === 2 && (
             <>
               <CreateContractScreen
-                handleAddressChange={handleAddressChange} // make sure to pass the function as a prop
+                handleAddressChange={handleAddressChange}
                 handleDateServay={handleDateServay}
                 handleDateSigne={handleDateSigne}
                 signDate={servayDate}
                 servayDate={servayDate}
-                projectName={projectName}
-                customerName={id.customerName}
-                allTotal={id.allTotal}
+                projectName={watch('projectName')}
+                customerName={customer.name}
+                allTotal={Number(quotation.allTotal)}
+                address={watch('address')}
               />
             </>
           )}
           {step === 3 && (
             <>
-              <Installment
+              <EditInstallment
                 handleBackPress={handleBackPress}
+                periodPercent={periodPercent}
                 data={{
-                  projectName,
-                  warantyYear: Number(warantyTimeWork),
-                  warantyTimeWork: Number(warantyTimeWork),
-                  workingDays,
-                  installingDay: Number(installingDay),
-                  adjustPerDay: Number(adjustPerDay),
-                  workAfterGetDeposit: Number(workAfterGetDeposit),
+                  projectName: watch('projectName'),
+                  warantyYear: Number(watch('warantyTimeWork')),
+                  warantyTimeWork: Number(watch('warantyTimeWork')),
+                  installingDay: Number(watch('installingDay')),
+                  adjustPerDay: Number(watch('adjustPerDay')),
+                  workAfterGetDeposit: Number(watch('workAfterGetDeposit')),
                   signDate,
                   servayDate,
-                  prepareDay: Number(prepareDay),
-                  finishedDay: Number(finishedDay),
-                  workCheckDay: Number(workCheckDay),
-                  workCheckEnd: Number(workCheckEnd),
-                  total: Number(id.allTotal),
+                  prepareDay: Number(watch('prepareDay')),
+                  finishedDay: Number(watch('finishedDay')),
+                  workCheckDay: Number(watch('workCheckDay')),
+                  workCheckEnd: Number(watch('workCheckEnd')),
+                  total: Number(quotation.allTotal),
                   signAddress: address,
-                  quotationId: id.id,
-                  sellerId: id.sellerId,
+                  quotationId: quotation.id,
+                  sellerId: quotation.sellerId,
                 }}
               />
             </>
@@ -583,10 +734,22 @@ const EditContractOption = ({navigation}: Props) => {
               onBack={handleBackPress}
               onNext={handleNextPress}
               isLoading={false}
-              disabled={fieldsAreEmpty()}
+              disabled={step === 1 ? !isDirty || !isValid : address === ''}
             />
           )}
         </SafeAreaView>
+      ) : (
+        <>
+          <View style={styles.loadingContainer}>
+            <Lottie
+              style={{width: '25%'}}
+              source={require('../../../assets/animation/lf20_rwq6ciql.json')}
+              autoPlay
+              loop
+            />
+          </View>
+        </>
+      )}
     </>
   );
 };
@@ -741,11 +904,6 @@ const styles = StyleSheet.create({
 
     paddingBottom: 30,
   },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   divider: {
     borderBottomWidth: 1,
     borderColor: '#A6A6A6',
@@ -777,6 +935,11 @@ const styles = StyleSheet.create({
     color: '#0073BA',
 
     marginLeft: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

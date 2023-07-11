@@ -1,0 +1,46 @@
+{
+    "balance": "1000",
+    "user": {
+        "address": "ถนน เพชรเกษม อ้อมใหญ่สามพราน",
+        "bankaccount": {},
+        "bizName": "Siamsafety Engineering",
+        "bizType": "individual",
+        "companyNumber": "",
+        "id": "2bddbfd4-c92f-4c21-aaa1-45f4ee0f3d39",
+        "logo": "https://firebasestorage.googleapis.com:443/v0/b/workerfirebase-f1005.appspot.com/o/images%2FE5C6DF83-BEA4-414E-BE4F-59BE33A65268.png?alt=media&token=3d8efe0c-c54c-4443-832e-5a21338719e7",
+        "mobileTel": "053306426",
+        "officeTel": "0959962030",
+        "rules": ["อลูมิเนียม"],
+        "signature": "none",
+        "userEmail": "phuthantrust@gmail.com",
+        "userLastName": "คันธบุษบง",
+        "userName": "ภูฐาน",
+        "userPosition": "none",
+        "wallet": {
+            "balance": "1000",
+            "id": "6b613b97-a99c-4ff5-99f0-0e7a8aa6e04c"
+        },
+        "walletId": "6b613b97-a99c-4ff5-99f0-0e7a8aa6e04c"
+    }
+} {
+    "address": "ถนน เพชรเกษม อ้อมใหญ่สามพราน",
+    "bankaccount": {},
+    "bizName": "Siamsafety Engineering",
+    "bizType": "individual",
+    "companyNumber": "",
+    "id": "2bddbfd4-c92f-4c21-aaa1-45f4ee0f3d39",
+    "logo": "https://firebasestorage.googleapis.com:443/v0/b/workerfirebase-f1005.appspot.com/o/images%2FE5C6DF83-BEA4-414E-BE4F-59BE33A65268.png?alt=media&token=3d8efe0c-c54c-4443-832e-5a21338719e7",
+    "mobileTel": "053306426",
+    "officeTel": "0959962030",
+    "rules": ["อลูมิเนียม"],
+    "signature": "none",
+    "userEmail": "phuthantrust@gmail.com",
+    "userLastName": "คันธบุษบง",
+    "userName": "ภูฐาน",
+    "userPosition": "none",
+    "wallet": {
+        "balance": "1000",
+        "id": "6b613b97-a99c-4ff5-99f0-0e7a8aa6e04c"
+    },
+    "walletId": "6b613b97-a99c-4ff5-99f0-0e7a8aa6e04c"
+}

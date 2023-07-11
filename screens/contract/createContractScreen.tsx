@@ -82,6 +82,7 @@ type Props = {
   customerName: string;
   allTotal: number;
   handleAddressChange:(address:string) => void;
+  address:string
 };
 const fetchContract = async ({
   id,
@@ -128,8 +129,7 @@ const CreateContractScreen = (props: Props) => {
   const [quotation, setQuotation] = useState<Quotation>({} as Quotation);
   const [company, setCompany] = useState('');
   const [contract, setContract] = useState<ContractData>({} as ContractData);
-  // const [signDate, setDateSign] = useState('');
-  // const [servayDate, setDateServay] = useState('');
+
   const route = useRoute();
   const {
     state: {isEmulator},
@@ -141,179 +141,29 @@ const CreateContractScreen = (props: Props) => {
   const [hasPhoneNumber, setHasPhoneNumber] = useState(false);
   const [date, setDate] = useState(new Date());
   const [signAddress, setAddress] = useState('');
-  const {data, isLoading, isError} = useQuery(
-    ['Contract', id],
-    () => fetchContract({id, isEmulator}).then(res => res),
-    {
-      onSuccess: data => {
-        setQuotation(data[0]);
-        setCustomer(data[1]);
-        setCompany(data[2]);
-        setContract(data[3]);
-      },
-    },
-  );
+
 
   const {
     handleSubmit,
     control,
+    reset,
     formState: {errors},
     watch,
-  } = useForm();
-  const address = watch('address');
-
-  const handleStep1Press = (hasAccount: boolean) => {
-    setStep1(false);
-    setHasPhoneNumber(hasAccount);
-    setStep2(true);
-  };
-
-
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length > maxLength) {
-      return text.substring(0, maxLength - 3) + '...';
-    }
-    return text;
-  };
-
-  const handleStep2Press = () => {
-    const apiData = {
-      data: {
-        id: quotation.id,
-        summary: quotation.summary,
-        services: quotation.services,
-        customer: customer,
-        vat7: quotation.vat7,
-        taxValue: quotation.taxValue,
-        taxName: 'vat3',
-        dateEnd: quotation.dateEnd,
-        discountValue: quotation.discountValue,
-        discountName: 'percent',
-        dateOffer: quotation.dateOffer,
-        FCMToken: quotation.FCMToken,
-        docNumber: quotation.docNumber,
-        summaryAfterDiscount: quotation.summaryAfterDiscount,
-        allTotal: quotation.allTotal,
-        sellerSignature: quotation.sellerSignature,
-        offerContract: '',
-        signDate,
-        servayDate,
-        signAddress,
-
-        userId: company.id,
+  } = useForm(
+    {
+      mode: 'onChange',
+      defaultValues: {
+        address: '',
       },
-    };
-
-    // navigation.navigate('InstallmentScreen', {data: apiData});
-  };
-
-  const handleStep3Press = async () => {
-    // setStep3(false);
-    // setStep2(true);
-    // navigation.navigate('InstallmentScreen');
-    // await mutate({data: { signDate, signAddress, servayDate, id:contract.id, quotationId:quotation.id}, isEmulator});
-  };
-
-  const handlePrevPress = () => {
-    if (step2) {
-      setStep1(true);
-      setStep2(false);
-    } else if (step3) {
-      handleStep3Press();
     }
-  };
-
-  const handleNextPress = () => {
-    if (step2) {
-      handleStep2Press();
-    }
-  };
-  const splitText = (text: string, maxLength: number) => {
-    let splitText = '';
-    let currentIndex = 0;
-    let nextIndex = maxLength;
-
-    while (currentIndex < text.length) {
-      splitText += text.slice(currentIndex, nextIndex) + '\n';
-      currentIndex += maxLength;
-      nextIndex += maxLength;
-    }
-
-    return splitText;
-  };
-
-  const onSubmit = (data: FormData) => {
-    console.log('address', data.address);
-    const apiData = {
-      data: {
-        id: quotation.id,
-        summary: quotation.summary,
-        services: quotation.services,
-        customer: customer,
-        vat7: quotation.vat7,
-        taxValue: quotation.taxValue,
-        taxName: 'vat3',
-        dateEnd: quotation.dateEnd,
-        discountValue: quotation.discountValue,
-        discountName: 'percent',
-        dateOffer: quotation.dateOffer,
-        FCMToken: quotation.FCMToken,
-        docNumber: quotation.docNumber,
-        summaryAfterDiscount: quotation.summaryAfterDiscount,
-        allTotal: quotation.allTotal,
-        sellerSignature: quotation.sellerSignature,
-        offerContract: '',
-        signDate,
-        servayDate,
-        signAddress: data.address, // change here
-
-        userId: company.id,
-      },
-    };
-
-    navigation.navigate('InstallmentScreen', {data: apiData});
-  };
-
-  const renderItem = ({item}: any) => (
-    <View style={[styles.summaryItem, {backgroundColor: item.bgColor}]}>
-      <Text style={styles.summaryKey}>{item.key}</Text>
-      <Text style={styles.summaryValue}>{item.value}</Text>
-    </View>
   );
-  const summaryData = [
-    {key: '1', value: contract.signDate, bgColor: '#f0f0f0'},
-    {key: '2', value: contract.servayDate, bgColor: 'white'},
-    {key: '3', value: contract.servayDateStamp, bgColor: '#f0f0f0'},
-    {key: '4', value: contract.workCheckDay, bgColor: 'white'},
-    {key: '5', value: contract.workCheckEnd, bgColor: '#f0f0f0'},
-    {key: '6', value: contract.warantyTimeWork, bgColor: 'white'},
-    {key: '7', value: contract.workAfterGetDeposit, bgColor: '#f0f0f0'},
-    {key: '8', value: contract.prepareDay, bgColor: 'white'},
-    {key: '9', value: contract.installingDay, bgColor: '#f0f0f0'},
-    {key: '10', value: contract.finishedDay, bgColor: 'white'},
-    {key: '11', value: contract.adjustPerDay, bgColor: '#f0f0f0'},
-    {key: '12', value: contract.warantyYear, bgColor: 'white'},
-    {key: '13', value: contract.deposit, bgColor: '#f0f0f0'},
-    {key: '14', value: contract.offerCheck, bgColor: 'white'},
-    {key: '15', value: contract.projectName, bgColor: '#f0f0f0'},
-    {key: '16', value: contract.sellerId, bgColor: 'white'},
-  ] as {key: string; value: any; bgColor: string}[];
 
-  // useEffect(() => {
-  //   const today = new Date();
-  //   const year = today.getFullYear();
-  //   const month = String(today.getMonth() + 1).padStart(2, '0');
-  //   const day = String(today.getDate()).padStart(2, '0');
-  //   setDateServay(`${day}-${month}-${year}`);
-  //   setDateSign(`${day}-${month}-${year}`);
-  // }, []);
 
 useEffect(() => {
-  if(address){
-    props.handleAddressChange(address);
-
-  }
-}, [address]);
+reset({
+  address:props.address
+})
+}, []);
   return (
     <View style={styles.container}>
       <ScrollView>
