@@ -24,6 +24,8 @@ import {useQuery, useMutation} from 'react-query';
 import {useNavigation} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {v4 as uuidv4} from 'uuid';
+import {Contract, Quotation, Customer, CompanyUser} from '../types/docType';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faChevronRight,
@@ -49,25 +51,33 @@ type Props = {
   data: any;
   handleBackPress: () => void;
   periodPercent: PeriodPercentType[];
+  total: number;
+  quotationId: string;
+  contractId: string;
+  sellerId: string;
 };
 interface MyError {
   response: object;
   // add other properties if necessary
 }
 type UpdateContractInput = {
-  data: any;
+  contract: Contract;
   isEmulator: boolean;
+  quotationId: string;
+  contractId: string;
+  sellerId: string;
+  newInstallmentDetails:any
 };
 const updateContract = async (input: UpdateContractInput): Promise<any> => {
-  const {data, isEmulator} = input;
+  const {contract, isEmulator, quotationId, contractId, sellerId,newInstallmentDetails} = input;
   const user = auth().currentUser;
-  console.log('data PUT', JSON.stringify(data));
+  console.log('data PUT', JSON.stringify(contract));
 
   let url;
   if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/createContract`;
+    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/updateContractAndLog`;
   } else {
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createContract`;
+    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/updateContractAndLog`;
   }
   const response = await fetch(url, {
     method: 'PUT',
@@ -75,26 +85,33 @@ const updateContract = async (input: UpdateContractInput): Promise<any> => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${user?.uid}`,
     },
-    body: JSON.stringify({data}),
+    body: JSON.stringify({quotationId, contractId, sellerId, contract, newInstallmentDetails}),
   });
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
-  const responseData = await response.json(); // Extract the data from the response
-  return responseData; // Return the data
+  const responseData = await response.json(); 
+  return responseData; 
 };
 
 const EditInstallment = (props: Props) => {
   const route = useRoute();
   const dataProps: any = props.data;
-  const totalPrice = dataProps.total;
+  const quotationId: string = props.quotationId;
+  const contractId: string = props.contractId;
+  const sellerId: string = props.sellerId;
+  const totalPrice = props.total;
   const [installments, setInstallments] = useState<number>(0);
   const [installmentDetails, setInstallmentDetails] = useState<
     InstallmentDetail[]
   >([]);
-  const percentagesProps = Object.values(props.periodPercent).map(installment => installment.percentage);
+  const percentagesProps = Object.values(props.periodPercent).map(
+    installment => installment.percentage,
+  );
 
-  const [percentages, setPercentages] = useState<{[key: number]: number}>(percentagesProps);
+  const [percentages, setPercentages] = useState<{[key: number]: number}>(
+    percentagesProps,
+  );
   const [isPercentagesValid, setIsPercentagesValid] = useState<boolean>(true);
   const [percentageValid, setPercentageValid] = useState<{
     [key: number]: number;
@@ -121,8 +138,8 @@ const EditInstallment = (props: Props) => {
     },
   });
 
-  useEffect(() => {
 
+  useEffect(() => {
     setInstallments(Object.values(watch('installments')).length);
 
     const totalPercentage = Object.values(percentages).reduce(
@@ -144,7 +161,7 @@ const EditInstallment = (props: Props) => {
 
   const {mutate, isLoading} = useMutation(updateContract, {
     onSuccess: data => {
-      const newId = dataProps.quotationId.slice(0, 8);
+      const newId = quotationId.slice(0, 8);
       navigation.navigate('DocViewScreen', {
         id: newId,
       });
@@ -169,12 +186,15 @@ const EditInstallment = (props: Props) => {
         details: installmentDetailsText[Number(key)],
       }),
     );
-    (dataProps.id = uuidv4()),
-      (dataProps.periodPercent = newInstallmentDetails);
-
-
-      console.log(dataProps)
-    // await mutate({data: dataProps, isEmulator: false});
+console.log('MV',dataProps)
+    await mutate({
+      contract: dataProps,
+      isEmulator: false,
+      quotationId,
+      contractId,
+      sellerId,
+    newInstallmentDetails
+    });
 
     // Update periodPercent in data
   }, [
@@ -184,7 +204,6 @@ const EditInstallment = (props: Props) => {
     installmentDetailsText,
     dataProps,
   ]);
-
 
   const DropdownIcon = () => (
     <Icon
@@ -215,7 +234,6 @@ const EditInstallment = (props: Props) => {
     label: `แบ่งชำระ ${value} งวด`,
     value,
   }));
-
 
   const renderItem = ({item, index}: {item: any; index: number}) => (
     <View style={styles.card}>
@@ -303,7 +321,7 @@ const EditInstallment = (props: Props) => {
           บาท
         </Text>
         <RNPickerSelect
-        value={installments}
+          value={installments}
           onValueChange={value => setInstallments(value)}
           items={pickerItems}
           placeholder={{label: 'เลือกจำนวนงวด', value: null}}

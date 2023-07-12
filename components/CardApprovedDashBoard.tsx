@@ -204,6 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginBottom: 10,
     marginTop: 10,
+    width:windowWidth,
     height: 'auto',
     borderColor: '#ccc',
     marginVertical: 10,

@@ -60,6 +60,8 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+
 
   const handleModalClose = () => {
     setShowModal(false); // Step 4
@@ -70,11 +72,9 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   }: any = useContext(Store);
   const [companyData, setCompanyData] = useState(null);
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
-  const fabStyle = {width: 50};
-  const handleFABPress = () => {
-    // Do something when FAB is pressed
-  };
+
   const handleSelectScreen = (id: string) => {
+
     setSelectedItemId(id);
     setModalVisible(true);
   };
@@ -135,6 +135,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     {
       enabled: !!user,
       onSuccess: data => {
+        console.log('data contract', data)
         setCompanyData(data[0]);
         setQuotationData(data[1]);
       },
@@ -145,7 +146,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     return (
       <View style={styles.loadingContainer}>
         <Lottie
-          style={{width: '25%'}}
+          style={{width: '10%'}}
           source={require('../assets/animation/lf20_rwq6ciql.json')}
           autoPlay
           loop
@@ -215,7 +216,8 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     setModalVisible(false);
   };
 
-  const handleModal = () => {
+  const handleModal = (id) => {
+    setSelectedItemId(id )
     setShowModal(true);
 
   };
@@ -264,9 +266,10 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
         </View>
       ) : (
         <View>
-          <TouchableOpacity onPress={() => handleModal()}>
+
+          <TouchableOpacity onPress={() => handleModal(item.id)}>
             <CardApprovedDashBoard
-              onPress={() => handleSelectScreen(item.id)}
+              onPress={() => handleSelectScreen(selectedItemId?.id)}
               status={item.status}
               date={item.dateApproved}
               price={item.allTotal}
@@ -308,8 +311,8 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
           onBackdropPress={handleModalClose}>
           <TouchableNativeFeedback
             onPress={() => {
-              setShowModal(false); // Step 4
-              // console.log('modal');
+     
+              setShowModal(false); 
               navigation.navigate('EditContractOption', {id: item.id});
             }}>
             <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
@@ -358,8 +361,8 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
           <TouchableOpacity
             onPress={() => {
               setShowModal(false); // Step 4
-              // console.log('modal');
-              navigation.navigate('EditContractOption', {id: item.id});
+           
+              navigation.navigate('EditContractOption', {id: selectedItemId});
             }}>
             <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
           </TouchableOpacity>
@@ -404,7 +407,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
 
   return (
     <>
-      <View style={{flex: 1}}>
+      <View style={{flex: 1,justifyContent: 'center', alignItems: 'center'}}>
         <FlatList
           data={sortedData}
           renderItem={renderItem}
@@ -415,11 +418,9 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
               <Text>ลูกค้าอนุมัติเอกสารก่อนเริ่มต้นทำสัญญา</Text>
             </View>
           }
-          contentContainerStyle={quotationData?.length === 0 && {flex: 1}}
+          contentContainerStyle={sortedData?.length === 0 && {flex: 1}}
         />
-        {/* <NewCustomerBtn
-    handlePress={()=>handleNewQuotationPress()}
-    /> */}
+
       </View>
     </>
   );

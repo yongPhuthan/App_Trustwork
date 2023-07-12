@@ -276,7 +276,7 @@ function SettingsScreen({navigation}: SettingScreenProps) {
     return (
       <View style={styles.loadingContainer}>
         <Lottie
-          style={{width: '25%'}}
+          style={{width: '10%'}}
           source={require('../assets/animation/lf20_rwq6ciql.json')}
           autoPlay
           loop
@@ -986,7 +986,7 @@ export const Navigation = () => {
     return (
       <View style={styles.loadingContainer}>
         <Lottie
-          style={{width: '25%'}}
+          style={{width: '10%'}}
           source={require('../assets/animation/lf20_rwq6ciql.json')}
           autoPlay
           loop

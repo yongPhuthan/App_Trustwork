@@ -22,7 +22,7 @@ import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Store} from '../../redux/Store';
-import { useForm, Controller } from 'react-hook-form';
+import {useForm, Controller} from 'react-hook-form';
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -49,32 +49,6 @@ interface MyError {
   response: object;
   // add other properties if necessary
 }
-const createContract = async ({
-  data,
-  isEmulator,
-}: {
-  data: any;
-  isEmulator: boolean;
-}) => {
-  const user = auth().currentUser;
-  let url;
-  if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/createContract`;
-  } else {
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createContract`;
-  }
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
-    },
-    body: JSON.stringify({data}),
-  });
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
 // const ContractOption = ({navigation}: Props) => {
 const ContractOption = ({navigation}: Props) => {
   const route = useRoute();
@@ -92,7 +66,7 @@ const ContractOption = ({navigation}: Props) => {
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [step, setStep] = useState(1);
   const [stepData, setStepData] = useState({});
-const textRequired ='จำเป็นต้องระบุ'
+  const textRequired = 'จำเป็นต้องระบุ';
   const [workAfterGetDeposit, setWorkAfterGetDeposit] = useState(0);
   const [prepareDay, setPrepareDay] = useState(0);
   const [finishedDay, setFinishedDay] = useState(0);
@@ -104,31 +78,32 @@ const textRequired ='จำเป็นต้องระบุ'
     handleSubmit,
     control,
     watch,
+    register,
+    setValue,
     reset,
-    formState: { errors,isDirty,dirtyFields,isValid },
+    formState: {errors, isDirty, dirtyFields, isValid},
   } = useForm({
-    mode:"onChange" 
-    // defaultValues: {
-    //   projectName: '',
-    //   signDate: '',
-    //   servayDate: '',
-    //   warantyTimeWork: 0,
-    //   workingDays: 0,
-    //   workCheckEnd: 0,
-    //   workCheckDay: 0,
-    //   installingDay: 0,
-    //   fcnToken: '',
-    //   adjustPerDay: 0,
-    //   workAfterGetDeposit: 0,
-    //   prepareDay: 0,
-    //   finishedDay: 0,
-    //   address: '',
-    // },
+    mode: 'onChange',
+    defaultValues: {
+      projectName: '',
+      signDate: '',
+      servayDate: '',
+      warantyTimeWork: '',
+      workingDays: '',
+      workCheckEnd: '',
+      workCheckDay: '',
+      installingDay: '',
+      adjustPerDay: '',
+      workAfterGetDeposit: '',
+      prepareDay: '',
+      finishedDay: '',
+      signAddress: '',
+    },
   });
 
-
   const handleAddressChange = (newAddress: string) => {
-    setAddress(newAddress);
+    setValue("signAddress", newAddress);
+  
   };
   const updateInstallmentData = (
     percentage: number,
@@ -176,8 +151,6 @@ const textRequired ='จำเป็นต้องระบุ'
     setDateServay(formattedDate);
   };
 
-
-
   const handleHideSecondPage = () => {
     setShowSecondPage(false);
   };
@@ -213,6 +186,7 @@ const textRequired ='จำเป็นต้องระบุ'
     const day = String(today.getDate()).padStart(2, '0');
     setDateServay(`${day}-${month}-${year}`);
     setDateSign(`${day}-${month}-${year}`);
+
   }, []);
 
   const handleNextPress = () => {
@@ -226,7 +200,7 @@ const textRequired ='จำเป็นต้องระบุ'
     // If it's not the first step, decrement the step.
     if (step > 1) {
       setStep(step - 1);
-    }else{
+    } else {
       reset({
         projectName: '',
         signDate: '',
@@ -242,19 +216,11 @@ const textRequired ='จำเป็นต้องระบุ'
         prepareDay: 0,
         finishedDay: 0,
         address: '',
-    });
-    navigation.goBack()
+        
+      });
+      navigation.goBack();
     }
   };
-  const fieldsAreEmpty = () => {
-    if (step === 1) {
-     ( !isDirty || !isValid)
-    } else if (step === 2) {
-      return address === '';
-    }
-  };
-
-console.log("WWATCH", watch('workAfterGetDeposit'))
 
   return (
     <>
@@ -262,12 +228,11 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
         {step === 1 && (
           <ScrollView style={styles.containerForm}>
             <View style={styles.formInput}>
-              
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>ชื่อโครงการ</Text>
                 <Controller
                   control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
+                  render={({field: {onChange, onBlur, value}}) => (
                     <TextInput
                       onBlur={onBlur}
                       onChangeText={onChange}
@@ -278,10 +243,9 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                     />
                   )}
                   name="projectName"
-                  rules={{ required: true }} // This line sets the field to required
+                  rules={{required: true}} // This line sets the field to required
                 />
-                              {errors.projectName && <Text>{textRequired}</Text>}
-
+                {errors.projectName && <Text>{textRequired}</Text>}
               </View>
 
               <SmallDivider />
@@ -294,31 +258,32 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 }}>
                 <Text style={styles.label}>รับประกันงานติดตั้งกี่ปี</Text>
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="warantyTimeWork"
-                  rules={{ required: true }} // This line sets the field to required
-                />
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="warantyTimeWork"
+                    rules={{required: true}} // This line sets the field to required
+                  />
 
                   <Text style={styles.inputSuffix}>ปี</Text>
-
                 </View>
-
               </View>
-              {errors.warantyTimeWork && <Text  style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
-
+              {errors.warantyTimeWork && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
 
               <SmallDivider />
               <View
@@ -329,30 +294,31 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 }}>
                 <Text style={styles.label}>Working Days</Text>
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="workingDays"
-                  rules={{ required: true }} // This line sets the field to required
-                />
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="workingDays"
+                    rules={{required: true}} // This line sets the field to required
+                  />
                   <Text style={styles.inputSuffix}>วัน</Text>
-               
-
                 </View>
-    
               </View>
-              {errors.workingDays && <Text   style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
+              {errors.workingDays && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
               <SmallDivider />
               <View
                 style={{
@@ -363,30 +329,32 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 <Text style={styles.label}>Installing Day</Text>
 
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="installingDay"
-                  rules={{ required: true }} // This line sets the field to required
-                />
-                  
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="installingDay"
+                    rules={{required: true}} // This line sets the field to required
+                  />
+
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
-               
-
               </View>
-              {errors.installingDay && <Text  style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
+              {errors.installingDay && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
               <SmallDivider />
               <View
                 style={{
@@ -397,30 +365,32 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 <Text style={styles.label}>Work After Get Deposit</Text>
 
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="workAfterGetDeposit"
-                  rules={{ required: true }} // This line sets the field to required
-                />
-                 
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="workAfterGetDeposit"
+                    rules={{required: true}} // This line sets the field to required
+                  />
+
                   <Text style={styles.inputSuffix}>วัน</Text>
-
-
                 </View>
               </View>
-              {errors.workAfterGetDeposit && <Text  style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
+              {errors.workAfterGetDeposit && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
               <SmallDivider />
               <View
                 style={{
@@ -431,30 +401,32 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 <Text style={styles.label}>Prepare Days</Text>
 
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="prepareDay"
-                  rules={{ required: true }} // This line sets the field to required
-                />
-                
-                  <Text style={styles.inputSuffix}>วัน</Text>
-                 
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="prepareDay"
+                    rules={{required: true}} // This line sets the field to required
+                  />
 
+                  <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
               </View>
-              {errors.prepareDay && <Text  style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
+              {errors.prepareDay && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
               <SmallDivider />
               <View
                 style={{
@@ -465,30 +437,32 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 <Text style={styles.label}>Finished Days</Text>
 
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="finishedDay"
-                  rules={{ required: true }} // This line sets the field to required
-                />
-                 
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="finishedDay"
+                    rules={{required: true}} // This line sets the field to required
+                  />
+
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
-           
-
               </View>
-              {errors.finishedDay && <Text  style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
+              {errors.finishedDay && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
               <SmallDivider />
               <View
                 style={{
@@ -499,30 +473,32 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 <Text style={styles.label}>Work Check Day</Text>
 
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="workCheckDay"
-                  rules={{ required: true }} // This line sets the field to required
-                />
-                 
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="workCheckDay"
+                    rules={{required: true}} // This line sets the field to required
+                  />
+
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
-
-
               </View>
-              {errors.workCheckDay && <Text   style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
+              {errors.workCheckDay && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
               <SmallDivider />
               <View
                 style={{
@@ -533,30 +509,32 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 <Text style={styles.label}>Work Check End</Text>
 
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="workCheckEnd"
-                  rules={{ required: true }} // This line sets the field to required
-                />
-                 
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="workCheckEnd"
+                    rules={{required: true}} // This line sets the field to required
+                  />
+
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
-               
-
               </View>
-              {errors.workCheckEnd && <Text  style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
+              {errors.workCheckEnd && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
               <SmallDivider />
               <View
                 style={{
@@ -568,46 +546,33 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 <Text style={styles.label}>Adjust Per Days</Text>
 
                 <View style={styles.inputContainerForm}>
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      style={{width: 30}}
-                      placeholderTextColor="#A6A6A6"
-                    />
-                  )}
-                  name="adjustPerDay"
-                  rules={{ required: true }} // This line sets the field to required
-                />
-                 
+                  <Controller
+                    control={control}
+                    render={({field: {onChange, onBlur, value}}) => (
+                      <TextInput
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{width: 30}}
+                        placeholderTextColor="#A6A6A6"
+                      />
+                    )}
+                    name="adjustPerDay"
+                    rules={{required: true}} // This line sets the field to required
+                  />
+
                   <Text style={styles.inputSuffix}>วัน</Text>
                 </View>
-              
-
               </View>
-              {errors.adjustPerDay && <Text  style={{
-                 alignSelf:'flex-end'
-              
-                }}>{textRequired}</Text>}
+              {errors.adjustPerDay && (
+                <Text
+                  style={{
+                    alignSelf: 'flex-end',
+                  }}>
+                  {textRequired}
+                </Text>
+              )}
               <SmallDivider />
-
-              {/* <TouchableOpacity
-            style={styles.buttonForm}
-            onPress={handleShowSecondPage}>
-            <View style={styles.headerForm}>
-              <Text style={styles.buttonTextForm}>ต่อไป</Text>
-
-              <FontAwesomeIcon
-                style={styles.iconForm}
-                icon={faChevronRight}
-                size={18}
-                color="white"
-              />
-            </View>
-          </TouchableOpacity> */}
             </View>
           </ScrollView>
         )}
@@ -620,7 +585,7 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
               handleDateSigne={handleDateSigne}
               signDate={servayDate}
               servayDate={servayDate}
-              projectName={projectName}
+              projectName={watch('projectName')}
               customerName={data.customerName}
               allTotal={data.allTotal}
               address={watch('address')}
@@ -632,7 +597,7 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
             <Installment
               handleBackPress={handleBackPress}
               data={{
-                projectName,
+                projectName:watch('projectName') ,
                 warantyYear: Number(watch('warantyTimeWork')),
                 warantyTimeWork: Number(watch('warantyTimeWork')),
                 workingDays,
@@ -646,7 +611,7 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
                 workCheckDay: Number(watch('workCheckDay')),
                 workCheckEnd: Number(watch('workCheckEnd')),
                 total: Number(data.allTotal),
-                signAddress: address,
+                signAddress: watch('signAddress'),
                 quotationId: data.id,
                 sellerId: data.sellerId,
               }}
@@ -660,11 +625,8 @@ console.log("WWATCH", watch('workAfterGetDeposit'))
             onBack={handleBackPress}
             onNext={handleNextPress}
             isLoading={false}
-            disabled={  (step === 1) ? 
-              ( !isDirty || !isValid):(
-                address === ''
-              )
-             } 
+            disabled={step === 1 ? !isDirty || !isValid : watch('signAddress') === ''}
+
           />
         )}
       </SafeAreaView>

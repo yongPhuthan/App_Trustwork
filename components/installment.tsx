@@ -8,6 +8,7 @@ import {
   Alert,
   TextInput,
   KeyboardAvoidingView,
+  SafeAreaView,
   Dimensions,
   Platform,
 } from 'react-native';
@@ -176,16 +177,14 @@ const Installment = (props: Props) => {
       dataProps.id = uuidv4(),
       dataProps.periodPercent = newInstallmentDetails;
 
+      console.log('DATAPROP',dataProps)
       await mutate({data: dataProps, isEmulator: false});
 
 
-    // Update periodPercent in data
   }, [isPercentagesValid, errorMessage, percentages, installmentDetailsText, dataProps]);
 
   const handleStep3Press = async () => {
-    // setStep3(false);
-    // setStep2(true);
-    // navigation.navigate('InstallmentScreen')
+
     await mutate({data: dataProps, isEmulator: true});
   };
 
@@ -291,8 +290,8 @@ const Installment = (props: Props) => {
   );
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <SafeAreaView
+      
       style={styles.container}>
       <View style={styles.innerContainer}>
         {installments < 1 && (
@@ -329,7 +328,7 @@ const Installment = (props: Props) => {
         onNext={handleSave}
         disabled={!isDirty || !isValid}
       />
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 const {width} = Dimensions.get('window');

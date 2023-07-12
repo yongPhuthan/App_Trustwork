@@ -1,4 +1,4 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
+import React, {useState, useContext, useCallback, useRef} from 'react';
 import {
   Button,
   SafeAreaView,
@@ -10,9 +10,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import DatePickerButton from '../../../components/styles/DatePicker';
 import messaging from '@react-native-firebase/messaging';
-import axios, {AxiosResponse, AxiosError} from 'axios';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {HOST_URL} from '@env';
 import {v4 as uuidv4} from 'uuid';
@@ -44,37 +42,6 @@ const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
   month: '2-digit',
   day: '2-digit',
 });
-
-interface MyError {
-  response: object;
-  // add other properties if necessary
-}
-const createContract = async ({
-  data,
-  isEmulator,
-}: {
-  data: any;
-  isEmulator: boolean;
-}) => {
-  const user = auth().currentUser;
-  let url;
-  if (isEmulator) {
-    url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/createContract`;
-  } else {
-    url = `https://asia-southeast1-workerfirebase-f1005.cloudfunctions.net/createContract`;
-  }
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${user?.uid}`,
-    },
-    body: JSON.stringify({data}),
-  });
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-};
 
 const fetchContract = async ({
   id,
@@ -120,7 +87,7 @@ const EditContractOption = ({navigation}: Props) => {
   const [fcnToken, setFtmToken] = useState('');
   const [isLoadingMutation, setIsLoadingMutation] = useState(false);
   const [step, setStep] = useState(1);
-  const [contract, setContract] = useState({});
+  const [contract, setContract] = useState<Contract>();
   const [quotation, setQuotation] = useState<Quotation>();
   const [customer, setCustomer] = useState<Customer>();
   const [stepData, setStepData] = useState({});
@@ -137,6 +104,7 @@ const EditContractOption = ({navigation}: Props) => {
     handleSubmit,
     control,
     watch,
+    setValue,
     reset,
     formState: {errors, isDirty, dirtyFields, isValid},
   } = useForm({
@@ -146,7 +114,6 @@ const EditContractOption = ({navigation}: Props) => {
       signDate: '',
       servayDate: '',
       warantyTimeWork: '',
-      workingDays: '',
       workCheckEnd: '',
       workCheckDay: '',
       installingDay: '',
@@ -154,9 +121,13 @@ const EditContractOption = ({navigation}: Props) => {
       workAfterGetDeposit: '',
       prepareDay: '',
       finishedDay: '',
-      address: '',
+      signAddress: '',
     },
   });
+
+  const handleAddressChange = useCallback((newAddress :string) => {
+    setValue('signAddress', newAddress, { shouldDirty: true });
+}, [setValue]);
 
   const {data, isLoading, isError} = useQuery(
     ['Contract', id],
@@ -170,11 +141,10 @@ const EditContractOption = ({navigation}: Props) => {
         setDateSign(data[3].signDate);
         setDateServay(data[3].servayDate);
         setCustomer(data[1]);
-        setAddress(data[3].signAddress)
+        setAddress(data[3].signAddress);
         reset({
           projectName: data[3].projectName,
           warantyTimeWork: data[3].warantyTimeWork,
-          workingDays: data[3].workingDays,
           workCheckEnd: data[3].workCheckEnd,
           workCheckDay: data[3].workCheckDay,
           installingDay: data[3].installingDay,
@@ -182,7 +152,7 @@ const EditContractOption = ({navigation}: Props) => {
           workAfterGetDeposit: data[3].workAfterGetDeposit,
           prepareDay: data[3].prepareDay,
           finishedDay: data[3].finishedDay,
-          address:data[3].signAddress
+          signAddress: data[3].signAddress,
         });
       },
     },
@@ -192,7 +162,7 @@ const EditContractOption = ({navigation}: Props) => {
     return (
       <View style={styles.loadingContainer}>
         <Lottie
-          style={{width: '25%'}}
+          style={{width: '10%'}}
           source={require('../../../assets/animation/lf20_rwq6ciql.json')}
           autoPlay
           loop
@@ -200,45 +170,18 @@ const EditContractOption = ({navigation}: Props) => {
       </View>
     );
   }
+  const watchedValues = watch();
+  const dirtyValues = Object.keys(dirtyFields).reduce((acc, key) => {
+    acc[key] = watchedValues[key];
+    return acc;
+  }, {});
 
-  const handleAddressChange = (newAddress: string) => {
-    setAddress(newAddress);
-  };
-  const updateInstallmentData = (
-    percentage: number,
-    details: string,
-    index: number,
-  ) => {
-    setStepData(prevState => ({
-      ...prevState,
-      [`percentage_${index}`]: percentage,
-      [`details_${index}`]: details,
-    }));
-  };
+
 
   const {
     state: {selectedContract, isEmulator},
     dispatch,
   }: any = useContext(Store);
-
-  const handleStartDateSelected = (date: Date) => {
-    const formattedDate = thaiDateFormatter.format(date);
-    // setServayDate(formattedDate);
-    console.log(servayDate);
-  };
-  // const {mutate} = useMutation(createContract, {
-  //   onSuccess: data => {
-  //     navigation.navigate('WebViewScreen', {id: data?.data.id});
-  //   },
-  //   onError: (error: MyError) => {
-  //     console.error('There was a problem calling the function:', error);
-  //     console.log(error.response);
-  //   },
-  // });
-
-  const handleShowSecondPage = () => {
-    setShowSecondPage(true);
-  };
 
   const handleDateSigne = (date: Date) => {
     const formattedDate = thaiDateFormatter.format(date);
@@ -250,54 +193,10 @@ const EditContractOption = ({navigation}: Props) => {
     setDateServay(formattedDate);
   };
 
-  const handleDonePress = async () => {
-    setIsLoadingMutation(true);
-    try {
-      const apiData = {
-        data: {
-          id: uuidv4(),
-          quotationId: id.data.id,
-          signDate: 'preview',
-          signDateStamp: 11,
-          deposit: 2,
-          signAddress: signAddress,
-          adjustPerDay: Number(adjustPerDay),
-          installingDay: Number(installingDay),
-          warantyYear: Number(warantyTimeWork),
-          prepareDay: Number(prepareDay),
-          servayDate: servayDate,
-          FCMToken: fcnToken,
-          // servayDateStamp: new Date().getTime(),
-          quotationPageQty: 1,
-          workCheckDay: Number(workCheckDay),
-          workCheckEnd: workCheckEnd,
-          warantyTimeWork: warantyTimeWork,
-          workAfterGetDeposit: workAfterGetDeposit,
-          sellerId: id.data.userId,
-          finishedDay: Number(finishedDay),
-          offerContract: 'preview',
-          selectedContract: '',
-          offerCheck: 'preview',
-          projectName: projectName,
-        },
-        quotation: id.data,
-      };
-
-      console.log('api data', JSON.stringify(apiData));
-      // await mutate({data: apiData, isEmulator});
-
-      setIsLoadingMutation(false);
-    } catch (error: Error | AxiosError | any) {
-      console.error('There was a problem calling the function:', error);
-      console.log(error.response);
-    }
-  };
-
   const handleNextPress = () => {
     if (step < 3) {
       setStep(step + 1);
     }
-    // Validate the inputs for step 2 and step 3 here in a similar way.
   };
 
   const handleBackPress = () => {
@@ -309,29 +208,19 @@ const EditContractOption = ({navigation}: Props) => {
         projectName: '',
         signDate: '',
         servayDate: '',
-        warantyTimeWork: 0,
-        workingDays: 0,
-        workCheckEnd: 0,
-        workCheckDay: 0,
-        installingDay: 0,
-        adjustPerDay: 0,
-        workAfterGetDeposit: 0,
-        prepareDay: 0,
-        finishedDay: 0,
-        address: '',
+        warantyTimeWork: '',
+        workCheckEnd: '',
+        workCheckDay: '',
+        installingDay: '',
+        adjustPerDay: '',
+        workAfterGetDeposit: '',
+        prepareDay: '',
+        finishedDay: '',
+        signAddress: '',
       });
       navigation.goBack();
     }
   };
-  const fieldsAreEmpty = () => {
-    if (step === 1) {
-      !isDirty || !isValid;
-    } else if (step === 2) {
-      return address === '';
-    }
-  };
-  console.log('DATA', quotation?.allTotal);
-
   return (
     <>
       {quotation && customer && contract ? (
@@ -374,7 +263,7 @@ const EditContractOption = ({navigation}: Props) => {
                       render={({field: {onChange, onBlur, value}}) => (
                         <TextInput
                           onBlur={onBlur}
-                          onChangeText={value => onChange(value)}
+                          onChangeText={val => onChange(Number(val))}
                           value={value ? value.toString() : ''}
                           style={{width: 30}}
                           placeholderTextColor="#A6A6A6"
@@ -402,40 +291,6 @@ const EditContractOption = ({navigation}: Props) => {
                     justifyContent: 'space-between',
                     marginTop: 10,
                   }}>
-                  <Text style={styles.label}>Working Days</Text>
-                  <View style={styles.inputContainerForm}>
-                    <Controller
-                      control={control}
-                      render={({field: {onChange, onBlur, value}}) => (
-                        <TextInput
-                          onBlur={onBlur}
-                          onChangeText={value => onChange(value)}
-                          value={value ? value.toString() : ''}
-                          style={{width: 30}}
-                          placeholderTextColor="#A6A6A6"
-                        />
-                      )}
-                      name="workingDays"
-                      rules={{required: true}}
-                    />
-                    <Text style={styles.inputSuffix}>วัน</Text>
-                  </View>
-                </View>
-                {errors.workingDays && (
-                  <Text
-                    style={{
-                      alignSelf: 'flex-end',
-                    }}>
-                    {textRequired}
-                  </Text>
-                )}
-                <SmallDivider />
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginTop: 10,
-                  }}>
                   <Text style={styles.label}>Installing Day</Text>
 
                   <View style={styles.inputContainerForm}>
@@ -444,7 +299,7 @@ const EditContractOption = ({navigation}: Props) => {
                       render={({field: {onChange, onBlur, value}}) => (
                         <TextInput
                           onBlur={onBlur}
-                          onChangeText={onChange}
+                          onChangeText={val => onChange(Number(val))}
                           value={value ? value.toString() : ''}
                           style={{width: 30}}
                           placeholderTextColor="#A6A6A6"
@@ -480,7 +335,7 @@ const EditContractOption = ({navigation}: Props) => {
                       render={({field: {onChange, onBlur, value}}) => (
                         <TextInput
                           onBlur={onBlur}
-                          onChangeText={onChange}
+                          onChangeText={val => onChange(Number(val))}
                           value={value.toString()}
                           style={{width: 30}}
                           placeholderTextColor="#A6A6A6"
@@ -516,7 +371,7 @@ const EditContractOption = ({navigation}: Props) => {
                       render={({field: {onChange, onBlur, value}}) => (
                         <TextInput
                           onBlur={onBlur}
-                          onChangeText={onChange}
+                          onChangeText={val => onChange(Number(val))}
                           value={value.toString()}
                           style={{width: 30}}
                           placeholderTextColor="#A6A6A6"
@@ -552,7 +407,7 @@ const EditContractOption = ({navigation}: Props) => {
                       render={({field: {onChange, onBlur, value}}) => (
                         <TextInput
                           onBlur={onBlur}
-                          onChangeText={onChange}
+                          onChangeText={val => onChange(Number(val))}
                           value={value.toString()}
                           style={{width: 30}}
                           placeholderTextColor="#A6A6A6"
@@ -588,7 +443,7 @@ const EditContractOption = ({navigation}: Props) => {
                       render={({field: {onChange, onBlur, value}}) => (
                         <TextInput
                           onBlur={onBlur}
-                          onChangeText={onChange}
+                          onChangeText={val => onChange(Number(val))}
                           value={value.toString()}
                           style={{width: 30}}
                           placeholderTextColor="#A6A6A6"
@@ -624,7 +479,7 @@ const EditContractOption = ({navigation}: Props) => {
                       render={({field: {onChange, onBlur, value}}) => (
                         <TextInput
                           onBlur={onBlur}
-                          onChangeText={onChange}
+                          onChangeText={val => onChange(Number(val))}
                           value={value.toString()}
                           style={{width: 30}}
                           placeholderTextColor="#A6A6A6"
@@ -661,7 +516,7 @@ const EditContractOption = ({navigation}: Props) => {
                       render={({field: {onChange, onBlur, value}}) => (
                         <TextInput
                           onBlur={onBlur}
-                          onChangeText={onChange}
+                          onChangeText={val => onChange(Number(val))}
                           value={value.toString()}
                           style={{width: 30}}
                           placeholderTextColor="#A6A6A6"
@@ -697,7 +552,7 @@ const EditContractOption = ({navigation}: Props) => {
                 projectName={watch('projectName')}
                 customerName={customer.name}
                 allTotal={Number(quotation.allTotal)}
-                address={watch('address')}
+                signAddress={watch('signAddress')}
               />
             </>
           )}
@@ -706,24 +561,13 @@ const EditContractOption = ({navigation}: Props) => {
               <EditInstallment
                 handleBackPress={handleBackPress}
                 periodPercent={periodPercent}
+                total={Number(quotation.allTotal)}
                 data={{
-                  projectName: watch('projectName'),
-                  warantyYear: Number(watch('warantyTimeWork')),
-                  warantyTimeWork: Number(watch('warantyTimeWork')),
-                  installingDay: Number(watch('installingDay')),
-                  adjustPerDay: Number(watch('adjustPerDay')),
-                  workAfterGetDeposit: Number(watch('workAfterGetDeposit')),
-                  signDate,
-                  servayDate,
-                  prepareDay: Number(watch('prepareDay')),
-                  finishedDay: Number(watch('finishedDay')),
-                  workCheckDay: Number(watch('workCheckDay')),
-                  workCheckEnd: Number(watch('workCheckEnd')),
-                  total: Number(quotation.allTotal),
-                  signAddress: address,
-                  quotationId: quotation.id,
-                  sellerId: quotation.sellerId,
+                  ...dirtyValues,
                 }}
+                quotationId={quotation.id}
+                contractId={contract.id}
+                sellerId={contract.sellerId}
               />
             </>
           )}
@@ -734,7 +578,7 @@ const EditContractOption = ({navigation}: Props) => {
               onBack={handleBackPress}
               onNext={handleNextPress}
               isLoading={false}
-              disabled={step === 1 ? !isDirty || !isValid : address === ''}
+              disabled={step === 1 ? !isValid : address === ''}
             />
           )}
         </SafeAreaView>
@@ -742,7 +586,7 @@ const EditContractOption = ({navigation}: Props) => {
         <>
           <View style={styles.loadingContainer}>
             <Lottie
-              style={{width: '25%'}}
+              style={{width: '10%'}}
               source={require('../../../assets/animation/lf20_rwq6ciql.json')}
               autoPlay
               loop

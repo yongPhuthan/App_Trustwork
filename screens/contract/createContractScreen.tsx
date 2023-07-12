@@ -82,7 +82,7 @@ type Props = {
   customerName: string;
   allTotal: number;
   handleAddressChange:(address:string) => void;
-  address:string
+  signAddress:string
 };
 const fetchContract = async ({
   id,
@@ -153,7 +153,7 @@ const CreateContractScreen = (props: Props) => {
     {
       mode: 'onChange',
       defaultValues: {
-        address: '',
+        signAddress: '',
       },
     }
   );
@@ -161,7 +161,7 @@ const CreateContractScreen = (props: Props) => {
 
 useEffect(() => {
 reset({
-  address:props.address
+  signAddress:props.signAddress
 })
 }, []);
   return (
@@ -254,23 +254,13 @@ reset({
               <SmallDivider />
               <View style={{marginTop: 10, alignSelf: 'flex-start'}}>
                 <Text style={styles.title}>สถาณที่ติดตั้งงาน:</Text>
-                <Controller
-                  control={control}
-                  render={({field}) => (
-                    <TextInput
+                <TextInput
                       multiline
                       style={styles.input}
-                      placeholder="Address"
-                      value={field.value}
-                      onChangeText={field.onChange}
+                      placeholder="signAddress"
+                      value={props.signAddress}
+                      onChangeText={props.handleAddressChange}
                     />
-                  )}
-                  name="address"
-                  rules={{required: true}}
-                />
-                {errors.address && (
-                  <Text style={styles.error}>This field is required.</Text>
-                )}
               </View>
             </View>
           </>

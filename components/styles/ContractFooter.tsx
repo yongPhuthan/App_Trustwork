@@ -3,6 +3,8 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Platform,
+  KeyboardAvoidingView,
   ActivityIndicator,
 } from 'react-native';
 import React from 'react';
@@ -27,57 +29,44 @@ type Props = {
 
 const ContractFooter = (props: Props) => {
   const {onNext, onBack, disabled, isLoading} = props;
-  // if (disabled) {
-  //   return (
-  //     <View style={styles.containerBtn}>
-  //       <TouchableOpacity style={styles.disabledButton} disabled>
-  //         <View style={styles.header}>
-  //           <Text style={styles.buttonText}>ดำเนินการต่อ</Text>
-  //           <FontAwesomeIcon
-  //             style={styles.icon}
-  //             icon={faChevronRight}
-  //             size={20}
-  //             color="white"
-  //           />
-  //         </View>
-  //       </TouchableOpacity>
-  //     </View>
-  //   );
-  // }
-
   return (
     <View style={styles.containerBtn}>
-      {/* Your main content here */}
-      <TouchableOpacity
-        style={[styles.previousButton, styles.outlinedButton]}
-        onPress={() => props.onBack()}>
-        <Text style={[styles.buttonText, styles.outlinedButtonText]}>
-          ย้อนกลับ
-        </Text>
-      </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{flex: 1}}>
+        <View style={styles.subContainer}>
+          <TouchableOpacity
+            style={[styles.previousButton, styles.outlinedButton]}
+            onPress={() => props.onBack()}>
+            <Text style={[styles.buttonText, styles.outlinedButtonText]}>
+              ย้อนกลับ
+            </Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[
-          styles.submitedButton,
-          {
-            backgroundColor: props.finalStep
-              ? 'green'
-              : props.disabled
-              ? '#ccc'
-              : '#0073BA',
-            opacity: props.disabled ? 0.5 : 1,
-          },
-        ]}
-        onPress={() => props.onNext()}
-        disabled={props.disabled}>
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#ffffff" />
-        ) : (
-          <Text style={styles.buttonText}>
-            {props.finalStep ? 'บันทึกสัญญา' : 'ไปต่อ'}
-          </Text>
-        )}
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.submitedButton,
+              {
+                backgroundColor: props.finalStep
+                  ? 'green'
+                  : props.disabled
+                  ? '#ccc'
+                  : '#0073BA',
+                opacity: props.disabled ? 0.5 : 1,
+              },
+            ]}
+            onPress={() => props.onNext()}
+            disabled={props.disabled}>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Text style={styles.buttonText}>
+                {props.finalStep ? 'บันทึกสัญญา' : 'ไปต่อ'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -95,6 +84,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     padding: 20,
     bottom: 0,
+  },
+  subContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   containerSubmitBtn: {
     flexDirection: 'row',
