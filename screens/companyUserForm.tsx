@@ -283,6 +283,14 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
     userPosition,
     taxID,
   ]);
+  const handleLogout = async () => {
+    try {
+      await auth().signOut();
+    } catch (error) {
+      console.error('Failed to sign out: ', error);
+    }
+  };
+  console.log('USER',user)
 
   const renderPage = () => {
     return (
@@ -360,6 +368,8 @@ const CompanyUserFormScreen = ({navigation}: CompanyUserFormScreenProps) => {
           save="value"
           placeholder={'เลือกหมวดหมู่ธุรกิจ'}
         />
+                <TouchableOpacity onPress={handleLogout}><Text>LOG OUT</Text></TouchableOpacity>
+
 
         <View
           style={{

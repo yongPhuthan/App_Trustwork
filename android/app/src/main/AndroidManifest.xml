@@ -21,6 +21,8 @@
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
+                  <data android:scheme="myapp" />
+
         </intent-filter>
       </activity>
 <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />

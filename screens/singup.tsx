@@ -38,7 +38,6 @@ const [isLoading, setIsLoading] = useState(false);
   const [error, setError] =
     useState<FirebaseAuthTypes.NativeFirebaseAuthError | null>(null);
 
-  // Calculated state to disable the button if the required information isn't entered
   const isButtonDisabled = !email || !password || !confirmPassword;
 
   const signUpEmail = async () => {
@@ -62,7 +61,6 @@ const [isLoading, setIsLoading] = useState(false);
       return;
     }
 
-    // checkRegistrationCode from Firestore logic here
     const docRef = firestore().collection('registrationCodes').doc(registrationCode);
     const doc = await docRef.get();
 
@@ -98,7 +96,6 @@ const [isLoading, setIsLoading] = useState(false);
       return;
     }
   
-    // If the code is valid and not used, mark it as used
     await docRef.update({ used: true });
   
 
@@ -277,3 +274,5 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
+
+

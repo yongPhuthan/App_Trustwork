@@ -48,7 +48,7 @@ export const Store = createContext<ContextType>({
     allTotal: 0,
     periodPercent: [],
     // isEmulator:true,
-    isEmulator: false,
+    isEmulator: true,
     companyID: '',
   },
   dispatch: () => {},
@@ -68,7 +68,7 @@ const initialState: StateType = {
   selectedContract: [],
   allTotal: 0,
   periodPercent: [],
-  isEmulator: false,
+  isEmulator: true,
   companyID: '',
 };
 

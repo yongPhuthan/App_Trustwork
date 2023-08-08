@@ -12,6 +12,8 @@ import {
   NavigationContainer,
   NavigationContext,
   useNavigation,
+
+  DefaultTheme
 } from '@react-navigation/native';
 import RootStack from './RootStack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -76,14 +78,13 @@ import {ScrollView} from 'react-native-gesture-handler';
 import AuditCategory from '../screens/auditCategory';
 import EditContractOption from '../screens/contract/edit/editContractOptions';
 import {useFetchContractDashboard} from '../hooks/useFetchContractDashboard';
-// import ContractSteps from '../screens/contract/contractSteps';
-// import FontAwesomeIcon from 'react-native-vector-icons/FontAwesomeIcon5';
+import RegisterScreen1 from '../screens/register/RegisterScreen1';
 
 type Props = {};
 interface SettingScreenProps {
   navigation: StackNavigationProp<ParamListBase, 'TopUpScreen'>;
 }
-type ScreenName = 'SignUpScreen' | 'CompanyUserFormScreen' | 'RootTab';
+type ScreenName = 'SignUpScreen' | 'CompanyUserFormScreen' | 'RootTab'|'RegisterScreen1';
 
 type Company = {
   bizName: string;
@@ -99,9 +100,9 @@ type Company = {
 
 type ParamListBase = {
   Quotation: undefined;
+  RegisterScreen1:undefined
   AddClient: undefined;
-  EditCompanyForm: {  dataProps?: Company
-  };
+  EditCompanyForm: {dataProps?: Company};
   AuditCategory: {title: string; description: string; serviceID: string};
   AddProductForm: undefined;
   TopUpScreen: undefined;
@@ -184,6 +185,7 @@ const fetchCompanyUser = async (isEmulator: boolean) => {
 
     let url;
     if (isEmulator) {
+      console.log(HOST_URL);
       url = `http://${HOST_URL}:5001/workerfirebase-f1005/asia-southeast1/queryCompanySeller2`;
     } else {
       console.log('isEmulator Fetch', isEmulator);
@@ -461,7 +463,9 @@ function SettingsScreen({navigation}: SettingScreenProps) {
             }}></View>
           <TouchableOpacity
             style={{paddingVertical: 15, paddingHorizontal: 24}}
-            onPress={() => navigation.navigate('EditCompanyForm', { dataProps: company })}>
+            onPress={() =>
+              navigation.navigate('EditCompanyForm', {dataProps: company})
+            }>
             <View
               style={{
                 flexDirection: 'row',
@@ -620,7 +624,7 @@ function RootTab({navigation}: NavigationScreen) {
             borderTopColor: 'transparent',
           },
           tabBarLabelStyle: {fontSize: 14},
-          tabBarLabelPosition: 'beside-icon',
+          tabBarLabelPosition: 'below-icon',
         }}>
         <Tab.Screen
           name="เสนอราคา"
@@ -659,7 +663,7 @@ function RootTab({navigation}: NavigationScreen) {
           component={RootStack}
         />
         <Tab.Screen
-          name="ทำสัญญา"
+          name="สัญญา"
           options={{
             headerStyle: {
               backgroundColor: '#fff',
@@ -959,6 +963,14 @@ export const Navigation = () => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [company, setCompany] = useState<Company>();
   const [isError, setIsError] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const MyTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: 'white'
+    },
+  };
   const {
     state: {isEmulator},
     dispatch,
@@ -969,6 +981,7 @@ export const Navigation = () => {
       if (user) {
         setUser(user);
       }
+      setLoadingUser(false);
     });
 
     return unsubscribe;
@@ -982,7 +995,8 @@ export const Navigation = () => {
       },
     },
   );
-  if (isLoading) {
+  if (isLoading && loadingUser) {
+    console.log('LOAD');
     return (
       <View style={styles.loadingContainer}>
         <Lottie
@@ -1012,18 +1026,25 @@ export const Navigation = () => {
     {name: 'CompanyUserFormScreen', component: EditCompanyUserFormScreen},
     {name: 'SignUpScreen', component: SignUpScreen},
     {name: 'LoginScreen', component: LoginScreen},
+    {name: 'RegisterScreen1', component: RegisterScreen1},
   ];
 
   let initialRouteName: ScreenName = 'RootTab';
 
   if (!user) {
-    initialRouteName = 'SignUpScreen';
+    console.log('CHECK USER');
+console.log('FIREBASE')
+    // initialRouteName = 'SignUpScreen';
+    initialRouteName = 'RegisterScreen1';
+
   } else if (!company) {
+    console.log('CHECK COMPANY');
     initialRouteName = 'CompanyUserFormScreen';
   }
+  console.log('FIREBASE')
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={MyTheme}>
       <Stack.Navigator
         initialRouteName={initialRouteName}
         screenOptions={{headerShown: false}}>

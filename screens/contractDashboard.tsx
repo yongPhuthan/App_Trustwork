@@ -62,7 +62,6 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
 
-
   const handleModalClose = () => {
     setShowModal(false); // Step 4
   };
@@ -74,7 +73,6 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
   const [quotationData, setQuotationData] = useState<Quotation[] | null>(null);
 
   const handleSelectScreen = (id: string) => {
-
     setSelectedItemId(id);
     setModalVisible(true);
   };
@@ -135,7 +133,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     {
       enabled: !!user,
       onSuccess: data => {
-        console.log('data contract', data)
+        console.log('data contract', data);
         setCompanyData(data[0]);
         setQuotationData(data[1]);
       },
@@ -154,7 +152,6 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
       </View>
     );
   }
-
 
   // useEffect(() => {
   // messaging().onNotificationOpenedApp(remoteMessage => {
@@ -216,10 +213,9 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     setModalVisible(false);
   };
 
-  const handleModal = (id) => {
-    setSelectedItemId(id )
+  const handleModal = id => {
+    setSelectedItemId(id);
     setShowModal(true);
-
   };
   const handleShowModalClose = () => {
     setShowModal(false);
@@ -234,10 +230,10 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
     if (!quotationData) {
       return null;
     }
-    return [...quotationData].sort((a, b) => 
-      a.status === 'approved' && b.status !== 'approved' ? -1 : 1);
+    return [...quotationData].sort((a, b) =>
+      a.status === 'approved' && b.status !== 'approved' ? -1 : 1,
+    );
   }, [quotationData]);
-  
 
   // const requestUserPermission = async () => {
   //   const authStatus = await messaging().requestPermission();
@@ -266,7 +262,6 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
         </View>
       ) : (
         <View>
-
           <TouchableOpacity onPress={() => handleModal(item.id)}>
             <CardApprovedDashBoard
               onPress={() => handleSelectScreen(selectedItemId?.id)}
@@ -311,8 +306,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
           onBackdropPress={handleModalClose}>
           <TouchableNativeFeedback
             onPress={() => {
-     
-              setShowModal(false); 
+              setShowModal(false);
               navigation.navigate('EditContractOption', {id: item.id});
             }}>
             <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
@@ -361,7 +355,7 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
           <TouchableOpacity
             onPress={() => {
               setShowModal(false); // Step 4
-           
+
               navigation.navigate('EditContractOption', {id: selectedItemId});
             }}>
             <Text style={styles.closeButtonText}>แก้ไขเอกสาร</Text>
@@ -407,21 +401,35 @@ const ContractDashBoard = ({navigation}: DashboardScreenProps) => {
 
   return (
     <>
-      <View style={{flex: 1,justifyContent: 'center', alignItems: 'center'}}>
-        <FlatList
-          data={sortedData}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          ListEmptyComponent={
-            <View
-              style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-              <Text>ลูกค้าอนุมัติเอกสารก่อนเริ่มต้นทำสัญญา</Text>
-            </View>
-          }
-          contentContainerStyle={sortedData?.length === 0 && {flex: 1}}
-        />
-
-      </View>
+      {data ? (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <FlatList
+            data={sortedData}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            ListEmptyComponent={
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <Text>ลูกค้าอนุมัติเอกสารก่อนเริ่มต้นทำสัญญา</Text>
+              </View>
+            }
+            contentContainerStyle={sortedData?.length === 0 && {flex: 1}}
+          />
+        </View>
+      ) : (
+        <View style={styles.loadingContainer}>
+          <Lottie
+            style={{width: '10%'}}
+            source={require('../assets/animation/lf20_rwq6ciql.json')}
+            autoPlay
+            loop
+          />
+        </View>
+      )}
     </>
   );
 };

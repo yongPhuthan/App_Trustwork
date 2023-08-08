@@ -2,6 +2,7 @@
 import firebase from '@react-native-firebase/app';
 import functions from '@react-native-firebase/functions';
 import messaging from '@react-native-firebase/messaging';
+import { Platform } from 'react-native';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAlFmHGPiZC-XXlfQN37zbz5gV6dYDAsrU',
@@ -18,16 +19,16 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// if (__DEV__) {
-//   let emulatorHost = 'http://localhost';
-//   if (Platform.OS === 'android') {
-//     emulatorHost = 'http://124.120.205.238';
-//   }
-//   firebase.functions().useEmulator(emulatorHost, 5001);
-//   firebase.auth().useEmulator(`${emulatorHost}:9099`);
-
-//   console.log('emulator' + emulatorHost);
-// }
+if (__DEV__) {
+  let emulatorHost = 'http://localhost';
+  if (Platform.OS === 'android') {
+    emulatorHost = 'http://124.120.205.238';
+  }
+  firebase.functions().useEmulator(emulatorHost, 5001);
+  firebase.auth().useEmulator(`${emulatorHost}:9099`);
+  firebase.firestore().useEmulator(emulatorHost, 8080)
+  console.log('emulator' + emulatorHost);
+}
 
 console.log('App name: ', firebase.app().name);
 

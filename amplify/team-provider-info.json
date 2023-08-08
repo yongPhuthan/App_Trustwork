@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-trustworkmobile-dev-142903-authRole",
+      "UnauthRoleArn": "arn:aws:iam::485108677501:role/amplify-trustworkmobile-dev-142903-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::485108677501:role/amplify-trustworkmobile-dev-142903-authRole",
+      "Region": "ap-southeast-1",
+      "DeploymentBucketName": "amplify-trustworkmobile-dev-142903-deployment",
+      "UnauthRoleName": "amplify-trustworkmobile-dev-142903-unauthRole",
+      "StackName": "amplify-trustworkmobile-dev-142903",
+      "StackId": "arn:aws:cloudformation:ap-southeast-1:485108677501:stack/amplify-trustworkmobile-dev-142903/c3320fa0-2eaa-11ee-b52f-0add5c3e6362",
+      "AmplifyAppId": "d1fy566ebtsavm"
+    },
+    "categories": {
+      "auth": {
+        "trustworkmobilea0d0a67c": {}
+      }
+    }
+  }
+}

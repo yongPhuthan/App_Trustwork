@@ -2,7 +2,7 @@
 #import <Firebase.h>
 #import <React/RCTBundleURLProvider.h>
 #import <FBSDKCoreKit/FBSDKCoreKit-swift.h>
-#import <React/RCTLinkingManager.h> 
+#import <React/RCTLinkingManager.h>
 
 @implementation AppDelegate
 
